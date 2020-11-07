@@ -213,13 +213,10 @@ fn output_types_to_result(output_types: &[InterfaceType]) -> String {
 impl<'input> ToString for &Type {
     fn to_string(&self) -> String {
         match self {
-            Type::Function {
-                arguments,
-                output_types,
-            } => format!(
+            Type::Function(function_type) => format!(
                 r#"(@interface type (func {args} {output_types}))"#,
-                args = encode_function_arguments(arguments),
-                output_types = output_types_to_result(&output_types),
+                args = encode_function_arguments(&function_type.arguments),
+                output_types = output_types_to_result(&function_type.output_types),
             ),
 
             Type::Record(record_type) => format!(
@@ -276,8 +273,8 @@ impl<'input> ToString for &Implementation {
     fn to_string(&self) -> String {
         format!(
             r#"(@interface implement (func {core_function_type}) (func {adapter_function_type}))"#,
-            core_function_type = self.core_function_type,
-            adapter_function_type = self.adapter_function_type,
+            core_function_type = self.core_function_id,
+            adapter_function_type = self.adapter_function_id,
         )
     }
 }
@@ -647,8 +644,8 @@ mod tests {
                 function_type: 0,
             }],
             implementations: vec![Implementation {
-                core_function_type: 0,
-                adapter_function_type: 1,
+                core_function_id: 0,
+                adapter_function_id: 1,
             }],
         })
             .to_string();

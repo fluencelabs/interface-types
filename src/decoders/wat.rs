@@ -432,12 +432,12 @@ impl Parse<'_> for AtInterface {
 }
 
 #[derive(PartialEq, Debug)]
-enum FunctionType {
+enum WATFunctionType {
     Header(Vec<FunctionArg>),
     Output(Vec<InterfaceType>),
 }
 
-impl Parse<'_> for FunctionType {
+impl Parse<'_> for WATFunctionType {
     fn parse(parser: Parser<'_>) -> Result<Self> {
         parser.parens(|parser| {
             let mut lookahead = parser.lookahead1();
@@ -471,7 +471,7 @@ impl Parse<'_> for FunctionType {
                     });
                 }
 
-                Ok(FunctionType::Header(arguments))
+                Ok(WATFunctionType::Header(arguments))
             } else if lookahead.peek::<keyword::result>() {
                 parser.parse::<keyword::result>()?;
 
@@ -481,7 +481,7 @@ impl Parse<'_> for FunctionType {
                     outputs.push(parser.parse()?);
                 }
 
-                Ok(FunctionType::Output(outputs))
+                Ok(WATFunctionType::Output(outputs))
             } else {
                 Err(lookahead.error())
             }
@@ -542,20 +542,22 @@ impl<'a> Parse<'a> for Type {
                 let mut output_types = vec![];
 
                 while !parser.is_empty() {
-                    let function_type = parser.parse::<FunctionType>()?;
+                    let function_type = parser.parse::<WATFunctionType>()?;
 
                     match function_type {
-                        FunctionType::Header(mut func_arguments) => {
+                        WATFunctionType::Header(mut func_arguments) => {
                             arguments.append(&mut func_arguments);
                         }
-                        FunctionType::Output(mut outputs) => output_types.append(&mut outputs),
+                        WATFunctionType::Output(mut outputs) => output_types.append(&mut outputs),
                     }
                 }
 
-                Ok(Type::Function {
-                    arguments: Rc::new(arguments),
-                    output_types: Rc::new(output_types),
-                })
+                let function_type = FunctionType {
+                    arguments,
+                    output_types,
+                };
+
+                Ok(Type::Function(Rc::new(function_type)))
             } else if lookahead.peek::<keyword::record>() {
                 Ok(Type::Record(Rc::new(parser.parse()?)))
             } else {
@@ -628,8 +630,8 @@ impl<'a> Parse<'a> for Implementation {
         })?;
 
         Ok(Implementation {
-            core_function_type,
-            adapter_function_type,
+            core_function_id: core_function_type,
+            adapter_function_id: adapter_function_type,
         })
     }
 }
@@ -928,33 +930,33 @@ mod tests {
     #[test]
     fn test_param_empty() {
         let input = buffer("(param)");
-        let output = FunctionType::InputTypes(vec![]);
+        let output = WATFunctionType::InputTypes(vec![]);
 
-        assert_eq!(parser::parse::<FunctionType>(&input).unwrap(), output);
+        assert_eq!(parser::parse::<WATFunctionType>(&input).unwrap(), output);
     }
 
     #[test]
     fn test_param() {
         let input = buffer("(param i32 string)");
-        let output = FunctionType::InputTypes(vec![InterfaceType::I32, InterfaceType::String]);
+        let output = WATFunctionType::InputTypes(vec![InterfaceType::I32, InterfaceType::String]);
 
-        assert_eq!(parser::parse::<FunctionType>(&input).unwrap(), output);
+        assert_eq!(parser::parse::<WATFunctionType>(&input).unwrap(), output);
     }
 
     #[test]
     fn test_result_empty() {
         let input = buffer("(result)");
-        let output = FunctionType::Output(vec![]);
+        let output = WATFunctionType::Output(vec![]);
 
-        assert_eq!(parser::parse::<FunctionType>(&input).unwrap(), output);
+        assert_eq!(parser::parse::<WATFunctionType>(&input).unwrap(), output);
     }
 
     #[test]
     fn test_result() {
         let input = buffer("(result i32 string)");
-        let output = FunctionType::Output(vec![InterfaceType::I32, InterfaceType::String]);
+        let output = WATFunctionType::Output(vec![InterfaceType::I32, InterfaceType::String]);
 
-        assert_eq!(parser::parse::<FunctionType>(&input).unwrap(), output);
+        assert_eq!(parser::parse::<WATFunctionType>(&input).unwrap(), output);
     }
 
     #[test]
@@ -1027,8 +1029,8 @@ mod tests {
     fn test_implementation() {
         let input = buffer(r#"(@interface implement (func 0) (func 1))"#);
         let output = Interface::Implementation(Implementation {
-            core_function_type: 0,
-            adapter_function_type: 1,
+            core_function_id: 0,
+            adapter_function_id: 1,
         });
 
         assert_eq!(parser::parse::<Interface>(&input).unwrap(), output);
@@ -1066,8 +1068,8 @@ mod tests {
                 function_type: 0,
             }],
             implementations: vec![Implementation {
-                core_function_type: 0,
-                adapter_function_type: 1,
+                core_function_id: 0,
+                adapter_function_id: 1,
             }],
         };
 

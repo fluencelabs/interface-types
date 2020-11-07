@@ -208,13 +208,10 @@ where
 {
     fn to_bytes(&self, writer: &mut W) -> io::Result<()> {
         match self {
-            Type::Function {
-                arguments,
-                output_types,
-            } => {
+            Type::Function(function_type) => {
                 TypeKind::Function.to_bytes(writer)?;
-                arguments.to_bytes(writer)?;
-                output_types.to_bytes(writer)?;
+                function_type.arguments.to_bytes(writer)?;
+                function_type.output_types.to_bytes(writer)?;
             }
 
             Type::Record(record_type) => {
@@ -281,8 +278,8 @@ where
     W: Write,
 {
     fn to_bytes(&self, writer: &mut W) -> io::Result<()> {
-        (self.core_function_type as u64).to_bytes(writer)?;
-        (self.adapter_function_type as u64).to_bytes(writer)?;
+        (self.core_function_id as u64).to_bytes(writer)?;
+        (self.adapter_function_id as u64).to_bytes(writer)?;
 
         Ok(())
     }
@@ -677,8 +674,8 @@ mod tests {
                     function_type: 1,
                 }],
                 implementations: vec![Implementation {
-                    core_function_type: 2,
-                    adapter_function_type: 3,
+                    core_function_id: 2,
+                    adapter_function_id: 3,
                 }],
             },
             &[

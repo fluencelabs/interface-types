@@ -1,6 +1,6 @@
 #![allow(missing_docs)]
 
-use crate::ast::FunctionArg;
+use crate::types::FunctionArg;
 use crate::types::RecordType;
 use crate::{types::InterfaceType, values::InterfaceValue};
 use std::rc::Rc;

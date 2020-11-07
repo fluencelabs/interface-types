@@ -3,7 +3,7 @@
 
 use crate::{
     interpreter::Instruction,
-    types::{InterfaceType, RecordType},
+    types::{FunctionType, RecordType},
 };
 
 use serde::Deserialize;
@@ -21,16 +21,6 @@ pub enum TypeKind {
     Record,
 }
 
-/// Represents the function argument type.
-#[derive(PartialEq, Eq, Debug, Clone, Hash, Serialize, Deserialize)]
-pub struct FunctionArg {
-    /// A function argument name.
-    pub name: String,
-
-    /// A function argument type.
-    pub ty: InterfaceType,
-}
-
 /// Represents a type.
 #[derive(PartialEq, Eq, Debug, Clone, Hash, Serialize, Deserialize)]
 pub enum Type {
@@ -39,13 +29,7 @@ pub enum Type {
     /// ```wasm,ignore
     /// (@interface type (func (param i32 i32) (result string)))
     /// ```
-    Function {
-        /// Types for the parameters (`(param (name i32))`).
-        arguments: Rc<Vec<FunctionArg>>,
-
-        /// Types for the results (`(result …)`).
-        output_types: Rc<Vec<InterfaceType>>,
-    },
+    Function(Rc<FunctionType>),
 
     /// A record type, like:
     ///
@@ -91,11 +75,11 @@ pub struct Adapter {
 /// Represents an implementation.
 #[derive(PartialEq, Eq, Debug, Default, Clone, Hash, Serialize, Deserialize)]
 pub struct Implementation {
-    /// The core function type.
-    pub core_function_type: u32,
+    /// The core function id.
+    pub core_function_id: u32,
 
-    /// The adapter function type.
-    pub adapter_function_type: u32,
+    /// The adapter function id.
+    pub adapter_function_id: u32,
 }
 
 /// Represents the kind of interface.

@@ -55,6 +55,26 @@ pub enum InterfaceType {
     Record(u64),
 }
 
+/// Represents the function argument type.
+#[derive(PartialEq, Eq, Debug, Clone, Hash, Serialize, Deserialize)]
+pub struct FunctionArg {
+    /// A function argument name.
+    pub name: String,
+
+    /// A function argument type.
+    pub ty: InterfaceType,
+}
+
+/// Represent a function type.
+#[derive(PartialEq, Eq, Debug, Clone, Hash, Serialize, Deserialize)]
+pub struct FunctionType {
+    /// Types for the parameters (`(param (name i32))`).
+    pub arguments: Vec<FunctionArg>,
+
+    /// Types for the results (`(result …)`).
+    pub output_types: Vec<InterfaceType>,
+}
+
 /// Represents a record field type.
 #[derive(PartialEq, Eq, Debug, Clone, Hash, Serialize, Deserialize)]
 pub struct RecordFieldType {

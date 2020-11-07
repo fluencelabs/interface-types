@@ -375,10 +375,12 @@ fn types<'input, E: ParseError<&'input [u8]>>(
                 consume!((input, arguments) = list(input, function_arg)?);
                 consume!((input, output_types) = list(input, ty)?);
 
-                types.push(Type::Function {
-                    arguments: Rc::new(arguments),
-                    output_types: Rc::new(output_types),
-                });
+                let function_type = FunctionType {
+                    arguments,
+                    output_types,
+                };
+
+                types.push(Type::Function(Rc::new(function_type)));
             }
 
             TypeKind::Record => {
@@ -470,8 +472,8 @@ fn implementations<'input, E: ParseError<&'input [u8]>>(
         consume!((input, adapter_function_type) = uleb(input)?);
 
         implementations.push(Implementation {
-            core_function_type: core_function_type as u32,
-            adapter_function_type: adapter_function_type as u32,
+            core_function_id: core_function_type as u32,
+            adapter_function_id: adapter_function_type as u32,
         });
     }
 
@@ -1081,8 +1083,8 @@ mod tests {
                     function_type: 1,
                 }],
                 implementations: vec![Implementation {
-                    core_function_type: 2,
-                    adapter_function_type: 3,
+                    core_function_id: 2,
+                    adapter_function_id: 3,
                 }],
             },
         ));
