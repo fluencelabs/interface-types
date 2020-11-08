@@ -214,7 +214,7 @@ impl<'input> ToString for &Type {
     fn to_string(&self) -> String {
         match self {
             Type::Function(function_type) => format!(
-                r#"(@interface type (func {args} {output_types}))"#,
+                r#"(@interface type (func {args} {output_types}\n))"#,
                 args = encode_function_arguments(&function_type.arguments),
                 output_types = output_types_to_result(&function_type.output_types),
             ),
@@ -282,93 +282,50 @@ impl<'input> ToString for &Implementation {
 /// Encode an `Interfaces` into a string.
 impl<'input> ToString for &Interfaces<'input> {
     fn to_string(&self) -> String {
-        let mut output = String::new();
+        fn format_numerated_types<T: ToString>(
+            types: impl Iterator<Item = T>,
+            start_id: usize,
+        ) -> String {
+            let formatted_types =
+                types
+                    .enumerate()
+                    .fold(String::new(), |mut accumulator, (id, ty)| {
+                        accumulator.push('\n');
+                        accumulator.push_str(&ty.to_string());
+                        accumulator.push_str(&format!("   ;; {}", start_id + id));
+                        accumulator
+                    });
 
-        let types =
-            self.types
-                .iter()
-                .enumerate()
-                .fold(String::new(), |mut accumulator, (id, ty)| {
-                    accumulator.push('\n');
-                    accumulator.push_str(&ty.to_string());
-                    accumulator.push_str(&format!("   ;; {}", id));
-                    accumulator
-                });
+            formatted_types
+        }
 
-        let exports = self
-            .exports
-            .iter()
-            .fold(String::new(), |mut accumulator, export| {
-                accumulator.push('\n');
-                accumulator.push_str(&export.to_string());
-                accumulator
-            });
+        fn print_types(types: String, header: impl AsRef<str>, output: &mut String) {
+            fn separator(output: &mut String) {
+                if !output.is_empty() {
+                    output.push_str("\n\n");
+                }
+            };
 
-        let imports = self
-            .imports
-            .iter()
-            .fold(String::new(), |mut accumulator, import| {
-                accumulator.push('\n');
-                accumulator.push_str(&import.to_string());
-                accumulator
-            });
-
-        let adapters = self
-            .adapters
-            .iter()
-            .fold(String::new(), |mut accumulator, adapter| {
-                accumulator.push('\n');
-                accumulator.push_str(&adapter.to_string());
-                accumulator
-            });
-
-        let implementations =
-            self.implementations
-                .iter()
-                .fold(String::new(), |mut accumulator, implementation| {
-                    accumulator.push('\n');
-                    accumulator.push_str(&implementation.to_string());
-                    accumulator
-                });
-
-        let separator = |output: &mut String| {
-            if !output.is_empty() {
-                output.push_str("\n\n");
+            if !types.is_empty() {
+                output.push_str(header.as_ref());
+                output.push_str(&types);
             }
-        };
 
-        if !types.is_empty() {
-            output.push_str(";; Types");
-            output.push_str(&types);
+            separator(output);
         }
 
-        separator(&mut output);
+        let types = format_numerated_types(self.types.iter(), 0);
+        let exports = format_numerated_types(self.exports.iter(), 0);
+        let imports = format_numerated_types(self.imports.iter(), self.exports.len());
+        let adapters = format_numerated_types(self.adapters.iter(), 0);
+        let implementations = format_numerated_types(self.implementations.iter(), 0);
 
-        if !exports.is_empty() {
-            output.push_str(";; Exports");
-            output.push_str(&exports);
-        }
-
-        separator(&mut output);
-
-        if !imports.is_empty() {
-            output.push_str(";; Imports");
-            output.push_str(&imports);
-        }
-
-        separator(&mut output);
-
-        if !adapters.is_empty() {
-            output.push_str(";; Adapters");
-            output.push_str(&adapters);
-        }
-
-        separator(&mut output);
-
-        if !implementations.is_empty() {
-            output.push_str(";; Implementations");
-            output.push_str(&implementations);
-        }
+        let mut output = String::new();
+        print_types(types, ";; Types", &mut output);
+        print_types(exports, ";; Exports", &mut output);
+        print_types(imports, ";; Imports", &mut output);
+        print_types(adapters, ";; Adapters", &mut output);
+        print_types(implementations, ";; Implementations", &mut output);
 
         output
     }
