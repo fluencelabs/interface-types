@@ -302,7 +302,7 @@ impl<'input> ToString for &Interfaces<'input> {
 
         fn print_types(types: String, header: impl AsRef<str>, output: &mut String) {
             fn separator(output: &mut String) {
-                if !output.is_empty() && !is_last {
+                if !output.is_empty() {
                     output.push_str("\n\n");
                 }
             };
