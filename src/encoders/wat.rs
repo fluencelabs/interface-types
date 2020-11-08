@@ -295,6 +295,15 @@ impl<'input> ToString for &Interfaces<'input> {
                     accumulator
                 });
 
+        let exports = self
+            .exports
+            .iter()
+            .fold(String::new(), |mut accumulator, export| {
+                accumulator.push('\n');
+                accumulator.push_str(&export.to_string());
+                accumulator
+            });
+
         let imports = self
             .imports
             .iter()
@@ -310,15 +319,6 @@ impl<'input> ToString for &Interfaces<'input> {
             .fold(String::new(), |mut accumulator, adapter| {
                 accumulator.push('\n');
                 accumulator.push_str(&adapter.to_string());
-                accumulator
-            });
-
-        let exports = self
-            .exports
-            .iter()
-            .fold(String::new(), |mut accumulator, export| {
-                accumulator.push('\n');
-                accumulator.push_str(&export.to_string());
                 accumulator
             });
 
@@ -344,6 +344,13 @@ impl<'input> ToString for &Interfaces<'input> {
 
         separator(&mut output);
 
+        if !exports.is_empty() {
+            output.push_str(";; Exports");
+            output.push_str(&exports);
+        }
+
+        separator(&mut output);
+
         if !imports.is_empty() {
             output.push_str(";; Imports");
             output.push_str(&imports);
@@ -354,13 +361,6 @@ impl<'input> ToString for &Interfaces<'input> {
         if !adapters.is_empty() {
             output.push_str(";; Adapters");
             output.push_str(&adapters);
-        }
-
-        separator(&mut output);
-
-        if !exports.is_empty() {
-            output.push_str(";; Exports");
-            output.push_str(&exports);
         }
 
         separator(&mut output);
