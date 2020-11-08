@@ -176,7 +176,7 @@ fn encode_function_arguments(arguments: &[FunctionArg]) -> String {
     }
 
     format!(
-        " (params{})",
+        "(params{})",
         arguments.iter().fold(
             String::new(),
             |mut accumulator, FunctionArg { name, ty }| {
@@ -198,12 +198,13 @@ fn output_types_to_result(output_types: &[InterfaceType]) -> String {
     }
 
     format!(
-        " (result{})",
+        "(result{})",
         output_types
             .iter()
             .fold(String::new(), |mut accumulator, interface_type| {
                 accumulator.push(' ');
                 accumulator.push_str(&interface_type.to_string());
+                accumulator.push(' ');
                 accumulator
             })
     )
@@ -214,7 +215,7 @@ impl<'input> ToString for &Type {
     fn to_string(&self) -> String {
         match self {
             Type::Function(function_type) => format!(
-                r#"(@type (func {args} {output_types} ))"#,
+                r#"(@type (func {args} {output_types}))"#,
                 args = encode_function_arguments(&function_type.arguments),
                 output_types = output_types_to_result(&function_type.output_types),
             ),
