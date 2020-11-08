@@ -203,7 +203,6 @@ fn output_types_to_result(output_types: &[InterfaceType]) -> String {
                 .fold(String::new(), |mut accumulator, interface_type| {
                     accumulator.push(' ');
                     accumulator.push_str(&interface_type.to_string());
-                    accumulator.push_str("\n");
                     accumulator
                 })
         )
@@ -215,9 +214,10 @@ impl<'input> ToString for &Type {
     fn to_string(&self) -> String {
         match self {
             Type::Function(function_type) => format!(
-                r#"(@type (func {args} {output_types}))"#,
+                r#"(@type (func {args} {output_types}{new_line}))"#,
                 args = encode_function_arguments(&function_type.arguments),
                 output_types = output_types_to_result(&function_type.output_types),
+                new_line = "\n",
             ),
 
             Type::Record(record_type) => format!(
@@ -244,7 +244,7 @@ impl<'input> ToString for &Import<'input> {
 impl ToString for &Adapter {
     fn to_string(&self) -> String {
         format!(
-            r#"(@func (type {function_type}){instructions})"#,
+            r#"(@func (type {function_type}){instructions}{new_line})"#,
             function_type = self.function_type,
             instructions =
                 self.instructions
@@ -254,6 +254,7 @@ impl ToString for &Adapter {
                         accumulator.push_str(&instruction.to_string());
                         accumulator
                     }),
+            new_line = "\n",
         )
     }
 }
@@ -293,7 +294,7 @@ impl<'input> ToString for &Interfaces<'input> {
                     .fold(String::new(), |mut accumulator, (id, ty)| {
                         accumulator.push('\n');
                         accumulator.push_str(&ty.to_string());
-                        accumulator.push_str(&format!("   ;; {}", start_id + id));
+                        accumulator.push_str(&format!("  ;; {}", start_id + id));
                         accumulator
                     });
 
