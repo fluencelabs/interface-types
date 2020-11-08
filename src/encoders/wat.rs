@@ -203,6 +203,7 @@ fn output_types_to_result(output_types: &[InterfaceType]) -> String {
                 .fold(String::new(), |mut accumulator, interface_type| {
                     accumulator.push(' ');
                     accumulator.push_str(&interface_type.to_string());
+                    accumulator.push_str("\n");
                     accumulator
                 })
         )
@@ -214,14 +215,13 @@ impl<'input> ToString for &Type {
     fn to_string(&self) -> String {
         match self {
             Type::Function(function_type) => format!(
-                r#"(@interface type (func {args} {output_types}
-                ))"#,
+                r#"(@type (func {args} {output_types}))"#,
                 args = encode_function_arguments(&function_type.arguments),
                 output_types = output_types_to_result(&function_type.output_types),
             ),
 
             Type::Record(record_type) => format!(
-                r#"(@interface type ({record_type}))"#,
+                r#"(@type ({record_type}))"#,
                 record_type = record_type.as_ref().to_string(),
             ),
         }
@@ -232,7 +232,7 @@ impl<'input> ToString for &Type {
 impl<'input> ToString for &Import<'input> {
     fn to_string(&self) -> String {
         format!(
-            r#"(@interface import "{namespace}" "{name}" (func (type {type})))"#,
+            r#"(@import "{namespace}" "{name}" (func (type {type})))"#,
             namespace = self.namespace,
             name = self.name,
             type = self.function_type,
@@ -244,7 +244,7 @@ impl<'input> ToString for &Import<'input> {
 impl ToString for &Adapter {
     fn to_string(&self) -> String {
         format!(
-            r#"(@interface func (type {function_type}){instructions})"#,
+            r#"(@func (type {function_type}){instructions})"#,
             function_type = self.function_type,
             instructions =
                 self.instructions
@@ -262,7 +262,7 @@ impl ToString for &Adapter {
 impl<'input> ToString for &Export<'input> {
     fn to_string(&self) -> String {
         format!(
-            r#"(@interface export "{name}" (func {type}))"#,
+            r#"(@export "{name}" (func {type}))"#,
             name = self.name,
             type = self.function_type,
         )
@@ -273,7 +273,7 @@ impl<'input> ToString for &Export<'input> {
 impl<'input> ToString for &Implementation {
     fn to_string(&self) -> String {
         format!(
-            r#"(@interface implement (func {core_function_type}) (func {adapter_function_type}))"#,
+            r#"(@implement (func {core_function_type}) (func {adapter_function_type}))"#,
             core_function_type = self.core_function_id,
             adapter_function_type = self.adapter_function_id,
         )
@@ -302,17 +302,17 @@ impl<'input> ToString for &Interfaces<'input> {
 
         fn print_types(types: String, header: impl AsRef<str>, output: &mut String) {
             fn separator(output: &mut String) {
-                if !output.is_empty() {
+                if !output.is_empty() && !is_last {
                     output.push_str("\n\n");
                 }
             };
+
+            separator(output);
 
             if !types.is_empty() {
                 output.push_str(header.as_ref());
                 output.push_str(&types);
             }
-
-            separator(output);
         }
 
         let types = format_numerated_types(self.types.iter(), 0);
