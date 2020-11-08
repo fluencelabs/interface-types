@@ -214,7 +214,8 @@ impl<'input> ToString for &Type {
     fn to_string(&self) -> String {
         match self {
             Type::Function(function_type) => format!(
-                r#"(@interface type (func {args} {output_types}\n))"#,
+                r#"(@interface type (func {args} {output_types}
+                ))"#,
                 args = encode_function_arguments(&function_type.arguments),
                 output_types = output_types_to_result(&function_type.output_types),
             ),
