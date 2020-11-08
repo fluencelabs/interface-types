@@ -172,41 +172,41 @@ impl ToString for &Instruction {
 fn encode_function_arguments(arguments: &[FunctionArg]) -> String {
     // here we know that arg_names and arg_types have the same length
     if arguments.is_empty() {
-        String::from("")
-    } else {
-        format!(
-            "\n  (param{})",
-            arguments.iter().fold(
-                String::new(),
-                |mut accumulator, FunctionArg { name, ty }| {
-                    accumulator.push_str(" $");
-                    accumulator.push_str(name);
-                    accumulator.push_str(": ");
-                    accumulator.push_str(&ty.to_string());
-                    accumulator
-                }
-            )
-        )
+        return String::new();
     }
+
+    format!(
+        " (params{})",
+        arguments.iter().fold(
+            String::new(),
+            |mut accumulator, FunctionArg { name, ty }| {
+                accumulator.push_str(" $");
+                accumulator.push_str(name);
+                accumulator.push_str(": ");
+                accumulator.push_str(&ty.to_string());
+                accumulator
+            }
+        )
+    )
 }
 
 /// Encode a list of `InterfaceType` representing outputs into a
 /// string.
 fn output_types_to_result(output_types: &[InterfaceType]) -> String {
     if output_types.is_empty() {
-        "".into()
-    } else {
-        format!(
-            "\n  (result{})",
-            output_types
-                .iter()
-                .fold(String::new(), |mut accumulator, interface_type| {
-                    accumulator.push(' ');
-                    accumulator.push_str(&interface_type.to_string());
-                    accumulator
-                })
-        )
+        return String::new();
     }
+
+    format!(
+        " (result{})",
+        output_types
+            .iter()
+            .fold(String::new(), |mut accumulator, interface_type| {
+                accumulator.push(' ');
+                accumulator.push_str(&interface_type.to_string());
+                accumulator
+            })
+    )
 }
 
 /// Encode a `Type` into a string.
@@ -214,10 +214,9 @@ impl<'input> ToString for &Type {
     fn to_string(&self) -> String {
         match self {
             Type::Function(function_type) => format!(
-                r#"(@type (func {args} {output_types}{new_line}))"#,
+                r#"(@type (func {args} {output_types} ))"#,
                 args = encode_function_arguments(&function_type.arguments),
                 output_types = output_types_to_result(&function_type.output_types),
-                new_line = "\n",
             ),
 
             Type::Record(record_type) => format!(
