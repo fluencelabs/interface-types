@@ -181,8 +181,6 @@ where
         }
     };
 
-    deallocate(instance, instruction, offset as _, size as _)?;
-
     Ok(result_array)
 }
 
