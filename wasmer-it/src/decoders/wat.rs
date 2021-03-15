@@ -391,7 +391,6 @@ impl Parse<'_> for Version {
     }
 }
 
-
 #[derive(PartialEq, Debug)]
 enum Interface<'a> {
     Version(Version),
@@ -588,7 +587,7 @@ impl<'a> Parse<'a> for Interfaces<'a> {
         }
 
         let version = version.ok_or_else(|| {
-            wast::Error::new(parser.cur_span(), String::from("version must be specified"))
+            wast::Error::new(parser.cur_span(), String::from("version must be specified, probably this module was built with old version of fce, please rebuild it"))
         })?;
 
         let interfaces = Interfaces {
