@@ -296,7 +296,7 @@ impl<'input> ToString for &Interfaces<'input> {
             }
         };
 
-        output.push_str("Version: ");
+        output.push_str("(@interface version ");
         output.push_str(&self.version.to_string());
         separator(&mut output);
 

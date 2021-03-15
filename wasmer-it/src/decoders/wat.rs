@@ -380,8 +380,21 @@ impl Parse<'_> for FunctionType {
 }
 
 #[derive(PartialEq, Debug)]
+struct Version(pub String);
+
+impl Parse<'_> for Version {
+    fn parse(parser: Parser<'_>) -> Result<Self> {
+        parser.parse::<keyword::version>()?;
+        let version = parser.parse()?;
+
+        Ok(Version(version))
+    }
+}
+
+
+#[derive(PartialEq, Debug)]
 enum Interface<'a> {
-    Version(String),
+    Version(Version),
     Type(Type),
     Import(Import<'a>),
     Adapter(Adapter),
@@ -592,7 +605,7 @@ impl<'a> Parse<'a> for Interfaces<'a> {
 }
 
 fn try_handle_version(
-    version_str: &str,
+    sdk_version: &Version,
     version: &mut Option<semver::Version>,
     parser: &Parser<'_>,
 ) -> Result<()> {
@@ -605,7 +618,7 @@ fn try_handle_version(
         ));
     }
 
-    let parsed_version = semver::Version::from_str(version_str)
+    let parsed_version = semver::Version::from_str(&sdk_version.0)
         .map_err(|e| wast::Error::new(parser.cur_span(), format!("version is corrupted: {}", e)))?;
     *version = Some(parsed_version);
 
