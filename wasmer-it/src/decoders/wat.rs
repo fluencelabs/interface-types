@@ -384,7 +384,7 @@ struct Version(pub String);
 
 impl Parse<'_> for Version {
     fn parse(parser: Parser<'_>) -> Result<Self> {
-        parser.parse::<keyword::version>()?;
+        parser.parse::<keyword::it_version>()?;
         let version = parser.parse()?;
 
         Ok(Version(version))
@@ -411,7 +411,7 @@ impl<'a> Parse<'a> for Interface<'a> {
 
                 let mut lookahead = parser.lookahead1();
 
-                if lookahead.peek::<keyword::version>() {
+                if lookahead.peek::<keyword::it_version>() {
                     Ok(Interface::Version(parser.parse()?))
                 } else if lookahead.peek::<keyword::r#type>() {
                     Ok(Interface::Type(parser.parse()?))
