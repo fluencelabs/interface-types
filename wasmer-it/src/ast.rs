@@ -139,3 +139,16 @@ pub struct Interfaces<'input> {
     /// All the implementations.
     pub implementations: Vec<Implementation>,
 }
+
+impl Interfaces {
+    pub fn from_version(version: semver::Version) -> Self {
+        Self {
+            version,
+            types: Vec::new(),
+            imports: Vec::new(),
+            adapters: Vec::new(),
+            exports: Vec::new(),
+            implementations: Vec::new(),
+        }
+    }
+}
