@@ -141,6 +141,22 @@ pub struct Interfaces<'input> {
 }
 
 impl Interfaces<'_> {
+    pub fn new() -> Self {
+        use std::str::FromStr;
+
+        // it's safe because otherwise it won't compile
+        let version = semver::Version::from_str(env!("CARGO_PKG_VERSION")).unwrap();
+
+        Self {
+            version,
+            types: Vec::new(),
+            imports: Vec::new(),
+            adapters: Vec::new(),
+            exports: Vec::new(),
+            implementations: Vec::new(),
+        }
+    }
+
     pub fn from_version(version: semver::Version) -> Self {
         Self {
             version,
