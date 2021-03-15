@@ -18,7 +18,7 @@ mod keyword {
     custom_keyword!(r#type = "type");
     custom_keyword!(record);
     custom_keyword!(field);
-    custom_keyword!(version);
+    custom_keyword!(it_version);
 
     // Special symbols
     custom_keyword!(comma = ",");
