@@ -140,7 +140,7 @@ pub struct Interfaces<'input> {
     pub implementations: Vec<Implementation>,
 }
 
-impl Interfaces {
+impl Interfaces<'_> {
     pub fn from_version(version: semver::Version) -> Self {
         Self {
             version,
