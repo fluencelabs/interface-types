@@ -141,6 +141,7 @@ pub struct Interfaces<'input> {
 }
 
 impl Interfaces<'_> {
+    /// Creates a new Interfaces where version comes from this package version.
     pub fn new() -> Self {
         use std::str::FromStr;
 
@@ -157,6 +158,7 @@ impl Interfaces<'_> {
         }
     }
 
+    /// Creates a new Interfaces from the provided version.
     pub fn from_version(version: semver::Version) -> Self {
         Self {
             version,
