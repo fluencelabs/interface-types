@@ -168,3 +168,9 @@ impl Interfaces<'_> {
         }
     }
 }
+
+impl Default for Interfaces<'_> {
+    fn default() -> Self {
+        Self::new()
+    }
+}
