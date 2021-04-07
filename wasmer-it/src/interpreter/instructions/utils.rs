@@ -1,5 +1,4 @@
 use crate::interpreter::instructions::ALLOCATE_FUNC_INDEX;
-use crate::interpreter::instructions::DEALLOCATE_FUNC_INDEX;
 use crate::interpreter::wasm;
 use crate::interpreter::wasm::structures::{FunctionIndex, TypedIndex};
 
@@ -128,29 +127,6 @@ where
         ));
     }
     to_native::<i32>(&values[0], instruction).map(|v| v as usize)
-}
-
-pub(super) fn deallocate<'instance, Instance, Export, LocalImport, Memory, MemoryView>(
-    instance: &'instance Instance,
-    instruction: Instruction,
-    mem_ptr: i32,
-    size: i32,
-) -> Result<(), InstructionError>
-where
-    Export: wasm::structures::Export + 'instance,
-    LocalImport: wasm::structures::LocalImport + 'instance,
-    Memory: wasm::structures::Memory<MemoryView> + 'instance,
-    MemoryView: wasm::structures::MemoryView,
-    Instance: wasm::structures::Instance<Export, LocalImport, Memory, MemoryView>,
-{
-    let _ = call_core(
-        instance,
-        DEALLOCATE_FUNC_INDEX,
-        instruction,
-        vec![IValue::I32(mem_ptr), IValue::I32(size)],
-    )?;
-
-    Ok(())
 }
 
 fn call_core<'instance, Instance, Export, LocalImport, Memory, MemoryView>(

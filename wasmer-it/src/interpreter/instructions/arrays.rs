@@ -1,4 +1,3 @@
-use super::deallocate;
 use super::read_from_instance_mem;
 use super::write_to_instance_mem;
 
@@ -180,8 +179,6 @@ where
             result
         }
     };
-
-    deallocate(instance, instruction, offset as _, size as _)?;
 
     Ok(result_array)
 }

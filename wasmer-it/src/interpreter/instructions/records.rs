@@ -12,18 +12,6 @@ use crate::{
 };
 
 use std::convert::TryInto;
-/*
-
-struct Record1 {
-field1: String,
-field2: i32,
-}
-
-// export
-fn foo(t: Record1) {
-
-// import
- */
 
 /*
 /// Build an `IValue::Record` based on values on the stack.
@@ -248,8 +236,6 @@ where
         }
         field_id += 1;
     }
-
-    super::deallocate(instance, instruction, offset as _, size as _)?;
 
     Ok(IValue::Record(
         NEVec::new(values.into_iter().collect())
