@@ -1,4 +1,3 @@
-use super::deallocate;
 use super::read_from_instance_mem;
 use super::write_to_instance_mem;
 

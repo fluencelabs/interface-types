@@ -32,7 +32,6 @@ use serde::Serialize;
 use std::convert::TryFrom;
 
 pub(self) const ALLOCATE_FUNC_INDEX: u32 = 0;
-pub(self) const DEALLOCATE_FUNC_INDEX: u32 = 1;
 
 /// Represents all the possible WIT instructions.
 #[derive(PartialEq, Eq, Debug, Clone, Hash, Serialize, Deserialize)]

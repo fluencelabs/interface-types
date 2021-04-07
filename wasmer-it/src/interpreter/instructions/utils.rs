@@ -1,5 +1,4 @@
 use crate::interpreter::instructions::ALLOCATE_FUNC_INDEX;
-use crate::interpreter::instructions::DEALLOCATE_FUNC_INDEX;
 use crate::interpreter::wasm;
 use crate::interpreter::wasm::structures::{FunctionIndex, TypedIndex};
 
