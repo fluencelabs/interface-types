@@ -98,6 +98,9 @@ pub struct Implementation {
 /// Represents the kind of interface.
 #[derive(PartialEq, Eq, Debug, Clone, Hash, Serialize, Deserialize)]
 pub enum InterfaceKind {
+    /// A version.
+    Version,
+
     /// A type.
     Type,
 
@@ -116,8 +119,11 @@ pub enum InterfaceKind {
 
 /// Represents a set of interfaces, i.e. it entirely describes a WIT
 /// definition.
-#[derive(PartialEq, Eq, Debug, Default, Clone, Hash)]
+#[derive(PartialEq, Eq, Debug, Clone, Hash)]
 pub struct Interfaces<'input> {
+    /// Version of IT.
+    pub version: semver::Version,
+
     /// All the types.
     pub types: Vec<Type>,
 
@@ -132,4 +138,41 @@ pub struct Interfaces<'input> {
 
     /// All the implementations.
     pub implementations: Vec<Implementation>,
+}
+
+impl Interfaces<'_> {
+    /// Creates a new Interfaces where version comes from this package version.
+    pub fn new() -> Self {
+        use std::str::FromStr;
+
+        // it's safe because otherwise it won't compile
+        let version = semver::Version::from_str(env!("CARGO_PKG_VERSION")).unwrap();
+
+        Self {
+            version,
+            types: Vec::new(),
+            imports: Vec::new(),
+            adapters: Vec::new(),
+            exports: Vec::new(),
+            implementations: Vec::new(),
+        }
+    }
+
+    /// Creates a new Interfaces from the provided version.
+    pub fn from_version(version: semver::Version) -> Self {
+        Self {
+            version,
+            types: Vec::new(),
+            imports: Vec::new(),
+            adapters: Vec::new(),
+            exports: Vec::new(),
+            implementations: Vec::new(),
+        }
+    }
+}
+
+impl Default for Interfaces<'_> {
+    fn default() -> Self {
+        Self::new()
+    }
 }
