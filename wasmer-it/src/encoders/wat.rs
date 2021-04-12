@@ -296,7 +296,7 @@ impl<'input> ToString for &Interfaces<'input> {
             }
         };
 
-        output.push_str(&format!(r#"(@interface it_version "{}""#, self.version));
+        output.push_str(&format!(r#"(@interface it_version "{}")"#, self.version));
         separator(&mut output);
 
         if !types.is_empty() {
