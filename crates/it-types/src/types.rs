@@ -8,6 +8,9 @@ use serde::Serialize;
 /// Represents the types supported by WIT.
 #[derive(PartialEq, Eq, Debug, Clone, Hash, Serialize, Deserialize)]
 pub enum IType {
+    /// Boolean.
+    Boolean,
+
     /// A 8-bits signed integer.
     S8,
 
@@ -41,11 +44,11 @@ pub enum IType {
     /// A string.
     String,
 
+    /// Specialization of arrays for byte vector.
+    ByteArray,
+
     /// An array of values of the same type.
     Array(Box<IType>),
-
-    /// An `any` reference.
-    Anyref,
 
     /// A 32-bits integer (as defined in WebAssembly core).
     I32,
@@ -98,6 +101,7 @@ impl Default for RecordType {
 impl ToString for &IType {
     fn to_string(&self) -> String {
         match &self {
+            IType::Boolean => "boolean".to_string(),
             IType::S8 => "s8".to_string(),
             IType::S16 => "s16".to_string(),
             IType::S32 => "s32".to_string(),
@@ -109,8 +113,8 @@ impl ToString for &IType {
             IType::F32 => "f32".to_string(),
             IType::F64 => "f64".to_string(),
             IType::String => "string".to_string(),
+            IType::ByteArray => "array (u8)".to_string(),
             IType::Array(ty) => format!("array ({})", ty.as_ref().to_string()),
-            IType::Anyref => "anyref".to_string(),
             IType::I32 => "i32".to_string(),
             IType::I64 => "i64".to_string(),
             IType::Record(record_type_id) => format!("record {}", record_type_id),

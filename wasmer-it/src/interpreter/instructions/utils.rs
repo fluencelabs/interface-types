@@ -2,6 +2,7 @@ use crate::interpreter::instructions::ALLOCATE_FUNC_INDEX;
 use crate::interpreter::wasm;
 use crate::interpreter::wasm::structures::{FunctionIndex, TypedIndex};
 
+use crate::instr_error;
 use crate::interpreter::instructions::to_native;
 use crate::IType;
 use crate::IValue;
@@ -38,13 +39,13 @@ where
 
     let right = offset + size;
     if right < offset || right >= memory_view.len() {
-        return Err(InstructionError::new(
+        return instr_error!(
             instruction,
             InstructionErrorKind::MemoryOutOfBoundsAccess {
                 index: right,
                 length: memory_view.len(),
-            },
-        ));
+            }
+        );
     }
 
     Ok((&memory_view[offset..offset + size])
@@ -82,13 +83,13 @@ where
 
     let right = offset + bytes.len();
     if right < offset || right >= memory_view.len() {
-        return Err(InstructionError::new(
+        return instr_error!(
             instruction,
             InstructionErrorKind::MemoryOutOfBoundsAccess {
                 index: right,
                 length: memory_view.len(),
-            },
-        ));
+            }
+        );
     }
 
     for (byte_id, byte) in bytes.iter().enumerate() {
@@ -117,14 +118,14 @@ where
         vec![IValue::I32(size as _)],
     )?;
     if values.len() != 1 {
-        return Err(InstructionError::new(
+        return instr_error!(
             instruction,
             InstructionErrorKind::LocalOrImportSignatureMismatch {
                 function_index: ALLOCATE_FUNC_INDEX,
                 expected: (vec![IType::I32], vec![]),
                 received: (vec![], vec![]),
-            },
-        ));
+            }
+        );
     }
     to_native::<i32>(&values[0], instruction).map(|v| v as usize)
 }

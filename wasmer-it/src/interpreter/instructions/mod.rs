@@ -11,10 +11,12 @@ mod utils;
 use crate::errors::{
     InstructionError, InstructionErrorKind, InstructionResult, WasmValueNativeCastError,
 };
+use crate::instr_error;
 use crate::interpreter::wasm;
 use crate::IType;
 use crate::IValue;
 use crate::NEVec;
+
 pub(crate) use argument_get::argument_get;
 pub(crate) use arrays::*;
 pub(crate) use call_core::call_core;
@@ -292,13 +294,13 @@ where
 
             Ok(())
         }
-        _ => Err(InstructionError::new(
+        _ => instr_error!(
             instruction,
             InstructionErrorKind::InvalidValueOnTheStack {
                 expected_type: interface_type.clone(),
                 received_value: interface_value.clone(),
-            },
-        )),
+            }
+        ),
     }
 }
 
@@ -330,14 +332,14 @@ where
     })?;
 
     if record_fields.len() != record_type.fields.len() {
-        return Err(InstructionError::new(
+        return instr_error!(
             instruction.clone(),
             InstructionErrorKind::InvalidValueOnTheStack {
                 expected_type: IType::Record(record_type_id),
                 // unwrap is safe here - len's been already checked
                 received_value: IValue::Record(NEVec::new(record_fields.to_vec()).unwrap()),
-            },
-        ));
+            }
+        );
     }
 
     for (record_type_field, record_value_field) in

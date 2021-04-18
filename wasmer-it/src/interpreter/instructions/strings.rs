@@ -1,10 +1,12 @@
 use super::to_native;
+use crate::instr_error;
 use crate::IType;
 use crate::IValue;
 use crate::{
     errors::{InstructionError, InstructionErrorKind},
     interpreter::Instruction,
 };
+
 use std::{cell::Cell, convert::TryInto};
 
 executable_instruction!(
@@ -45,13 +47,13 @@ executable_instruction!(
             }
 
             if memory_view.len() < pointer + length {
-                return Err(InstructionError::new(
+                return instr_error!(
                     instruction.clone(),
                     InstructionErrorKind::MemoryOutOfBoundsAccess {
                         index: pointer + length,
                         length: memory_view.len(),
-                    },
-                ));
+                    }
+                );
             }
 
             let data: Vec<u8> = (&memory_view[pointer..pointer + length])
@@ -131,18 +133,18 @@ executable_instruction!(
                     Ok(())
                 },
 
-                Some(value) => Err(InstructionError::new(
+                Some(value) => instr_error!(
                     instruction.clone(),
                     InstructionErrorKind::InvalidValueOnTheStack {
                         expected_type: IType::String,
                         received_value: (&value).clone(),
-                    },
-                )),
+                    }
+                ),
 
-                None => Err(InstructionError::new(
+                None => instr_error!(
                     instruction.clone(),
-                    InstructionErrorKind::StackIsTooSmall { needed: 1 },
-                )),
+                    InstructionErrorKind::StackIsTooSmall { needed: 1 }
+                ),
             }
         }
     }

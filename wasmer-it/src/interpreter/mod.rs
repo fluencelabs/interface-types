@@ -242,15 +242,6 @@ where
                     let value_type = value_type.clone();
                     instructions::array_lower_memory(instruction, value_type)
                 }
-
-                /*
-                Instruction::RecordLift { type_index } => {
-                    instructions::record_lift(*type_index, instruction)
-                }
-                Instruction::RecordLower { type_index } => {
-                    instructions::record_lower(*type_index, instruction)
-                }
-                */
                 Instruction::RecordLiftMemory { record_type_id } => {
                     instructions::record_lift_memory(record_type_id as _, instruction)
                 }

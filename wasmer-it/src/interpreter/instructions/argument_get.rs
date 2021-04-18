@@ -1,7 +1,5 @@
-use crate::{
-    errors::{InstructionError, InstructionErrorKind},
-    interpreter::Instruction,
-};
+use crate::instr_error;
+use crate::{errors::InstructionErrorKind, interpreter::Instruction};
 
 executable_instruction!(
     argument_get(index: u32, instruction: Instruction) -> _ {
@@ -9,10 +7,10 @@ executable_instruction!(
             let invocation_inputs = runtime.invocation_inputs;
 
             if (index as usize) >= invocation_inputs.len() {
-                return Err(InstructionError::new(
+                return instr_error!(
                     instruction.clone(),
-                    InstructionErrorKind::InvocationInputIsMissing { index },
-                ));
+                    InstructionErrorKind::InvocationInputIsMissing { index }
+                );
             }
 
             log::debug!("arg.get: pushing {:?} on the stack", invocation_inputs[index as usize]);

@@ -1,9 +1,11 @@
+use crate::instr_error;
 use crate::IType;
 use crate::IValue;
 use crate::{
     errors::{InstructionError, InstructionErrorKind},
     interpreter::Instruction,
 };
+
 use std::convert::TryInto;
 
 macro_rules! lowering_lifting {
@@ -34,20 +36,20 @@ macro_rules! lowering_lifting {
                                 })
                         }
                         Some(wrong_value) => {
-                            return Err(InstructionError::new(
+                            return instr_error!(
                                 instruction.clone(),
                                 InstructionErrorKind::InvalidValueOnTheStack {
                                     expected_type: IType::$from_variant,
                                     received_value: wrong_value,
                                 }
-                            ))
+                            )
                         },
 
                         None => {
-                            return Err(InstructionError::new(
+                            return instr_error!(
                                 instruction.clone(),
-                                InstructionErrorKind::StackIsTooSmall { needed: 1 },
-                            ))
+                                InstructionErrorKind::StackIsTooSmall { needed: 1 }
+                            )
                         }
                     }
 

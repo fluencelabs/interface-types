@@ -41,6 +41,16 @@ impl InstructionError {
 
 impl Error for InstructionError {}
 
+#[macro_export]
+macro_rules! instr_error {
+    ($instruction:expr, $error_kind:expr) => {
+        Err(crate::errors::InstructionError::new(
+            $instruction,
+            $error_kind,
+        ))
+    };
+}
+
 impl Display for InstructionError {
     fn fmt(&self, formatter: &mut Formatter) -> fmt::Result {
         write!(

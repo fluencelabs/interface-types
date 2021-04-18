@@ -1,6 +1,7 @@
 use super::read_from_instance_mem;
 use super::write_to_instance_mem;
 
+use crate::instr_error;
 use crate::interpreter::instructions::{is_record_fields_compatible_to_type, to_native};
 use crate::IRecordType;
 use crate::IType;
@@ -175,7 +176,6 @@ where
                 values.push(IValue::F32(value as _));
             }
             IType::F64 => values.push(IValue::F64(f64::from_bits(value))),
-            IType::Anyref => {}
             IType::String => {
                 let string_offset = value;
                 field_id += 1;
@@ -209,7 +209,7 @@ where
                         array_size as _,
                         instruction.clone(),
                     )?;
-                    values.push(IValue::Array(array));
+                    values.push(array);
                 } else {
                     values.push(IValue::Array(vec![]));
                 }
@@ -399,17 +399,17 @@ where
 
                     Ok(())
                 }
-                Some(value) => Err(InstructionError::new(
+                Some(value) => instr_error!(
                     instruction.clone(),
                     InstructionErrorKind::InvalidValueOnTheStack {
                         expected_type: IType::Record(record_type_id),
                         received_value: value,
-                    },
-                )),
-                None => Err(InstructionError::new(
+                    }
+                ),
+                None => instr_error!(
                     instruction.clone(),
-                    InstructionErrorKind::StackIsTooSmall { needed: 1 },
-                )),
+                    InstructionErrorKind::StackIsTooSmall { needed: 1 }
+                ),
             }
         }
     })

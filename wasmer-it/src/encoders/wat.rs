@@ -354,7 +354,6 @@ mod tests {
             (&IType::F32).to_string(),
             (&IType::F64).to_string(),
             (&IType::String).to_string(),
-            (&IType::Anyref).to_string(),
             (&IType::I32).to_string(),
             (&IType::I64).to_string(),
             (&IType::Record(RecordType {

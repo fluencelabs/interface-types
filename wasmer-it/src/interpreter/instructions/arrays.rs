@@ -1,6 +1,11 @@
-use super::read_from_instance_mem;
-use super::write_to_instance_mem;
+mod read_arrays;
 
+use super::read_from_instance_mem;
+use super::record_lift_memory_;
+use super::write_to_instance_mem;
+use read_arrays::*;
+
+use crate::instr_error;
 use crate::interpreter::instructions::to_native;
 use crate::{
     errors::{InstructionError, InstructionErrorKind},
@@ -14,9 +19,9 @@ pub(super) fn array_lift_memory_<'instance, Instance, Export, LocalImport, Memor
     instance: &'instance Instance,
     value_type: &IType,
     offset: usize,
-    size: usize,
+    elements_count: usize,
     instruction: Instruction,
-) -> Result<Vec<IValue>, InstructionError>
+) -> Result<IValue, InstructionError>
 where
     Export: crate::interpreter::wasm::structures::Export,
     LocalImport: crate::interpreter::wasm::structures::LocalImport,
@@ -25,162 +30,43 @@ where
     Instance: crate::interpreter::wasm::structures::Instance<Export, LocalImport, Memory, MemoryView>
         + 'instance,
 {
-    use safe_transmute::guard::AllOrNothingGuard;
-    use safe_transmute::transmute_many;
-    use safe_transmute::transmute_vec;
-
-    if size == 0 {
-        return Ok(vec![]);
+    if elements_count == 0 {
+        return Ok(IValue::Array(vec![]));
     }
 
-    let data = read_from_instance_mem(instance, instruction.clone(), offset, size)?;
-
-    let result_array = match value_type {
-        IType::S8 => {
-            let data = transmute_vec::<u8, i8>(data).unwrap();
-            data.into_iter().map(IValue::S8).collect::<Vec<_>>()
-        }
-        IType::S16 => {
-            let data = transmute_many::<i16, AllOrNothingGuard>(&data).unwrap();
-
-            data.iter().map(|v| IValue::S16(*v)).collect::<Vec<_>>()
-        }
-        IType::S32 => {
-            let data = transmute_many::<i32, AllOrNothingGuard>(&data).unwrap();
-            data.iter().map(|v| IValue::S32(*v)).collect::<Vec<_>>()
-        }
-        IType::S64 => {
-            let data = transmute_many::<i64, AllOrNothingGuard>(&data).unwrap();
-            data.iter().map(|v| IValue::S64(*v)).collect::<Vec<_>>()
-        }
-        IType::I32 => {
-            let data = transmute_many::<i32, AllOrNothingGuard>(&data).unwrap();
-            data.iter().map(|v| IValue::I32(*v)).collect::<Vec<_>>()
-        }
-        IType::I64 => {
-            let data = transmute_many::<i64, AllOrNothingGuard>(&data).unwrap();
-            data.iter().map(|v| IValue::S64(*v)).collect::<Vec<_>>()
-        }
-        IType::U8 => data.into_iter().map(IValue::U8).collect::<Vec<_>>(),
-        IType::U16 => {
-            let data = transmute_many::<u16, AllOrNothingGuard>(&data).unwrap();
-            data.iter().map(|v| IValue::U16(*v)).collect::<Vec<_>>()
-        }
-        IType::U32 => {
-            let data = transmute_many::<u32, AllOrNothingGuard>(&data).unwrap();
-            data.iter().map(|v| IValue::U32(*v)).collect::<Vec<_>>()
-        }
-        IType::U64 => {
-            let data = transmute_many::<u64, AllOrNothingGuard>(&data).unwrap();
-            data.iter().map(|v| IValue::U64(*v)).collect::<Vec<_>>()
-        }
-        IType::F32 => {
-            let data = transmute_many::<u32, AllOrNothingGuard>(&data).unwrap();
-            data.iter()
-                .map(|v| IValue::F32(f32::from_bits(*v)))
-                .collect::<Vec<_>>()
-        }
-        IType::F64 => {
-            let data = transmute_many::<u64, AllOrNothingGuard>(&data).unwrap();
-            data.iter()
-                .map(|v| IValue::F64(f64::from_bits(*v)))
-                .collect::<Vec<_>>()
-        }
-        IType::Anyref => unimplemented!(),
-        IType::String => {
-            let data = transmute_many::<u32, AllOrNothingGuard>(&data).unwrap();
-
-            if data.is_empty() {
-                return Ok(vec![]);
-            }
-
-            let mut result = Vec::with_capacity(data.len() / 2);
-            let mut data = data.iter();
-
-            while let Some(string_offset) = data.next() {
-                let string_size = data.next().ok_or_else(|| {
-                    InstructionError::new(
-                        instruction.clone(),
-                        InstructionErrorKind::CorruptedArray(String::from(
-                            "serialized array must contain even count of elements",
-                        )),
-                    )
-                })?;
-
-                let string_mem = read_from_instance_mem(
-                    instance,
-                    instruction.clone(),
-                    *string_offset as _,
-                    *string_size as _,
-                )?;
-
-                // TODO: check
-                let string = String::from_utf8(string_mem).unwrap();
-                result.push(IValue::String(string));
-            }
-
-            result
-        }
+    match value_type {
+        IType::Boolean => read_bool_array(instance, instruction.clone(), offset, elements_count),
+        IType::S8 => read_s8_array(instance, instruction.clone(), offset, elements_count),
+        IType::S16 => read_s16_array(instance, instruction.clone(), offset, elements_count),
+        IType::S32 => read_s32_array(instance, instruction.clone(), offset, elements_count),
+        IType::S64 => read_s64_array(instance, instruction.clone(), offset, elements_count),
+        IType::I32 => read_i32_array(instance, instruction.clone(), offset, elements_count),
+        IType::I64 => read_i64_array(instance, instruction.clone(), offset, elements_count),
+        IType::U8 => read_u8_array(instance, instruction.clone(), offset, elements_count),
+        IType::U16 => read_u16_array(instance, instruction.clone(), offset, elements_count),
+        IType::U32 => read_u32_array(instance, instruction.clone(), offset, elements_count),
+        IType::U64 => read_u64_array(instance, instruction.clone(), offset, elements_count),
+        IType::F32 => read_f32_array(instance, instruction.clone(), offset, elements_count),
+        IType::F64 => read_f64_array(instance, instruction.clone(), offset, elements_count),
+        IType::String => read_string_array(instance, instruction.clone(), offset, elements_count),
+        IType::Record(record_type_id) => read_record_array(
+            instance,
+            instruction.clone(),
+            *record_type_id,
+            offset,
+            elements_count,
+        ),
+        IType::ByteArray => read_array_array(
+            instance,
+            instruction.clone(),
+            &IType::ByteArray,
+            offset,
+            elements_count,
+        ),
         IType::Array(ty) => {
-            let data = transmute_many::<u32, AllOrNothingGuard>(&data).unwrap();
-
-            if data.is_empty() {
-                return Ok(vec![]);
-            }
-
-            let mut result = Vec::with_capacity(data.len() / 2);
-            let mut data = data.iter();
-
-            while let Some(array_offset) = data.next() {
-                let array_size = data.next().ok_or_else(|| {
-                    InstructionError::new(
-                        instruction.clone(),
-                        InstructionErrorKind::CorruptedArray(String::from(
-                            "serialized array must contain even count of elements",
-                        )),
-                    )
-                })?;
-
-                let value = array_lift_memory_(
-                    instance,
-                    &*ty,
-                    *array_offset as _,
-                    *array_size as _,
-                    instruction.clone(),
-                )?;
-
-                result.push(IValue::Array(value));
-            }
-
-            result
+            read_array_array(instance, instruction.clone(), &ty, offset, elements_count)
         }
-        IType::Record(record_type_id) => {
-            let record_type = instance.wit_record_by_id(*record_type_id).ok_or_else(|| {
-                InstructionError::new(
-                    instruction.clone(),
-                    InstructionErrorKind::RecordTypeByNameIsMissing {
-                        record_type_id: *record_type_id,
-                    },
-                )
-            })?;
-
-            let data = transmute_many::<u32, AllOrNothingGuard>(&data).unwrap();
-
-            let mut result = Vec::with_capacity(data.len());
-
-            for record_offset in data {
-                result.push(super::record_lift_memory_(
-                    instance,
-                    record_type,
-                    *record_offset as _,
-                    instruction.clone(),
-                )?);
-            }
-            result
-        }
-    };
-
-    Ok(result_array)
+    }
 }
 
 pub(crate) fn array_lift_memory<Instance, Export, LocalImport, Memory, MemoryView>(
@@ -233,7 +119,7 @@ where
             )?;
 
             log::trace!("array.lift_memory: pushing {:?} on the stack", array);
-            runtime.stack.push(IValue::Array(array));
+            runtime.stack.push(array);
 
             Ok(())
         }
@@ -356,13 +242,13 @@ where
 
                     Ok(())
                 }
-                _ => Err(InstructionError::new(
+                _ => instr_error!(
                     instruction.clone(),
                     InstructionErrorKind::InvalidValueOnTheStack {
                         expected_type: IType::Array(Box::new(value_type.clone())),
-                        received_value: stack_value.clone(),
-                    },
-                )),
+                        received_value: stack_value.clone()
+                    }
+                ),
             }
         }
     })

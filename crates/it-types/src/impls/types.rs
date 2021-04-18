@@ -18,6 +18,7 @@ where
 {
     fn to_bytes(&self, writer: &mut W) -> io::Result<()> {
         match self {
+            IType::Boolean => 0x0b_u8.to_bytes(writer),
             IType::S8 => 0x00_u8.to_bytes(writer),
             IType::S16 => 0x01_u8.to_bytes(writer),
             IType::S32 => 0x02_u8.to_bytes(writer),
@@ -29,11 +30,11 @@ where
             IType::F32 => 0x08_u8.to_bytes(writer),
             IType::F64 => 0x09_u8.to_bytes(writer),
             IType::String => 0x0a_u8.to_bytes(writer),
+            IType::ByteArray => 0x3C_u8.to_bytes(writer),
             IType::Array(ty) => {
                 0x36_u8.to_bytes(writer)?;
                 ty.to_bytes(writer)
             }
-            IType::Anyref => 0x0b_u8.to_bytes(writer),
             IType::I32 => 0x0c_u8.to_bytes(writer),
             IType::I64 => 0x0d_u8.to_bytes(writer),
             IType::Record(record_id) => {
@@ -77,6 +78,7 @@ mod keyword {
     custom_keyword!(field);
 
     // New types.
+    custom_keyword!(boolean);
     custom_keyword!(s8);
     custom_keyword!(s16);
     custom_keyword!(s32);
@@ -92,7 +94,11 @@ mod keyword {
 impl Parse<'_> for IType {
     fn parse(parser: Parser<'_>) -> Result<IType, ParseError> {
         let mut lookahead = parser.lookahead1();
-        if lookahead.peek::<keyword::s8>() {
+        if lookahead.peek::<keyword::boolean>() {
+            parser.parse::<keyword::boolean>()?;
+
+            Ok(IType::Boolean)
+        } else if lookahead.peek::<keyword::s8>() {
             parser.parse::<keyword::s8>()?;
 
             Ok(IType::S8)
@@ -142,10 +148,6 @@ impl Parse<'_> for IType {
             let array_type = parser.parens(|p| p.parse())?;
 
             Ok(IType::Array(Box::new(array_type)))
-        } else if lookahead.peek::<keyword::anyref>() {
-            parser.parse::<keyword::anyref>()?;
-
-            Ok(IType::Anyref)
         } else if lookahead.peek::<keyword::i32>() {
             parser.parse::<keyword::i32>()?;
 

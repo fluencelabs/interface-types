@@ -112,6 +112,7 @@ fn ty<'input, E: ParseError<&'input [u8]>>(
     consume!((input, opcode) = byte(input)?);
 
     let ty = match opcode {
+        0x0b => IType::Boolean,
         0x00 => IType::S8,
         0x01 => IType::S16,
         0x02 => IType::S32,
@@ -123,12 +124,12 @@ fn ty<'input, E: ParseError<&'input [u8]>>(
         0x08 => IType::F32,
         0x09 => IType::F64,
         0x0a => IType::String,
+        0x3c => IType::ByteArray,
         0x36 => {
             consume!((input, array_value_type) = ty(input)?);
 
             IType::Array(Box::new(array_value_type))
         }
-        0x0b => IType::Anyref,
         0x0c => IType::I32,
         0x0d => IType::I64,
         0x0e => {
