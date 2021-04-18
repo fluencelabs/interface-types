@@ -55,9 +55,9 @@ where
     MemoryView: wasm::structures::MemoryView + 'instance,
     Instance: wasm::structures::Instance<Export, LocalImport, Memory, MemoryView>,
 {
-    let memory_index: u32 = 0;
+    let memory_index = 0;
     let memory_view = instance
-        .memory(memory_index as usize)
+        .memory(memory_index)
         .ok_or_else(|| {
             InstructionError::new(
                 instruction.clone(),
@@ -112,7 +112,7 @@ def_read_func!(read_s8_array, (i8, elements_count), {
     |memory_view: &[Cell<u8>]| {
         let mut result = Vec::with_capacity(elements_count);
         for element_id in 0..elements_count {
-            let value = i8::from_be_bytes([Cell::get(&memory_view[element_id])]);
+            let value = i8::from_le_bytes([Cell::get(&memory_view[element_id])]);
             result.push(IValue::S8(value));
         }
 
@@ -124,7 +124,7 @@ def_read_func!(read_u16_array, (u16, elements_count), {
     |memory_view: &[Cell<u8>]| {
         let mut result = Vec::with_capacity(elements_count);
         for element_id in 0..elements_count {
-            let value = u16::from_be_bytes([
+            let value = u16::from_le_bytes([
                 Cell::get(&memory_view[2 * element_id]),
                 Cell::get(&memory_view[2 * element_id + 1]),
             ]);
@@ -139,7 +139,7 @@ def_read_func!(read_s16_array, (i16, elements_count), {
     |memory_view: &[Cell<u8>]| {
         let mut result = Vec::with_capacity(elements_count);
         for element_id in 0..elements_count {
-            let value = i16::from_be_bytes([
+            let value = i16::from_le_bytes([
                 Cell::get(&memory_view[2 * element_id]),
                 Cell::get(&memory_view[2 * element_id + 1]),
             ]);
@@ -154,7 +154,7 @@ def_read_func!(read_u32_array, (u32, elements_count), {
     |memory_view: &[Cell<u8>]| {
         let mut result = Vec::with_capacity(elements_count);
         for element_id in 0..elements_count {
-            let value = u32::from_be_bytes([
+            let value = u32::from_le_bytes([
                 Cell::get(&memory_view[4 * element_id]),
                 Cell::get(&memory_view[4 * element_id + 1]),
                 Cell::get(&memory_view[4 * element_id + 2]),
@@ -171,7 +171,7 @@ def_read_func!(read_f32_array, (f32, elements_count), {
     |memory_view: &[Cell<u8>]| {
         let mut result = Vec::with_capacity(elements_count);
         for element_id in 0..elements_count {
-            let value = f32::from_be_bytes([
+            let value = f32::from_le_bytes([
                 Cell::get(&memory_view[4 * element_id]),
                 Cell::get(&memory_view[4 * element_id + 1]),
                 Cell::get(&memory_view[4 * element_id + 2]),
@@ -188,7 +188,7 @@ def_read_func!(read_s32_array, (i32, elements_count), {
     |memory_view: &[Cell<u8>]| {
         let mut result = Vec::with_capacity(elements_count);
         for element_id in 0..elements_count {
-            let value = i32::from_be_bytes([
+            let value = i32::from_le_bytes([
                 Cell::get(&memory_view[4 * element_id]),
                 Cell::get(&memory_view[4 * element_id + 1]),
                 Cell::get(&memory_view[4 * element_id + 2]),
@@ -205,7 +205,7 @@ def_read_func!(read_i32_array, (i32, elements_count), {
     |memory_view: &[Cell<u8>]| {
         let mut result = Vec::with_capacity(elements_count);
         for element_id in 0..elements_count {
-            let value = i32::from_be_bytes([
+            let value = i32::from_le_bytes([
                 Cell::get(&memory_view[4 * element_id]),
                 Cell::get(&memory_view[4 * element_id + 1]),
                 Cell::get(&memory_view[4 * element_id + 2]),
@@ -222,7 +222,7 @@ def_read_func!(read_u64_array, (u64, elements_count), {
     |memory_view: &[Cell<u8>]| {
         let mut result = Vec::with_capacity(elements_count);
         for element_id in 0..elements_count {
-            let value = u64::from_be_bytes([
+            let value = u64::from_le_bytes([
                 Cell::get(&memory_view[4 * element_id]),
                 Cell::get(&memory_view[4 * element_id + 1]),
                 Cell::get(&memory_view[4 * element_id + 2]),
@@ -243,7 +243,7 @@ def_read_func!(read_f64_array, (f64, elements_count), {
     |memory_view: &[Cell<u8>]| {
         let mut result = Vec::with_capacity(elements_count);
         for element_id in 0..elements_count {
-            let value = f64::from_be_bytes([
+            let value = f64::from_le_bytes([
                 Cell::get(&memory_view[4 * element_id]),
                 Cell::get(&memory_view[4 * element_id + 1]),
                 Cell::get(&memory_view[4 * element_id + 2]),
@@ -264,7 +264,7 @@ def_read_func!(read_s64_array, (i64, elements_count), {
     |memory_view: &[Cell<u8>]| {
         let mut result = Vec::with_capacity(elements_count);
         for element_id in 0..elements_count {
-            let value = i64::from_be_bytes([
+            let value = i64::from_le_bytes([
                 Cell::get(&memory_view[4 * element_id]),
                 Cell::get(&memory_view[4 * element_id + 1]),
                 Cell::get(&memory_view[4 * element_id + 2]),
@@ -285,7 +285,7 @@ def_read_func!(read_i64_array, (i64, elements_count), {
     |memory_view: &[Cell<u8>]| {
         let mut result = Vec::with_capacity(elements_count);
         for element_id in 0..elements_count {
-            let value = i64::from_be_bytes([
+            let value = i64::from_le_bytes([
                 Cell::get(&memory_view[4 * element_id]),
                 Cell::get(&memory_view[4 * element_id + 1]),
                 Cell::get(&memory_view[4 * element_id + 2]),
@@ -459,7 +459,7 @@ where
                 )?;
                 IValue::ByteArray(value)
             }
-            _ => super::array_lift_memory_(
+            _ => super::array_lift_memory_impl(
                 instance,
                 &*ty,
                 *array_offset as _,

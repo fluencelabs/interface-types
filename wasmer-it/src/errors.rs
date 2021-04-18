@@ -127,8 +127,8 @@ pub enum InstructionErrorKind {
 
     /// The memory doesn't exist.
     MemoryIsMissing {
-        /// The memory indeX.
-        memory_index: u32,
+        /// The memory index.
+        memory_index: usize,
     },
 
     /// Tried to read out of bounds of the memory.

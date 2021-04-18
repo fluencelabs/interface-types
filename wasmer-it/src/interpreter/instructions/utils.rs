@@ -24,9 +24,9 @@ where
     MemoryView: wasm::structures::MemoryView,
     Instance: wasm::structures::Instance<Export, LocalImport, Memory, MemoryView>,
 {
-    let memory_index: u32 = 0;
+    let memory_index = 0;
     let memory_view = instance
-        .memory(memory_index as usize)
+        .memory(memory_index)
         .ok_or_else(|| {
             InstructionError::new(
                 instruction.clone(),
@@ -66,11 +66,15 @@ where
     MemoryView: wasm::structures::MemoryView,
     Instance: wasm::structures::Instance<Export, LocalImport, Memory, MemoryView>,
 {
+    if bytes.is_empty() {
+        return Ok(0);
+    }
+
     let offset = allocate(instance, instruction.clone(), bytes.len() as _)?;
 
-    let memory_index: u32 = 0;
+    let memory_index = 0;
     let memory_view = instance
-        .memory(memory_index as usize)
+        .memory(memory_index)
         .ok_or_else(|| {
             InstructionError::new(
                 instruction.clone(),

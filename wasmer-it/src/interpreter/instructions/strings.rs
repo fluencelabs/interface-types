@@ -19,10 +19,10 @@ executable_instruction!(
                 )
             })?;
 
-            let memory_index: u32 = 0;
+            let memory_index = 0;
             let memory = runtime
                 .wasm_instance
-                .memory(memory_index as usize)
+                .memory(memory_index)
                 .ok_or_else(|| {
                     InstructionError::new(
                         instruction.clone(),
@@ -96,9 +96,9 @@ executable_instruction!(
             })?;
 
             let instance = &mut runtime.wasm_instance;
-            let memory_index: u32 = 0;
+            let memory_index = 0;
             let memory_view = instance
-                .memory(memory_index as usize)
+                .memory(memory_index)
                 .ok_or_else(|| {
                     InstructionError::new(
                         instruction.clone(),
