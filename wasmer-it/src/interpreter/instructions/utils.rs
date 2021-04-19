@@ -24,6 +24,10 @@ where
     MemoryView: wasm::structures::MemoryView,
     Instance: wasm::structures::Instance<Export, LocalImport, Memory, MemoryView>,
 {
+    if size == 0 {
+        return Ok(vec![]);
+    }
+
     let memory_index = 0;
     let memory_view = instance
         .memory(memory_index)

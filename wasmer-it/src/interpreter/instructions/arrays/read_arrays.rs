@@ -397,7 +397,7 @@ where
     let mut result = Vec::with_capacity(data.len());
 
     for record_offset in data {
-        result.push(super::record_lift_memory_(
+        result.push(super::record_lift_memory_impl(
             instance,
             record_type,
             *record_offset as _,

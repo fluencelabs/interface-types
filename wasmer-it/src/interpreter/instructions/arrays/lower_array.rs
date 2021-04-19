@@ -1,4 +1,4 @@
-use super::utils::MemoryWriter;
+use super::memory_writer::MemoryWriter;
 use super::write_to_instance_mem;
 
 use crate::{
@@ -75,7 +75,7 @@ where
 
             IValue::Record(values) => {
                 let record_offset =
-                    super::record_lower_memory_(instance, instruction.clone(), values)?;
+                    super::record_lower_memory_impl(instance, instruction.clone(), values)?;
                 writer.write_array(record_offset.to_le_bytes());
             }
         }

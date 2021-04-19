@@ -52,6 +52,7 @@
 // #![forbid(unsafe_code)]
 #![doc(html_favicon_url = "https://wasmer.io/static/icons/favicon.ico")]
 #![doc(html_logo_url = "https://github.com/wasmerio.png")]
+#![recursion_limit = "512"]
 
 pub mod ast;
 #[macro_use]

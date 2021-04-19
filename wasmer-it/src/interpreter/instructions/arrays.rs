@@ -1,7 +1,7 @@
 mod lift_array;
 mod lower_array;
+mod memory_writer;
 mod read_arrays;
-mod utils;
 mod write_arrays;
 
 pub(crate) use lift_array::array_lift_memory_impl;
@@ -9,8 +9,8 @@ pub(crate) use lower_array::array_lower_memory_impl;
 
 use super::allocate;
 use super::read_from_instance_mem;
-use super::record_lift_memory_;
-use super::record_lower_memory_;
+use super::record_lift_memory_impl;
+use super::record_lower_memory_impl;
 use super::write_to_instance_mem;
 
 use crate::instr_error;
