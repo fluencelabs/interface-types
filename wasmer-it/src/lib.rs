@@ -40,7 +40,7 @@
 
 #![deny(
     dead_code,
-    broken_intra_doc_links,
+    rustdoc::broken_intra_doc_links,
     missing_docs,
     nonstandard_style,
     unreachable_patterns,
@@ -52,7 +52,6 @@
 // #![forbid(unsafe_code)]
 #![doc(html_favicon_url = "https://wasmer.io/static/icons/favicon.ico")]
 #![doc(html_logo_url = "https://github.com/wasmerio.png")]
-#![recursion_limit = "512"]
 
 pub mod ast;
 #[macro_use]

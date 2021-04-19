@@ -354,8 +354,12 @@ where
             *string_size as _,
         )?;
 
-        // TODO: check
-        let string = String::from_utf8(string_mem).unwrap();
+        let string = String::from_utf8(string_mem).map_err(|e| {
+            InstructionError::new(
+                instruction.clone(),
+                InstructionErrorKind::CorruptedUTF8String(e),
+            )
+        })?;
         result.push(IValue::String(string));
     }
 

@@ -41,6 +41,7 @@ impl InstructionError {
 
 impl Error for InstructionError {}
 
+/// Allows you to shorten the expression creates a new InstructionError.
 #[macro_export]
 macro_rules! instr_error {
     ($instruction:expr, $error_kind:expr) => {
@@ -178,6 +179,9 @@ pub enum InstructionErrorKind {
 
     /// Errors related to Serialization/deserialization of record.
     SerdeError(String),
+
+    /// Errors related to lifting incorrect UTF8 string from a Wasm module.
+    CorruptedUTF8String(std::string::FromUtf8Error),
 }
 
 impl Error for InstructionErrorKind {}
@@ -288,6 +292,11 @@ impl Display for InstructionErrorKind {
                 formatter,
                 "serde error: {}", err,
             ),
+
+            Self::CorruptedUTF8String(err) => write!(
+                formatter,
+                "corrupted utf8 string: {}", err
+            )
         }
     }
 }

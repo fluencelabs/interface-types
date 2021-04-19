@@ -104,8 +104,9 @@ where
         string_size as _,
     )?;
 
-    // TODO: check
-    let string = String::from_utf8(string_mem).unwrap();
+    let string = String::from_utf8(string_mem).map_err(|e| {
+        InstructionError::new(instruction, InstructionErrorKind::CorruptedUTF8String(e))
+    })?;
 
     Ok(string)
 }
@@ -126,12 +127,7 @@ where
     let offset = reader.read_u32();
     let elements_count = reader.read_u32();
 
-    let array = read_from_instance_mem(
-        instance,
-        instruction.clone(),
-        offset as _,
-        elements_count as _,
-    )?;
+    let array = read_from_instance_mem(instance, instruction, offset as _, elements_count as _)?;
     let byte_array = IValue::ByteArray(array);
 
     Ok(byte_array)
@@ -159,7 +155,7 @@ where
         ty,
         array_offset as _,
         elements_count as _,
-        instruction.clone(),
+        instruction,
     )
 }
 
@@ -182,11 +178,9 @@ where
     let record_type = instance.wit_record_by_id(record_type_id).ok_or_else(|| {
         InstructionError::new(
             instruction.clone(),
-            InstructionErrorKind::RecordTypeByNameIsMissing {
-                record_type_id,
-            },
+            InstructionErrorKind::RecordTypeByNameIsMissing { record_type_id },
         )
     })?;
 
-    record_lift_memory_impl(instance, record_type, offset as _, instruction.clone())
+    record_lift_memory_impl(instance, record_type, offset as _, instruction)
 }
