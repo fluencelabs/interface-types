@@ -39,8 +39,6 @@ where
         .view();
     let writer = MemoryWriter::new(memory_view, offset);
 
-    let values_count = array_values.len();
-
     // here it's known that all interface values have the same type
     for value in array_values {
         match value {
@@ -59,29 +57,38 @@ where
             IValue::F64(value) => writer.write_array(value.to_le_bytes()),
             IValue::String(value) => {
                 let string_pointer =
-                    write_to_instance_mem(instance, instruction.clone(), value.as_bytes())?;
+                    write_to_instance_mem(instance, instruction.clone(), value.as_bytes())? as u32;
+                let string_size = value.len() as u32;
 
                 writer.write_array(string_pointer.to_le_bytes());
-                writer.write_array(value.len().to_le_bytes());
+                writer.write_array(string_size.to_le_bytes());
             }
-            IValue::ByteArray(values) => writer.write_slice(&values),
+            IValue::ByteArray(values) => {
+                let array_pointer =
+                    write_to_instance_mem(instance, instruction.clone(), &values)? as u32;
+                let array_size = values.len() as u32;
+
+                writer.write_array(array_pointer.to_le_bytes());
+                writer.write_array(array_size.to_le_bytes());
+            }
             IValue::Array(values) => {
                 let (array_offset, array_size) =
                     array_lower_memory_impl(instance, instruction.clone(), values)?;
 
+                let (array_offset, array_size) = (array_offset as u32, array_size as u32);
                 writer.write_array(array_offset.to_le_bytes());
                 writer.write_array(array_size.to_le_bytes());
             }
 
             IValue::Record(values) => {
                 let record_offset =
-                    super::record_lower_memory_impl(instance, instruction.clone(), values)?;
+                    super::record_lower_memory_impl(instance, instruction.clone(), values)? as u32;
                 writer.write_array(record_offset.to_le_bytes());
             }
         }
     }
 
-    Ok((offset as _, values_count as _))
+    Ok((offset as _, writer.written_values() as _))
 }
 
 fn value_size(value: &IValue) -> usize {
@@ -97,9 +104,7 @@ fn value_size(value: &IValue) -> usize {
         IValue::U64(_) => 8,
         IValue::F32(_) => 4,
         IValue::F64(_) => 8,
-        IValue::String(_) => 4,
-        IValue::ByteArray(_) => 4,
-        IValue::Array(_) => 4,
+        IValue::String(_) | IValue::ByteArray(_) | IValue::Array(_) => 2 * 4,
         IValue::I32(_) => 4,
         IValue::I64(_) => 8,
         IValue::Record(_) => 4,

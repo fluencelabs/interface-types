@@ -17,6 +17,8 @@ use crate::IType;
 use crate::IValue;
 use crate::NEVec;
 
+pub use records::record_size;
+
 pub(crate) use argument_get::argument_get;
 pub(crate) use arrays::*;
 pub(crate) use call_core::call_core;

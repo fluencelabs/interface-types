@@ -2,6 +2,8 @@ mod lift_record;
 mod lower_record;
 mod value_reader;
 
+pub use lift_record::record_size;
+
 pub(crate) use lift_record::record_lift_memory_impl;
 pub(crate) use lower_record::record_lower_memory_impl;
 

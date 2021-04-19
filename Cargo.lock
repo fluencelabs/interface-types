@@ -28,7 +28,7 @@ checksum = "e78d4f1cc4ae33bbfc157ed5d5a5ef3bc29227303d595861deb238fcec4e9457"
 
 [[package]]
 name = "fluence-it-types"
-version = "0.1.1"
+version = "0.2.0"
 dependencies = [
  "it-to-bytes",
  "nom",
@@ -225,7 +225,7 @@ checksum = "b5a972e5669d67ba988ce3dc826706fb0a8b01471c088cb0b6110b805cc36aed"
 
 [[package]]
 name = "wasmer-interface-types-fl"
-version = "0.19.0"
+version = "0.20.0"
 dependencies = [
  "fluence-it-types",
  "it-to-bytes",

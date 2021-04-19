@@ -223,14 +223,14 @@ def_read_func!(read_u64_array, (u64, elements_count), {
         let mut result = Vec::with_capacity(elements_count);
         for element_id in 0..elements_count {
             let value = u64::from_le_bytes([
-                Cell::get(&memory_view[4 * element_id]),
-                Cell::get(&memory_view[4 * element_id + 1]),
-                Cell::get(&memory_view[4 * element_id + 2]),
-                Cell::get(&memory_view[4 * element_id + 3]),
-                Cell::get(&memory_view[4 * element_id + 4]),
-                Cell::get(&memory_view[4 * element_id + 5]),
-                Cell::get(&memory_view[4 * element_id + 6]),
-                Cell::get(&memory_view[4 * element_id + 7]),
+                Cell::get(&memory_view[8 * element_id]),
+                Cell::get(&memory_view[8 * element_id + 1]),
+                Cell::get(&memory_view[8 * element_id + 2]),
+                Cell::get(&memory_view[8 * element_id + 3]),
+                Cell::get(&memory_view[8 * element_id + 4]),
+                Cell::get(&memory_view[8 * element_id + 5]),
+                Cell::get(&memory_view[8 * element_id + 6]),
+                Cell::get(&memory_view[8 * element_id + 7]),
             ]);
             result.push(IValue::U64(value));
         }
@@ -244,14 +244,14 @@ def_read_func!(read_f64_array, (f64, elements_count), {
         let mut result = Vec::with_capacity(elements_count);
         for element_id in 0..elements_count {
             let value = f64::from_le_bytes([
-                Cell::get(&memory_view[4 * element_id]),
-                Cell::get(&memory_view[4 * element_id + 1]),
-                Cell::get(&memory_view[4 * element_id + 2]),
-                Cell::get(&memory_view[4 * element_id + 3]),
-                Cell::get(&memory_view[4 * element_id + 4]),
-                Cell::get(&memory_view[4 * element_id + 5]),
-                Cell::get(&memory_view[4 * element_id + 6]),
-                Cell::get(&memory_view[4 * element_id + 7]),
+                Cell::get(&memory_view[8 * element_id]),
+                Cell::get(&memory_view[8 * element_id + 1]),
+                Cell::get(&memory_view[8 * element_id + 2]),
+                Cell::get(&memory_view[8 * element_id + 3]),
+                Cell::get(&memory_view[8 * element_id + 4]),
+                Cell::get(&memory_view[8 * element_id + 5]),
+                Cell::get(&memory_view[8 * element_id + 6]),
+                Cell::get(&memory_view[8 * element_id + 7]),
             ]);
             result.push(IValue::F64(value));
         }
@@ -265,14 +265,14 @@ def_read_func!(read_s64_array, (i64, elements_count), {
         let mut result = Vec::with_capacity(elements_count);
         for element_id in 0..elements_count {
             let value = i64::from_le_bytes([
-                Cell::get(&memory_view[4 * element_id]),
-                Cell::get(&memory_view[4 * element_id + 1]),
-                Cell::get(&memory_view[4 * element_id + 2]),
-                Cell::get(&memory_view[4 * element_id + 3]),
-                Cell::get(&memory_view[4 * element_id + 4]),
-                Cell::get(&memory_view[4 * element_id + 5]),
-                Cell::get(&memory_view[4 * element_id + 6]),
-                Cell::get(&memory_view[4 * element_id + 7]),
+                Cell::get(&memory_view[8 * element_id]),
+                Cell::get(&memory_view[8 * element_id + 1]),
+                Cell::get(&memory_view[8 * element_id + 2]),
+                Cell::get(&memory_view[8 * element_id + 3]),
+                Cell::get(&memory_view[8 * element_id + 4]),
+                Cell::get(&memory_view[8 * element_id + 5]),
+                Cell::get(&memory_view[8 * element_id + 6]),
+                Cell::get(&memory_view[8 * element_id + 7]),
             ]);
             result.push(IValue::S64(value));
         }
@@ -286,14 +286,14 @@ def_read_func!(read_i64_array, (i64, elements_count), {
         let mut result = Vec::with_capacity(elements_count);
         for element_id in 0..elements_count {
             let value = i64::from_le_bytes([
-                Cell::get(&memory_view[4 * element_id]),
-                Cell::get(&memory_view[4 * element_id + 1]),
-                Cell::get(&memory_view[4 * element_id + 2]),
-                Cell::get(&memory_view[4 * element_id + 3]),
-                Cell::get(&memory_view[4 * element_id + 4]),
-                Cell::get(&memory_view[4 * element_id + 5]),
-                Cell::get(&memory_view[4 * element_id + 6]),
-                Cell::get(&memory_view[4 * element_id + 7]),
+                Cell::get(&memory_view[8 * element_id]),
+                Cell::get(&memory_view[8 * element_id + 1]),
+                Cell::get(&memory_view[8 * element_id + 2]),
+                Cell::get(&memory_view[8 * element_id + 3]),
+                Cell::get(&memory_view[8 * element_id + 4]),
+                Cell::get(&memory_view[8 * element_id + 5]),
+                Cell::get(&memory_view[8 * element_id + 6]),
+                Cell::get(&memory_view[8 * element_id + 7]),
             ]);
             result.push(IValue::I64(value));
         }

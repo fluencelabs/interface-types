@@ -73,6 +73,8 @@ pub use fluence_it_types::IValue;
 
 pub use it_to_bytes::ToBytes;
 
+pub use crate::interpreter::record_size;
+
 #[cfg(feature = "serde")]
 pub use crate::serde::de::from_interface_values;
 

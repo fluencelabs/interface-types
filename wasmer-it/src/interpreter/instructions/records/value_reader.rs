@@ -69,7 +69,6 @@ macro_rules! read_ty {
     };
 }
 
-// TODO: rewrite this with macros
 impl ValueReader {
     pub(super) fn new(stream: Vec<u8>) -> Self {
         let offset = Cell::new(0);

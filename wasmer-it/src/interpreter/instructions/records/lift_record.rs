@@ -58,8 +58,8 @@ where
     ))
 }
 
-/// Returns record size in bytes.
-fn record_size(record_type: &IRecordType) -> usize {
+/// Returns the record size in bytes.
+pub fn record_size(record_type: &IRecordType) -> usize {
     let mut record_size = 0;
 
     for field_type in record_type.fields.iter() {

@@ -36,28 +36,30 @@ where
             IValue::F64(value) => result.extend_from_slice(&value.to_le_bytes()),
             IValue::String(value) => {
                 let string_pointer =
-                    write_to_instance_mem(instance, instruction.clone(), value.as_bytes())?;
+                    write_to_instance_mem(instance, instruction.clone(), value.as_bytes())? as u32;
 
                 result.extend_from_slice(&string_pointer.to_le_bytes());
-                result.extend_from_slice(&value.len().to_le_bytes());
+                result.extend_from_slice(&(value.len() as u32).to_le_bytes());
             }
             IValue::ByteArray(value) => {
-                let array_pointer = write_to_instance_mem(instance, instruction.clone(), &value)?;
+                let array_pointer =
+                    write_to_instance_mem(instance, instruction.clone(), &value)? as u32;
 
                 result.extend_from_slice(&array_pointer.to_le_bytes());
-                result.extend_from_slice(&value.len().to_le_bytes());
+                result.extend_from_slice(&(value.len() as u32).to_le_bytes());
             }
 
             IValue::Array(values) => {
                 let (offset, size) =
                     super::array_lower_memory_impl(instance, instruction.clone(), values)?;
 
-                result.extend_from_slice(&offset.to_le_bytes());
-                result.extend_from_slice(&size.to_le_bytes());
+                result.extend_from_slice(&(offset as u32).to_le_bytes());
+                result.extend_from_slice(&(size as u32).to_le_bytes());
             }
 
             IValue::Record(values) => {
-                let record_ptr = record_lower_memory_impl(instance, instruction.clone(), values)?;
+                let record_ptr =
+                    record_lower_memory_impl(instance, instruction.clone(), values)? as u32;
 
                 result.extend_from_slice(&record_ptr.to_le_bytes());
             }

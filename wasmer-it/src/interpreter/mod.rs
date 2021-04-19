@@ -4,9 +4,11 @@ mod instructions;
 pub mod stack;
 pub mod wasm;
 
+pub use instructions::record_size;
+pub use instructions::Instruction;
+
 use crate::errors::{InstructionResult, InterpreterResult};
 use crate::IValue;
-pub use instructions::Instruction;
 use stack::Stack;
 use std::{convert::TryFrom, marker::PhantomData};
 
