@@ -66,14 +66,9 @@ fn record_size(record_type: &IRecordType) -> usize {
         record_size += match field_type.ty {
             IType::Boolean | IType::S8 | IType::U8 => 1,
             IType::S16 | IType::U16 => 2,
-            IType::S32
-            | IType::U32
-            | IType::I32
-            | IType::F32
-            | IType::String
-            | IType::ByteArray
-            | IType::Array(_)
-            | IType::Record(_) => 32,
+            IType::S32 | IType::U32 | IType::I32 | IType::F32 => 4,
+            IType::Record(_) => 4,
+            IType::String | IType::ByteArray | IType::Array(_) => 2 * 4,
             IType::S64 | IType::U64 | IType::I64 | IType::F64 => 64,
         };
     }

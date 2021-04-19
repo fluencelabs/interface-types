@@ -2,7 +2,6 @@ mod lift_array;
 mod lower_array;
 mod memory_writer;
 mod read_arrays;
-mod write_arrays;
 
 pub(crate) use lift_array::array_lift_memory_impl;
 pub(crate) use lower_array::array_lower_memory_impl;
