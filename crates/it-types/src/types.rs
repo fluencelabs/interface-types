@@ -101,7 +101,7 @@ impl Default for RecordType {
 impl ToString for &IType {
     fn to_string(&self) -> String {
         match &self {
-            IType::Boolean => "boolean".to_string(),
+            IType::Boolean => "bool".to_string(),
             IType::S8 => "s8".to_string(),
             IType::S16 => "s16".to_string(),
             IType::S32 => "s32".to_string(),

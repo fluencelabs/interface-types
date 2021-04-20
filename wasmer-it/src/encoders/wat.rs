@@ -65,6 +65,7 @@ impl ToString for &Instruction {
         match self {
             Instruction::ArgumentGet { index } => format!("arg.get {}", index),
             Instruction::CallCore { function_index } => format!("call-core {}", function_index),
+            Instruction::BoolFromI32 => "bool.from_i32".into(),
             Instruction::S8FromI32 => "s8.from_i32".into(),
             Instruction::S8FromI64 => "s8.from_i64".into(),
             Instruction::S16FromI32 => "s16.from_i32".into(),
@@ -73,6 +74,7 @@ impl ToString for &Instruction {
             Instruction::S32FromI64 => "s32.from_i64".into(),
             Instruction::S64FromI32 => "s64.from_i32".into(),
             Instruction::S64FromI64 => "s64.from_i64".into(),
+            Instruction::I32FromBool => "i32.from_bool".into(),
             Instruction::I32FromS8 => "i32.from_s8".into(),
             Instruction::I32FromS16 => "i32.from_s16".into(),
             Instruction::I32FromS32 => "i32.from_s32".into(),

@@ -196,6 +196,7 @@ where
                 (*function_index as u64).to_bytes(writer)?;
             }
 
+            Instruction::BoolFromI32 => 0x3E_u8.to_bytes(writer)?,
             Instruction::S8FromI32 => 0x02_u8.to_bytes(writer)?,
             Instruction::S8FromI64 => 0x03_u8.to_bytes(writer)?,
             Instruction::S16FromI32 => 0x04_u8.to_bytes(writer)?,
@@ -204,6 +205,7 @@ where
             Instruction::S32FromI64 => 0x07_u8.to_bytes(writer)?,
             Instruction::S64FromI32 => 0x08_u8.to_bytes(writer)?,
             Instruction::S64FromI64 => 0x09_u8.to_bytes(writer)?,
+            Instruction::I32FromBool => 0x3F_u8.to_bytes(writer)?,
             Instruction::I32FromS8 => 0x0a_u8.to_bytes(writer)?,
             Instruction::I32FromS16 => 0x0b_u8.to_bytes(writer)?,
             Instruction::I32FromS32 => 0x0c_u8.to_bytes(writer)?,

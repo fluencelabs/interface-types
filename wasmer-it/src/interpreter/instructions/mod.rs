@@ -52,6 +52,9 @@ pub enum Instruction {
         function_index: u32,
     },
 
+    /// The bool.from_i32` instruction.
+    BoolFromI32,
+
     /// The `s8.from_i32` instruction.
     S8FromI32,
 
@@ -75,6 +78,9 @@ pub enum Instruction {
 
     /// The `s64.from_i64` instruction.
     S64FromI64,
+
+    /// The i32.from_bool instruction.
+    I32FromBool,
 
     /// The `i32.from_s8` instruction.
     I32FromS8,
@@ -169,20 +175,6 @@ pub enum Instruction {
         value_type: IType,
     },
 
-    /*
-    /// The `record.lift` instruction.
-    RecordLift {
-        /// The type index of the record.
-        type_index: u32,
-    },
-
-    /// The `record.lower` instruction.
-    RecordLower {
-        /// The type index of the record.
-        type_index: u32,
-    },
-
-     */
     /// The `record.lift_memory` instruction.
     RecordLiftMemory {
         /// The type index of the record.

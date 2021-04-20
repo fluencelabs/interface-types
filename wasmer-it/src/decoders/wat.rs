@@ -39,6 +39,7 @@ mod keyword {
     // Instructions.
     custom_keyword!(argument_get = "arg.get");
     custom_keyword!(call_core = "call-core");
+    custom_keyword!(bool_from_i32 = "bool.from_i32");
     custom_keyword!(s8_from_i32 = "s8.from_i32");
     custom_keyword!(s8_from_i64 = "s8.from_i64");
     custom_keyword!(s16_from_i32 = "s16.from_i32");
@@ -47,6 +48,7 @@ mod keyword {
     custom_keyword!(s32_from_i64 = "s32.from_i64");
     custom_keyword!(s64_from_i32 = "s64.from_i32");
     custom_keyword!(s64_from_i64 = "s64.from_i64");
+    custom_keyword!(i32_from_bool = "i32.from_bool");
     custom_keyword!(i32_from_s8 = "i32.from_s8");
     custom_keyword!(i32_from_s16 = "i32.from_s16");
     custom_keyword!(i32_from_s32 = "i32.from_s32");

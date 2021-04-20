@@ -68,6 +68,7 @@ lowering_lifting!(s32_from_i32, "s32.from_i32", S32, I32);
 lowering_lifting!(s32_from_i64, "s32.from_i64", S32, I64);
 lowering_lifting!(s64_from_i32, "s64.from_i32", S64, I32);
 lowering_lifting!(s64_from_i64, "s64.from_i64", S64, I64);
+lowering_lifting!(i32_from_bool, "i32.from_bool", I32, Boolean);
 lowering_lifting!(i32_from_s8, "i32.from_s8", I32, S8);
 lowering_lifting!(i32_from_s16, "i32.from_s16", I32, S16);
 lowering_lifting!(i32_from_s32, "i32.from_s32", I32, S32);
@@ -92,6 +93,44 @@ lowering_lifting!(i64_from_u8, "i64.from_u8", I64, U8);
 lowering_lifting!(i64_from_u16, "i64.from_u16", I64, U16);
 lowering_lifting!(i64_from_u32, "i64.from_u32", I64, U32);
 lowering_lifting!(i64_from_u64, "i64.from_u64", I64, U64);
+
+executable_instruction!(
+    bool_from_i32(instruction: Instruction) -> _ {
+        move |runtime| -> _ {
+            match runtime.stack.pop1() {
+                Some(IValue::I32(value)) => {
+                    runtime
+                        .stack
+                        .push({
+                            let converted_value = IValue::Boolean(value == 1);
+
+                            log::trace!("bool.from_i32: converting {:?} to {:?}" , value, converted_value);
+
+                            converted_value
+                        })
+                }
+                Some(wrong_value) => {
+                    return instr_error!(
+                        instruction.clone(),
+                        InstructionErrorKind::InvalidValueOnTheStack {
+                            expected_type: IType::I32,
+                            received_value: wrong_value,
+                        }
+                    )
+                },
+
+                None => {
+                    return instr_error!(
+                        instruction.clone(),
+                        InstructionErrorKind::StackIsTooSmall { needed: 1 }
+                    )
+                }
+            }
+
+            Ok(())
+        }
+    }
+);
 
 #[cfg(test)]
 mod tests {

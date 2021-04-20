@@ -200,6 +200,7 @@ where
                     instructions::call_core(function_index, instruction)
                 }
 
+                Instruction::BoolFromI32 => instructions::bool_from_i32(instruction),
                 Instruction::S8FromI32 => instructions::s8_from_i32(instruction),
                 Instruction::S8FromI64 => instructions::s8_from_i64(instruction),
                 Instruction::S16FromI32 => instructions::s16_from_i32(instruction),
@@ -208,6 +209,7 @@ where
                 Instruction::S32FromI64 => instructions::s32_from_i64(instruction),
                 Instruction::S64FromI32 => instructions::s64_from_i32(instruction),
                 Instruction::S64FromI64 => instructions::s64_from_i64(instruction),
+                Instruction::I32FromBool => instructions::i32_from_bool(instruction),
                 Instruction::I32FromS8 => instructions::i32_from_s8(instruction),
                 Instruction::I32FromS16 => instructions::i32_from_s16(instruction),
                 Instruction::I32FromS32 => instructions::i32_from_s32(instruction),
