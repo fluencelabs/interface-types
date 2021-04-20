@@ -41,6 +41,28 @@ macro_rules! def_read_func {
     };
 }
 
+macro_rules! value_der {
+    ($memory_view:expr, $element_id:expr, $element_size:expr, @seq_start $($ids:tt),* @seq_end) => {
+        [$(std::cell::Cell::get(&$memory_view[$element_size * $element_id + $ids])),+]
+    };
+
+    ($memory_view:expr, $element_id:expr, 1) => {
+        value_der!($memory_view, $element_id, 1, @seq_start 0 @seq_end);
+    };
+
+    ($memory_view:expr, $element_id:expr, 2) => {
+        value_der!($memory_view, $element_id, 2, @seq_start 0, 1 @seq_end);
+    };
+
+    ($memory_view:expr, $element_id:expr, 4) => {
+        value_der!($memory_view, $element_id, 4, @seq_start 0, 1, 2, 3 @seq_end);
+    };
+
+    ($memory_view:expr, $element_id:expr, 8) => {
+        value_der!($memory_view, $element_id, 8, @seq_start 0, 1, 2, 3, 4, 5, 6, 7 @seq_end);
+    };
+}
+
 fn ivalues_from_mem<'instance, Instance, Export, LocalImport, Memory, MemoryView>(
     instance: &'instance Instance,
     instruction: Instruction,
@@ -89,7 +111,7 @@ def_read_func!(read_bool_array, (bool, elements_count), {
         let mut result = Vec::with_capacity(elements_count);
         for element_id in 0..elements_count {
             let value = Cell::get(&memory_view[element_id]);
-            result.push(IValue::Boolean(value == 1));
+            result.push(IValue::Boolean(value != 0));
         }
 
         result
@@ -124,10 +146,7 @@ def_read_func!(read_u16_array, (u16, elements_count), {
     |memory_view: &[Cell<u8>]| {
         let mut result = Vec::with_capacity(elements_count);
         for element_id in 0..elements_count {
-            let value = u16::from_le_bytes([
-                Cell::get(&memory_view[2 * element_id]),
-                Cell::get(&memory_view[2 * element_id + 1]),
-            ]);
+            let value = u16::from_le_bytes(value_der!(memory_view, element_id, 2));
             result.push(IValue::U16(value));
         }
 
@@ -139,10 +158,7 @@ def_read_func!(read_s16_array, (i16, elements_count), {
     |memory_view: &[Cell<u8>]| {
         let mut result = Vec::with_capacity(elements_count);
         for element_id in 0..elements_count {
-            let value = i16::from_le_bytes([
-                Cell::get(&memory_view[2 * element_id]),
-                Cell::get(&memory_view[2 * element_id + 1]),
-            ]);
+            let value = i16::from_le_bytes(value_der!(memory_view, element_id, 2));
             result.push(IValue::S16(value));
         }
 
@@ -154,12 +170,7 @@ def_read_func!(read_u32_array, (u32, elements_count), {
     |memory_view: &[Cell<u8>]| {
         let mut result = Vec::with_capacity(elements_count);
         for element_id in 0..elements_count {
-            let value = u32::from_le_bytes([
-                Cell::get(&memory_view[4 * element_id]),
-                Cell::get(&memory_view[4 * element_id + 1]),
-                Cell::get(&memory_view[4 * element_id + 2]),
-                Cell::get(&memory_view[4 * element_id + 3]),
-            ]);
+            let value = u32::from_le_bytes(value_der!(memory_view, element_id, 4));
             result.push(IValue::U32(value));
         }
 
@@ -171,12 +182,7 @@ def_read_func!(read_f32_array, (f32, elements_count), {
     |memory_view: &[Cell<u8>]| {
         let mut result = Vec::with_capacity(elements_count);
         for element_id in 0..elements_count {
-            let value = f32::from_le_bytes([
-                Cell::get(&memory_view[4 * element_id]),
-                Cell::get(&memory_view[4 * element_id + 1]),
-                Cell::get(&memory_view[4 * element_id + 2]),
-                Cell::get(&memory_view[4 * element_id + 3]),
-            ]);
+            let value = f32::from_le_bytes(value_der!(memory_view, element_id, 4));
             result.push(IValue::F32(value));
         }
 
@@ -188,12 +194,7 @@ def_read_func!(read_s32_array, (i32, elements_count), {
     |memory_view: &[Cell<u8>]| {
         let mut result = Vec::with_capacity(elements_count);
         for element_id in 0..elements_count {
-            let value = i32::from_le_bytes([
-                Cell::get(&memory_view[4 * element_id]),
-                Cell::get(&memory_view[4 * element_id + 1]),
-                Cell::get(&memory_view[4 * element_id + 2]),
-                Cell::get(&memory_view[4 * element_id + 3]),
-            ]);
+            let value = i32::from_le_bytes(value_der!(memory_view, element_id, 4));
             result.push(IValue::S32(value));
         }
 
@@ -205,12 +206,7 @@ def_read_func!(read_i32_array, (i32, elements_count), {
     |memory_view: &[Cell<u8>]| {
         let mut result = Vec::with_capacity(elements_count);
         for element_id in 0..elements_count {
-            let value = i32::from_le_bytes([
-                Cell::get(&memory_view[4 * element_id]),
-                Cell::get(&memory_view[4 * element_id + 1]),
-                Cell::get(&memory_view[4 * element_id + 2]),
-                Cell::get(&memory_view[4 * element_id + 3]),
-            ]);
+            let value = i32::from_le_bytes(value_der!(memory_view, element_id, 4));
             result.push(IValue::I32(value));
         }
 
@@ -222,16 +218,7 @@ def_read_func!(read_u64_array, (u64, elements_count), {
     |memory_view: &[Cell<u8>]| {
         let mut result = Vec::with_capacity(elements_count);
         for element_id in 0..elements_count {
-            let value = u64::from_le_bytes([
-                Cell::get(&memory_view[8 * element_id]),
-                Cell::get(&memory_view[8 * element_id + 1]),
-                Cell::get(&memory_view[8 * element_id + 2]),
-                Cell::get(&memory_view[8 * element_id + 3]),
-                Cell::get(&memory_view[8 * element_id + 4]),
-                Cell::get(&memory_view[8 * element_id + 5]),
-                Cell::get(&memory_view[8 * element_id + 6]),
-                Cell::get(&memory_view[8 * element_id + 7]),
-            ]);
+            let value = u64::from_le_bytes(value_der!(memory_view, element_id, 8));
             result.push(IValue::U64(value));
         }
 
@@ -243,16 +230,7 @@ def_read_func!(read_f64_array, (f64, elements_count), {
     |memory_view: &[Cell<u8>]| {
         let mut result = Vec::with_capacity(elements_count);
         for element_id in 0..elements_count {
-            let value = f64::from_le_bytes([
-                Cell::get(&memory_view[8 * element_id]),
-                Cell::get(&memory_view[8 * element_id + 1]),
-                Cell::get(&memory_view[8 * element_id + 2]),
-                Cell::get(&memory_view[8 * element_id + 3]),
-                Cell::get(&memory_view[8 * element_id + 4]),
-                Cell::get(&memory_view[8 * element_id + 5]),
-                Cell::get(&memory_view[8 * element_id + 6]),
-                Cell::get(&memory_view[8 * element_id + 7]),
-            ]);
+            let value = f64::from_le_bytes(value_der!(memory_view, element_id, 8));
             result.push(IValue::F64(value));
         }
 
@@ -264,16 +242,7 @@ def_read_func!(read_s64_array, (i64, elements_count), {
     |memory_view: &[Cell<u8>]| {
         let mut result = Vec::with_capacity(elements_count);
         for element_id in 0..elements_count {
-            let value = i64::from_le_bytes([
-                Cell::get(&memory_view[8 * element_id]),
-                Cell::get(&memory_view[8 * element_id + 1]),
-                Cell::get(&memory_view[8 * element_id + 2]),
-                Cell::get(&memory_view[8 * element_id + 3]),
-                Cell::get(&memory_view[8 * element_id + 4]),
-                Cell::get(&memory_view[8 * element_id + 5]),
-                Cell::get(&memory_view[8 * element_id + 6]),
-                Cell::get(&memory_view[8 * element_id + 7]),
-            ]);
+            let value = i64::from_le_bytes(value_der!(memory_view, element_id, 8));
             result.push(IValue::S64(value));
         }
 
@@ -285,16 +254,7 @@ def_read_func!(read_i64_array, (i64, elements_count), {
     |memory_view: &[Cell<u8>]| {
         let mut result = Vec::with_capacity(elements_count);
         for element_id in 0..elements_count {
-            let value = i64::from_le_bytes([
-                Cell::get(&memory_view[8 * element_id]),
-                Cell::get(&memory_view[8 * element_id + 1]),
-                Cell::get(&memory_view[8 * element_id + 2]),
-                Cell::get(&memory_view[8 * element_id + 3]),
-                Cell::get(&memory_view[8 * element_id + 4]),
-                Cell::get(&memory_view[8 * element_id + 5]),
-                Cell::get(&memory_view[8 * element_id + 6]),
-                Cell::get(&memory_view[8 * element_id + 7]),
-            ]);
+            let value = i64::from_le_bytes(value_der!(memory_view, element_id, 8));
             result.push(IValue::I64(value));
         }
 

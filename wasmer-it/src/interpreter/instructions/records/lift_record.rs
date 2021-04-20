@@ -32,7 +32,7 @@ where
 
     for field in (*record_type.fields).iter() {
         match &field.ty {
-            IType::Boolean => values.push(IValue::Boolean(reader.read_u8() == 1)),
+            IType::Boolean => values.push(IValue::Boolean(reader.read_u8() != 0)),
             IType::S8 => values.push(IValue::S8(reader.read_i8())),
             IType::S16 => values.push(IValue::S16(reader.read_i16())),
             IType::S32 => values.push(IValue::S32(reader.read_i32())),
@@ -69,7 +69,7 @@ pub fn record_size(record_type: &IRecordType) -> usize {
             IType::S32 | IType::U32 | IType::I32 | IType::F32 => 4,
             IType::Record(_) => 4,
             IType::String | IType::ByteArray | IType::Array(_) => 2 * 4,
-            IType::S64 | IType::U64 | IType::I64 | IType::F64 => 64,
+            IType::S64 | IType::U64 | IType::I64 | IType::F64 => 8,
         };
     }
 

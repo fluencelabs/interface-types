@@ -17,6 +17,7 @@ use crate::IType;
 use crate::IValue;
 use crate::NEVec;
 
+pub use arrays::ser_value_size;
 pub use records::record_size;
 
 pub(crate) use argument_get::argument_get;
@@ -258,6 +259,7 @@ where
     Instance: wasm::structures::Instance<Export, LocalImport, Memory, MemoryView>,
 {
     match (&interface_type, interface_value) {
+        (IType::Boolean, IValue::Boolean(_)) => Ok(()),
         (IType::S8, IValue::S8(_)) => Ok(()),
         (IType::S16, IValue::S16(_)) => Ok(()),
         (IType::S32, IValue::S32(_)) => Ok(()),
@@ -271,12 +273,33 @@ where
         (IType::F32, IValue::F32(_)) => Ok(()),
         (IType::F64, IValue::F64(_)) => Ok(()),
         (IType::String, IValue::String(_)) => Ok(()),
+        (IType::ByteArray, IValue::ByteArray(_)) => Ok(()),
         (IType::Array(ty), IValue::Array(values)) => {
             for value in values {
                 is_value_compatible_to_type(instance, ty, value, instruction.clone())?
             }
 
             Ok(())
+        }
+        (IType::ByteArray, IValue::Array(values)) => {
+            for value in values {
+                is_value_compatible_to_type(instance, &IType::U8, value, instruction.clone())?
+            }
+
+            Ok(())
+        }
+        (IType::Array(ty), IValue::ByteArray(_)) => {
+            if ty.as_ref() == &IType::U8 {
+                return Ok(());
+            }
+
+            instr_error!(
+                instruction,
+                InstructionErrorKind::InvalidValueOnTheStack {
+                    expected_type: interface_type.clone(),
+                    received_value: interface_value.clone(),
+                }
+            )
         }
         (IType::Record(ref record_type_id), IValue::Record(record_fields)) => {
             is_record_fields_compatible_to_type(

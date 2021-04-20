@@ -24,7 +24,7 @@ where
         return Ok((0, 0));
     }
 
-    let size_to_allocate = value_size(&array_values[0]) * array_values.len();
+    let size_to_allocate = ser_value_size(&array_values[0]) * array_values.len();
     let offset = super::allocate(instance, instruction.clone(), size_to_allocate)?;
 
     let memory_index = 0;
@@ -91,22 +91,14 @@ where
     Ok((offset as _, writer.written_values() as _))
 }
 
-fn value_size(value: &IValue) -> usize {
+/// Size of a value in a serialized view.
+pub fn ser_value_size(value: &IValue) -> usize {
     match value {
-        IValue::Boolean(_) => 1,
-        IValue::S8(_) => 1,
-        IValue::S16(_) => 2,
-        IValue::S32(_) => 4,
-        IValue::S64(_) => 8,
-        IValue::U8(_) => 1,
-        IValue::U16(_) => 2,
-        IValue::U32(_) => 4,
-        IValue::U64(_) => 8,
-        IValue::F32(_) => 4,
-        IValue::F64(_) => 8,
+        IValue::Boolean(_) | IValue::S8(_) | IValue::U8(_) => 1,
+        IValue::S16(_) | IValue::U16(_) => 2,
+        IValue::S32(_) | IValue::U32(_) | IValue::F32(_) | IValue::I32(_) => 4,
+        IValue::S64(_) | IValue::U64(_) | IValue::F64(_) | IValue::I64(_) => 8,
         IValue::String(_) | IValue::ByteArray(_) | IValue::Array(_) => 2 * 4,
-        IValue::I32(_) => 4,
-        IValue::I64(_) => 8,
         IValue::Record(_) => 4,
     }
 }

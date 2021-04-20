@@ -5,6 +5,7 @@ pub mod stack;
 pub mod wasm;
 
 pub use instructions::record_size;
+pub use instructions::ser_value_size;
 pub use instructions::Instruction;
 
 use crate::errors::{InstructionResult, InterpreterResult};
