@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-use crate::MResult;
 use crate::error::MemoryAccessError;
+use crate::MResult;
 
 use std::cell::Cell;
 
@@ -75,7 +75,11 @@ impl<'m> MemoryWriter<'m> {
         Ok(())
     }
 
-    pub fn sequential_writer(&self, offset: usize, size: usize) -> MResult<SequentialWriter<'_, '_>> {
+    pub fn sequential_writer(
+        &self,
+        offset: usize,
+        size: usize,
+    ) -> MResult<SequentialWriter<'_, '_>> {
         self.check_access(offset, size)?;
 
         Ok(SequentialWriter::new(&self, offset))

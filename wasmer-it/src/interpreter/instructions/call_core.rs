@@ -11,7 +11,7 @@ executable_instruction!(
             let index = FunctionIndex::new(function_index as usize);
 
             let local_or_import = instance.local_or_import(index).ok_or_else(|| {
-                InstructionError::new(
+                InstructionError::from_error_kind(
                     instruction.clone(),
                     InstructionErrorKind::LocalOrImportIsMissing {
                         function_index,
@@ -21,7 +21,7 @@ executable_instruction!(
             let inputs_cardinality = local_or_import.inputs_cardinality();
 
             let inputs = runtime.stack.pop(inputs_cardinality).ok_or_else(|| {
-                InstructionError::new(
+                InstructionError::from_error_kind(
                     instruction.clone(),
                     InstructionErrorKind::StackIsTooSmall {
                         needed: inputs_cardinality,
@@ -29,12 +29,13 @@ executable_instruction!(
                 )
             })?;
 
-            super::check_function_signature(&**instance, local_or_import, &inputs, instruction.clone())?;
+            super::check_function_signature(&**instance, local_or_import, &inputs)
+                .map_err(|e| InstructionError::from_error_kind(instruction.clone(), e))?;
 
             log::debug!("call-core: calling {} with arguments: {:?}", local_or_import.name(), inputs);
 
             let outputs = local_or_import.call(&inputs).map_err(|_| {
-                InstructionError::new(
+                InstructionError::from_error_kind(
                     instruction.clone(),
                     InstructionErrorKind::LocalOrImportCall {
                         function_name: local_or_import.name().to_string(),

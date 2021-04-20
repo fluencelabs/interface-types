@@ -1,19 +1,12 @@
-mod error;
 mod lift_record;
 mod lower_record;
-
-pub use lift_record::record_size;
 
 pub(crate) use lift_record::record_lift_memory_impl;
 pub(crate) use lower_record::record_lower_memory_impl;
 
-pub(self) use error::LiLoRecordError;
-pub(self) type LiLoResult<T> = std::result::Result<T, LiLoRecordError>;
-
 use super::array_lift_memory_impl;
 use super::array_lower_memory_impl;
-use super::read_from_instance_mem;
-use super::write_to_instance_mem;
+use super::lilo;
 
 use crate::instr_error;
 use crate::interpreter::instructions::{is_record_fields_compatible_to_type, to_native};
@@ -40,7 +33,7 @@ where
     Box::new({
         move |runtime| -> _ {
             let inputs = runtime.stack.pop(1).ok_or_else(|| {
-                InstructionError::new(
+                InstructionError::from_error_kind(
                     instruction.clone(),
                     InstructionErrorKind::StackIsTooSmall { needed: 1 },
                 )
@@ -49,12 +42,12 @@ where
             let offset: usize = to_native::<i32>(&inputs[0], instruction.clone())?
                 .try_into()
                 .map_err(|e| (e, "offset").into())
-                .map_err(|k| InstructionError::new(instruction.clone(), k))?;
+                .map_err(|k| InstructionError::from_error_kind(instruction.clone(), k))?;
 
             // TODO: size = 0
             let instance = &runtime.wasm_instance;
             let record_type = instance.wit_record_by_id(record_type_id).ok_or_else(|| {
-                InstructionError::new(
+                InstructionError::from_error_kind(
                     instruction.clone(),
                     InstructionErrorKind::RecordTypeByNameIsMissing { record_type_id },
                 )
@@ -66,8 +59,22 @@ where
                 record_type_id
             );
 
-            let record =
-                record_lift_memory_impl(&**instance, record_type, offset, instruction.clone())?;
+            let memory_index = 0;
+            let memory_view = instance
+                .memory(memory_index)
+                .ok_or_else(|| {
+                    InstructionError::from_error_kind(
+                        instruction.clone(),
+                        InstructionErrorKind::MemoryIsMissing { memory_index },
+                    )
+                })?
+                .view();
+            let memory = memory_view.deref();
+
+            let li_helper = lilo::LiHelper::new(&**instance, memory)
+                .map_err(|e| InstructionError::from_lilo(instruction.clone(), e))?;
+            let record = record_lift_memory_impl(&li_helper, record_type, offset)
+                .map_err(|e| InstructionError::from_lilo(instruction.clone(), e))?;
 
             log::debug!("record.lift_memory: pushing {:?} on the stack", record);
             runtime.stack.push(record);
@@ -101,13 +108,27 @@ where
                         &**instance,
                         record_type_id,
                         &record_fields,
-                        instruction.clone(),
-                    )?;
+                    )
+                    .map_err(|e| InstructionError::from_error_kind(instruction.clone(), e))?;
 
                     log::debug!("record.lower_memory: obtained {:?} values on the stack for record type = {}", record_fields, record_type_id);
 
-                    let offset =
-                        record_lower_memory_impl(*instance, instruction.clone(), record_fields)?;
+                    let memory_index = 0;
+                    let memory_view = instance
+                        .memory(memory_index)
+                        .ok_or_else(|| {
+                            InstructionError::from_error_kind(
+                                instruction.clone(),
+                                InstructionErrorKind::MemoryIsMissing { memory_index },
+                            )
+                        })?
+                        .view();
+                    let memory = memory_view.deref();
+
+                    let lo_helper = lilo::LoHelper::new(&**instance, memory)
+                        .map_err(|e| InstructionError::from_lilo(instruction.clone(), e))?;
+                    let offset = record_lower_memory_impl(&lo_helper, record_fields)
+                        .map_err(|e| InstructionError::from_lilo(instruction.clone(), e))?;
 
                     log::debug!("record.lower_memory: pushing {} on the stack", offset);
                     runtime.stack.push(IValue::I32(offset));

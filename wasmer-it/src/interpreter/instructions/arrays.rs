@@ -1,18 +1,11 @@
 mod lift_array;
 mod lower_array;
-mod memory_writer;
-mod read_arrays;
-
-pub use lower_array::ser_value_size;
 
 pub(crate) use lift_array::array_lift_memory_impl;
 pub(crate) use lower_array::array_lower_memory_impl;
 
-use super::allocate;
-use super::read_from_instance_mem;
-use super::record_lift_memory_impl;
+use super::lilo;
 use super::record_lower_memory_impl;
-use super::write_to_instance_mem;
 
 use crate::instr_error;
 use crate::interpreter::instructions::to_native;
@@ -41,7 +34,7 @@ where
     Box::new({
         move |runtime| -> _ {
             let inputs = runtime.stack.pop(2).ok_or_else(|| {
-                InstructionError::new(
+                InstructionError::from_error_kind(
                     instruction.clone(),
                     InstructionErrorKind::StackIsTooSmall { needed: 1 },
                 )
@@ -50,12 +43,12 @@ where
             let offset: usize = to_native::<i32>(&inputs[0], instruction.clone())?
                 .try_into()
                 .map_err(|e| (e, "offset").into())
-                .map_err(|k| InstructionError::new(instruction.clone(), k))?;
+                .map_err(|k| InstructionError::from_error_kind(instruction.clone(), k))?;
 
             let size: usize = to_native::<i32>(&inputs[1], instruction.clone())?
                 .try_into()
                 .map_err(|e| (e, "size").into())
-                .map_err(|k| InstructionError::new(instruction.clone(), k))?;
+                .map_err(|k| InstructionError::from_error_kind(instruction.clone(), k))?;
 
             log::trace!(
                 "array.lift_memory: lifting memory for value type: {:?}, popped offset {}, size {}",
@@ -65,13 +58,23 @@ where
             );
 
             let instance = &mut runtime.wasm_instance;
-            let array = array_lift_memory_impl(
-                *instance,
-                &value_type,
-                offset as _,
-                size as _,
-                instruction.clone(),
-            )?;
+
+            let memory_index = 0;
+            let memory_view = instance
+                .memory(memory_index)
+                .ok_or_else(|| {
+                    InstructionError::from_error_kind(
+                        instruction.clone(),
+                        InstructionErrorKind::MemoryIsMissing { memory_index },
+                    )
+                })?
+                .view();
+            let memory = memory_view.deref();
+
+            let li_helper = lilo::LiHelper::new(&**instance, memory)
+                .map_err(|e| InstructionError::from_lilo(instruction.clone(), e))?;
+            let array = array_lift_memory_impl(&li_helper, &value_type, offset as _, size as _)
+                .map_err(|e| InstructionError::from_lilo(instruction.clone(), e))?;
 
             log::trace!("array.lift_memory: pushing {:?} on the stack", array);
             runtime.stack.push(array);
@@ -99,7 +102,7 @@ where
         move |runtime| -> _ {
             let instance = &mut runtime.wasm_instance;
             let stack_value = runtime.stack.pop1().ok_or_else(|| {
-                InstructionError::new(
+                InstructionError::from_error_kind(
                     instruction.clone(),
                     InstructionErrorKind::StackIsTooSmall { needed: 1 },
                 )
@@ -110,16 +113,28 @@ where
                     log::trace!("array.lower_memory: obtained {:?} values on the stack for interface type {:?}", values, value_type);
 
                     for value in values.iter() {
-                        super::is_value_compatible_to_type(
-                            &**instance,
-                            &value_type,
-                            &value,
-                            instruction.clone(),
-                        )?;
+                        super::is_value_compatible_to_type(&**instance, &value_type, &value)
+                            .map_err(|e| {
+                                InstructionError::from_error_kind(instruction.clone(), e)
+                            })?;
                     }
 
-                    let (offset, size) =
-                        array_lower_memory_impl(*instance, instruction.clone(), values)?;
+                    let memory_index = 0;
+                    let memory_view = instance
+                        .memory(memory_index)
+                        .ok_or_else(|| {
+                            InstructionError::from_error_kind(
+                                instruction.clone(),
+                                InstructionErrorKind::MemoryIsMissing { memory_index },
+                            )
+                        })?
+                        .view();
+                    let memory = memory_view.deref();
+
+                    let lo_helper = lilo::LoHelper::new(&**instance, memory)
+                        .map_err(|e| InstructionError::from_lilo(instruction.clone(), e))?;
+                    let (offset, size) = array_lower_memory_impl(&lo_helper, values)
+                        .map_err(|e| InstructionError::from_lilo(instruction.clone(), e))?;
 
                     log::trace!(
                         "array.lower_memory: pushing {}, {} on the stack",

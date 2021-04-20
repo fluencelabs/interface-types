@@ -20,7 +20,7 @@ macro_rules! lowering_lifting {
                                 .push({
                                     let converted_value = IValue::$to_variant(value.try_into().map_err(
                                         |_| {
-                                            InstructionError::new(
+                                            InstructionError::from_error_kind(
                                                 instruction.clone(),
                                                 InstructionErrorKind::LoweringLifting {
                                                     from: IType::$from_variant,

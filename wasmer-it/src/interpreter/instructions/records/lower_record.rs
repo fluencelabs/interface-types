@@ -1,13 +1,10 @@
-use super::write_to_instance_mem;
-use super::LiLoResult;
-use super::LiLoRecordError;
+use super::lilo::*;
+
 use crate::IValue;
 use crate::NEVec;
 
-use it_lilo_utils::memory_writer::MemoryWriter;
-
 pub(crate) fn record_lower_memory_impl(
-    writer: &MemoryWriter,
+    lo_helper: &LoHelper,
     values: NEVec<IValue>,
 ) -> LiLoResult<i32> {
     let average_field_size = 4;
@@ -29,38 +26,34 @@ pub(crate) fn record_lower_memory_impl(
             IValue::F32(value) => result.extend_from_slice(&value.to_le_bytes()),
             IValue::F64(value) => result.extend_from_slice(&value.to_le_bytes()),
             IValue::String(value) => {
-                let offset =
-                    write_to_instance_mem(instance, instruction.clone(), value.as_bytes())? as u32;
+                let offset = lo_helper.write_to_mem(value.as_bytes())? as u32;
 
                 result.extend_from_slice(&offset.to_le_bytes());
                 result.extend_from_slice(&(value.len() as u32).to_le_bytes());
             }
             IValue::ByteArray(value) => {
-                let array_pointer =
-                    write_to_instance_mem(instance, instruction.clone(), &value)? as u32;
+                let offset = lo_helper.write_to_mem(&value)? as u32;
 
-                result.extend_from_slice(&array_pointer.to_le_bytes());
+                result.extend_from_slice(&offset.to_le_bytes());
                 result.extend_from_slice(&(value.len() as u32).to_le_bytes());
             }
 
             IValue::Array(values) => {
-                let (offset, size) =
-                    super::array_lower_memory_impl(instance, instruction.clone(), values)?;
+                let (offset, size) = super::array_lower_memory_impl(lo_helper, values)?;
 
                 result.extend_from_slice(&(offset as u32).to_le_bytes());
                 result.extend_from_slice(&(size as u32).to_le_bytes());
             }
 
             IValue::Record(values) => {
-                let record_ptr =
-                    record_lower_memory_impl(instance, instruction.clone(), values)? as u32;
+                let offset = record_lower_memory_impl(lo_helper, values)? as u32;
 
-                result.extend_from_slice(&record_ptr.to_le_bytes());
+                result.extend_from_slice(&offset.to_le_bytes());
             }
         }
     }
 
-    let result_pointer = write_to_instance_mem(instance, instruction, &result)?;
+    let result_pointer = lo_helper.write_to_mem(&result)?;
 
     Ok(result_pointer as _)
 }

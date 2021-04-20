@@ -1,105 +1,70 @@
-use super::memory_writer::MemoryWriter;
-use super::write_to_instance_mem;
+use super::lilo::*;
 
-use crate::{
-    errors::{InstructionError, InstructionErrorKind},
-    interpreter::Instruction,
-    IValue,
-};
+use crate::IValue;
 
-pub(crate) fn array_lower_memory_impl<Instance, Export, LocalImport, Memory, MemoryView>(
-    instance: &mut Instance,
-    instruction: Instruction,
+use it_lilo_utils::ser_value_size;
+use it_lilo_utils::type_code_form_ivalue;
+
+pub(crate) fn array_lower_memory_impl(
+    lo_helper: &LoHelper,
     array_values: Vec<IValue>,
-) -> Result<(usize, usize), InstructionError>
-where
-    Export: crate::interpreter::wasm::structures::Export,
-    LocalImport: crate::interpreter::wasm::structures::LocalImport,
-    Memory: crate::interpreter::wasm::structures::Memory<MemoryView>,
-    MemoryView: crate::interpreter::wasm::structures::MemoryView,
-    Instance:
-        crate::interpreter::wasm::structures::Instance<Export, LocalImport, Memory, MemoryView>,
-{
+) -> LiLoResult<(usize, usize)> {
     if array_values.is_empty() {
         return Ok((0, 0));
     }
 
     let elements_count = array_values.len();
     let size_to_allocate = ser_value_size(&array_values[0]) * elements_count;
-    let offset = super::allocate(instance, instruction.clone(), size_to_allocate)?;
+    let offset = (lo_helper.allocate)(
+        size_to_allocate as _,
+        type_code_form_ivalue(&array_values[0]) as _,
+    )?;
 
-    let memory_index = 0;
-    let memory_view = &instance
-        .memory(memory_index)
-        .ok_or_else(|| {
-            InstructionError::new(
-                instruction.clone(),
-                InstructionErrorKind::MemoryIsMissing { memory_index },
-            )
-        })?
-        .view();
-    let writer = MemoryWriter::new(memory_view, offset);
+    let seq_writer = lo_helper
+        .writer
+        .sequential_writer(offset, size_to_allocate)?;
 
     // here it's known that all interface values have the same type
     for value in array_values {
         match value {
-            IValue::Boolean(value) => writer.write_u8(value as _),
-            IValue::S8(value) => writer.write_u8(value as _),
-            IValue::S16(value) => writer.write_array(value.to_le_bytes()),
-            IValue::S32(value) => writer.write_array(value.to_le_bytes()),
-            IValue::S64(value) => writer.write_array(value.to_le_bytes()),
-            IValue::U8(value) => writer.write_array(value.to_le_bytes()),
-            IValue::U16(value) => writer.write_array(value.to_le_bytes()),
-            IValue::U32(value) => writer.write_array(value.to_le_bytes()),
-            IValue::U64(value) => writer.write_array(value.to_le_bytes()),
-            IValue::I32(value) => writer.write_array(value.to_le_bytes()),
-            IValue::I64(value) => writer.write_array(value.to_le_bytes()),
-            IValue::F32(value) => writer.write_array(value.to_le_bytes()),
-            IValue::F64(value) => writer.write_array(value.to_le_bytes()),
+            IValue::Boolean(value) => seq_writer.write_u8(value as _),
+            IValue::S8(value) => seq_writer.write_u8(value as _),
+            IValue::S16(value) => seq_writer.write_array(value.to_le_bytes()),
+            IValue::S32(value) => seq_writer.write_array(value.to_le_bytes()),
+            IValue::S64(value) => seq_writer.write_array(value.to_le_bytes()),
+            IValue::U8(value) => seq_writer.write_array(value.to_le_bytes()),
+            IValue::U16(value) => seq_writer.write_array(value.to_le_bytes()),
+            IValue::U32(value) => seq_writer.write_array(value.to_le_bytes()),
+            IValue::U64(value) => seq_writer.write_array(value.to_le_bytes()),
+            IValue::I32(value) => seq_writer.write_array(value.to_le_bytes()),
+            IValue::I64(value) => seq_writer.write_array(value.to_le_bytes()),
+            IValue::F32(value) => seq_writer.write_array(value.to_le_bytes()),
+            IValue::F64(value) => seq_writer.write_array(value.to_le_bytes()),
             IValue::String(value) => {
-                let string_pointer =
-                    write_to_instance_mem(instance, instruction.clone(), value.as_bytes())? as u32;
-                let string_size = value.len() as u32;
+                let offset = lo_helper.write_to_mem(value.as_bytes())? as u32;
 
-                writer.write_array(string_pointer.to_le_bytes());
-                writer.write_array(string_size.to_le_bytes());
+                seq_writer.write_array(offset.to_le_bytes());
+                seq_writer.write_array((value.len() as u32).to_le_bytes());
             }
             IValue::ByteArray(values) => {
-                let array_pointer =
-                    write_to_instance_mem(instance, instruction.clone(), &values)? as u32;
-                let array_size = values.len() as u32;
+                let offset = lo_helper.write_to_mem(&values)? as u32;
 
-                writer.write_array(array_pointer.to_le_bytes());
-                writer.write_array(array_size.to_le_bytes());
+                seq_writer.write_array(offset.to_le_bytes());
+                seq_writer.write_array((values.len() as u32).to_le_bytes());
             }
             IValue::Array(values) => {
-                let (array_offset, array_size) =
-                    array_lower_memory_impl(instance, instruction.clone(), values)?;
+                let (offset, size) = array_lower_memory_impl(lo_helper, values)?;
 
-                let (array_offset, array_size) = (array_offset as u32, array_size as u32);
-                writer.write_array(array_offset.to_le_bytes());
-                writer.write_array(array_size.to_le_bytes());
+                seq_writer.write_array((offset as u32).to_le_bytes());
+                seq_writer.write_array((size as u32).to_le_bytes());
             }
 
             IValue::Record(values) => {
-                let record_offset =
-                    super::record_lower_memory_impl(instance, instruction.clone(), values)? as u32;
-                writer.write_array(record_offset.to_le_bytes());
+                let offset = super::record_lower_memory_impl(lo_helper, values)? as u32;
+                seq_writer.write_array(offset.to_le_bytes());
             }
         }
     }
 
     Ok((offset as _, elements_count as _))
-}
-
-/// Size of a value in a serialized view.
-pub fn ser_value_size(value: &IValue) -> usize {
-    match value {
-        IValue::Boolean(_) | IValue::S8(_) | IValue::U8(_) => 1,
-        IValue::S16(_) | IValue::U16(_) => 2,
-        IValue::S32(_) | IValue::U32(_) | IValue::F32(_) | IValue::I32(_) => 4,
-        IValue::S64(_) | IValue::U64(_) | IValue::F64(_) | IValue::I64(_) => 8,
-        IValue::String(_) | IValue::ByteArray(_) | IValue::Array(_) => 2 * 4,
-        IValue::Record(_) => 4,
-    }
 }
