@@ -6,6 +6,10 @@ authors = ["Fluence Labs"]
 edition = "2018"
 license = "Apache-2.0"
 
+[lib]
+name = "fluence_it_types"
+path = "src/lib.rs"
+
 [dependencies]
 it-to-bytes = { path = "../to-bytes/", version = "0.1.0" }
 

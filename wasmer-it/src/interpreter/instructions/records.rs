@@ -1,11 +1,14 @@
+mod error;
 mod lift_record;
 mod lower_record;
-mod value_reader;
 
 pub use lift_record::record_size;
 
 pub(crate) use lift_record::record_lift_memory_impl;
 pub(crate) use lower_record::record_lower_memory_impl;
+
+pub(self) use error::LiLoRecordError;
+pub(self) type LiLoResult<T> = std::result::Result<T, LiLoRecordError>;
 
 use super::array_lift_memory_impl;
 use super::array_lower_memory_impl;

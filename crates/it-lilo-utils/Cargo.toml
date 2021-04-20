@@ -1,0 +1,17 @@
+[package]
+name = "it-lilo-utils"
+version = "0.1.0"
+authors = ["Fluence Labs"]
+description = "Defines some helper utils for lifting/lowering IT"
+edition = "2018"
+license = "Apache-2.0"
+
+[lib]
+name = "it_lilo_utils"
+path = "src/lib.rs"
+
+[dependencies]
+fluence-it-types = { path = "../it-types/", version = "0.2.0" }
+
+paste = "1.0.5"
+thiserror = "1.0.24"

@@ -65,6 +65,7 @@ mod serde;
 mod values;
 
 // re-exports
+pub use fluence_it_types::ne_vec;
 pub use fluence_it_types::ne_vec::NEVec;
 pub use fluence_it_types::IRecordFieldType;
 pub use fluence_it_types::IRecordType;

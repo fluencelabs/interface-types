@@ -24,7 +24,8 @@ where
         return Ok((0, 0));
     }
 
-    let size_to_allocate = ser_value_size(&array_values[0]) * array_values.len();
+    let elements_count = array_values.len();
+    let size_to_allocate = ser_value_size(&array_values[0]) * elements_count;
     let offset = super::allocate(instance, instruction.clone(), size_to_allocate)?;
 
     let memory_index = 0;
@@ -88,7 +89,7 @@ where
         }
     }
 
-    Ok((offset as _, writer.written_values() as _))
+    Ok((offset as _, elements_count as _))
 }
 
 /// Size of a value in a serialized view.

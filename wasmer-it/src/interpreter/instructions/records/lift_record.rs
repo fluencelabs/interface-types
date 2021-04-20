@@ -1,6 +1,6 @@
-use super::read_from_instance_mem;
+use super::LiLoRecordError;
+use super::LiLoResult;
 
-use super::value_reader::ValueReader;
 use crate::IRecordType;
 use crate::IType;
 use crate::IValue;
@@ -10,52 +10,46 @@ use crate::{
     interpreter::Instruction,
 };
 
+use it_lilo_utils::memory_reader::MemoryReader;
+use it_lilo_utils::memory_reader::SequentialReader;
+
 #[rustfmt::skip]
-pub(crate) fn record_lift_memory_impl<'instance, Instance, Export, LocalImport, Memory, MemoryView>(
-    instance: &'instance Instance,
+pub(crate) fn record_lift_memory_impl(
+    reader: &MemoryReader<'_>,
     record_type: &IRecordType,
     offset: usize,
-    instruction: Instruction,
-) -> Result<IValue, InstructionError>
-where
-    Export: crate::interpreter::wasm::structures::Export,
-    LocalImport: crate::interpreter::wasm::structures::LocalImport,
-    Memory: crate::interpreter::wasm::structures::Memory<MemoryView>,
-    MemoryView: crate::interpreter::wasm::structures::MemoryView,
-    Instance: crate::interpreter::wasm::structures::Instance<Export, LocalImport, Memory, MemoryView> + 'instance,
-{
+) -> LiLoResult<IValue> {
     let mut values = Vec::with_capacity(record_type.fields.len());
 
     let size = record_size(record_type);
-    let data = read_from_instance_mem(instance, instruction.clone(), offset, size)?;
-    let reader = ValueReader::new(data);
+    let seq_reader = reader.sequential_reader(offset, size)?;
 
     for field in (*record_type.fields).iter() {
         match &field.ty {
-            IType::Boolean => values.push(IValue::Boolean(reader.read_u8() != 0)),
-            IType::S8 => values.push(IValue::S8(reader.read_i8())),
-            IType::S16 => values.push(IValue::S16(reader.read_i16())),
-            IType::S32 => values.push(IValue::S32(reader.read_i32())),
-            IType::S64 => values.push(IValue::S64(reader.read_i64())),
-            IType::I32 => values.push(IValue::I32(reader.read_i32())),
-            IType::I64 => values.push(IValue::I64(reader.read_i64())),
-            IType::U8 => values.push(IValue::U8(reader.read_u8())),
-            IType::U16 => values.push(IValue::U16(reader.read_u16())),
-            IType::U32 => values.push(IValue::U32(reader.read_u32())),
-            IType::U64 => values.push(IValue::U64(reader.read_u64())),
-            IType::F32 => values.push(IValue::F32(reader.read_f32())),
-            IType::F64 => values.push(IValue::F64(reader.read_f64())),
-            IType::String => values.push(IValue::String(read_string(instance, instruction.clone(), &reader)?)),
-            IType::ByteArray => values.push(read_byte_array(instance, instruction.clone(), &reader)?),
-            IType::Array(ty) =>  values.push(read_array(instance, instruction.clone(), &reader, &**ty)?),
-            IType::Record(record_type_id) => values.push(read_record(instance, instruction.clone(), &reader, *record_type_id)?),
+            IType::Boolean => values.push(IValue::Boolean(seq_reader.read_u8() != 0)),
+            IType::S8 => values.push(IValue::S8(seq_reader.read_i8())),
+            IType::S16 => values.push(IValue::S16(seq_reader.read_i16())),
+            IType::S32 => values.push(IValue::S32(seq_reader.read_i32())),
+            IType::S64 => values.push(IValue::S64(seq_reader.read_i64())),
+            IType::I32 => values.push(IValue::I32(seq_reader.read_i32())),
+            IType::I64 => values.push(IValue::I64(seq_reader.read_i64())),
+            IType::U8 => values.push(IValue::U8(seq_reader.read_u8())),
+            IType::U16 => values.push(IValue::U16(seq_reader.read_u16())),
+            IType::U32 => values.push(IValue::U32(seq_reader.read_u32())),
+            IType::U64 => values.push(IValue::U64(seq_reader.read_u64())),
+            IType::F32 => values.push(IValue::F32(seq_reader.read_f32())),
+            IType::F64 => values.push(IValue::F64(seq_reader.read_f64())),
+            IType::String => values.push(IValue::String(read_string(reader, &seq_reader)?)),
+            IType::ByteArray => values.push(read_byte_array(reader, &seq_reader)?),
+            IType::Array(ty) =>  values.push(read_array(&reader, &seq_reader, &**ty)?),
+            IType::Record(record_type_id) => values.push(read_record(&reader, &seq_reader, *record_type_id)?),
         }
     }
 
-    Ok(IValue::Record(
-        NEVec::new(values.into_iter().collect())
-            .expect("Record must have at least one field, zero given"),
-    ))
+    let record = NEVec::new(values.into_iter().collect())
+        .map_err(|_| LiLoRecordError::EmptyRecord(record_type.name.clone()))?;
+
+    Ok(IValue::Record(record))
 }
 
 /// Returns the record size in bytes.
@@ -76,28 +70,11 @@ pub fn record_size(record_type: &IRecordType) -> usize {
     record_size
 }
 
-fn read_string<'instance, Instance, Export, LocalImport, Memory, MemoryView>(
-    instance: &Instance,
-    instruction: Instruction,
-    reader: &ValueReader,
-) -> Result<String, InstructionError>
-where
-    Export: crate::interpreter::wasm::structures::Export,
-    LocalImport: crate::interpreter::wasm::structures::LocalImport,
-    Memory: crate::interpreter::wasm::structures::Memory<MemoryView>,
-    MemoryView: crate::interpreter::wasm::structures::MemoryView,
-    Instance: crate::interpreter::wasm::structures::Instance<Export, LocalImport, Memory, MemoryView>
-        + 'instance,
-{
-    let string_offset = reader.read_u32();
-    let string_size = reader.read_u32();
+fn read_string(reader: &MemoryReader, seq_reader: &SequentialReader) -> LiLoResult<String> {
+    let offset = seq_reader.read_u32();
+    let size = seq_reader.read_u32();
 
-    let string_mem = read_from_instance_mem(
-        instance,
-        instruction.clone(),
-        string_offset as _,
-        string_size as _,
-    )?;
+    let string_mem = reader.read_raw_u8_array(offset as _, size as _)?;
 
     let string = String::from_utf8(string_mem).map_err(|e| {
         InstructionError::new(instruction, InstructionErrorKind::CorruptedUTF8String(e))
@@ -106,69 +83,32 @@ where
     Ok(string)
 }
 
-fn read_byte_array<'instance, Instance, Export, LocalImport, Memory, MemoryView>(
-    instance: &Instance,
-    instruction: Instruction,
-    reader: &ValueReader,
-) -> Result<IValue, InstructionError>
-where
-    Export: crate::interpreter::wasm::structures::Export,
-    LocalImport: crate::interpreter::wasm::structures::LocalImport,
-    Memory: crate::interpreter::wasm::structures::Memory<MemoryView>,
-    MemoryView: crate::interpreter::wasm::structures::MemoryView,
-    Instance: crate::interpreter::wasm::structures::Instance<Export, LocalImport, Memory, MemoryView>
-        + 'instance,
-{
-    let offset = reader.read_u32();
-    let elements_count = reader.read_u32();
+fn read_byte_array(reader: &MemoryReader, seq_reader: &SequentialReader) -> LiLoResult<IValue> {
+    let offset = seq_reader.read_u32();
+    let size = seq_reader.read_u32();
 
-    let array = read_from_instance_mem(instance, instruction, offset as _, elements_count as _)?;
-    let byte_array = IValue::ByteArray(array);
+    let array = reader.read_raw_u8_array(offset as _, size as _)?;
 
-    Ok(byte_array)
+    Ok(IValue::ByteArray(array))
 }
 
-fn read_array<'instance, Instance, Export, LocalImport, Memory, MemoryView>(
-    instance: &Instance,
-    instruction: Instruction,
-    reader: &ValueReader,
-    ty: &IType,
-) -> Result<IValue, InstructionError>
-where
-    Export: crate::interpreter::wasm::structures::Export,
-    LocalImport: crate::interpreter::wasm::structures::LocalImport,
-    Memory: crate::interpreter::wasm::structures::Memory<MemoryView>,
-    MemoryView: crate::interpreter::wasm::structures::MemoryView,
-    Instance: crate::interpreter::wasm::structures::Instance<Export, LocalImport, Memory, MemoryView>
-        + 'instance,
-{
-    let array_offset = reader.read_u32();
-    let elements_count = reader.read_u32();
+fn read_array(
+    reader: &MemoryReader,
+    seq_reader: &SequentialReader,
+    value_type: &IType,
+) -> LiLoResult<IValue> {
+    let offset = seq_reader.read_u32();
+    let size = seq_reader.read_u32();
 
-    super::array_lift_memory_impl(
-        instance,
-        ty,
-        array_offset as _,
-        elements_count as _,
-        instruction,
-    )
+    super::array_lift_memory_impl(reader, value_type, offset as _, size as _)
 }
 
-fn read_record<'instance, Instance, Export, LocalImport, Memory, MemoryView>(
-    instance: &Instance,
-    instruction: Instruction,
-    reader: &ValueReader,
+fn read_record(
+    reader: &MemoryReader,
+    seq_reader: &SequentialReader,
     record_type_id: u64,
-) -> Result<IValue, InstructionError>
-where
-    Export: crate::interpreter::wasm::structures::Export,
-    LocalImport: crate::interpreter::wasm::structures::LocalImport,
-    Memory: crate::interpreter::wasm::structures::Memory<MemoryView>,
-    MemoryView: crate::interpreter::wasm::structures::MemoryView,
-    Instance: crate::interpreter::wasm::structures::Instance<Export, LocalImport, Memory, MemoryView>
-        + 'instance,
-{
-    let offset = reader.read_u32();
+) -> LiLoResult<IValue> {
+    let offset = seq_reader.read_u32();
 
     let record_type = instance.wit_record_by_id(record_type_id).ok_or_else(|| {
         InstructionError::new(
@@ -177,5 +117,5 @@ where
         )
     })?;
 
-    record_lift_memory_impl(instance, record_type, offset as _, instruction)
+    record_lift_memory_impl(reader, record_type, offset as _)
 }
