@@ -25,7 +25,7 @@ pub struct MemoryWriter<'m> {
 
 /// Writes values of basic types sequentially to the provided writer.
 /// It don't check memory limits for the optimization purposes,
-/// so it could created by the MemoryReader::sequential_reader method.
+/// so it could be created only by the MemoryReader::sequential_reader method.
 pub struct SequentialWriter<'w, 'm> {
     writer: &'w MemoryWriter<'m>,
     offset: Cell<usize>,
@@ -87,6 +87,8 @@ impl<'m> MemoryWriter<'m> {
 
     pub fn check_access(&self, offset: usize, size: usize) -> MResult<()> {
         let right = offset + size;
+
+        // the first condition is a check for overflow
         if right < offset || right >= self.memory.len() {
             return Err(MemoryAccessError::InvalidAccess {
                 offset,

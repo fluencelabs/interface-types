@@ -68,7 +68,7 @@ lowering_lifting!(s32_from_i32, "s32.from_i32", S32, I32);
 lowering_lifting!(s32_from_i64, "s32.from_i64", S32, I64);
 lowering_lifting!(s64_from_i32, "s64.from_i32", S64, I32);
 lowering_lifting!(s64_from_i64, "s64.from_i64", S64, I64);
-//lowering_lifting!(i32_from_bool, "i32.from_bool", I32, Boolean);
+lowering_lifting!(i32_from_bool, "i32.from_bool", I32, Boolean);
 lowering_lifting!(i32_from_s8, "i32.from_s8", I32, S8);
 lowering_lifting!(i32_from_s16, "i32.from_s16", I32, S16);
 lowering_lifting!(i32_from_s32, "i32.from_s32", I32, S32);
@@ -105,44 +105,6 @@ executable_instruction!(
                             let converted_value = IValue::Boolean(value != 0);
 
                             log::trace!("bool.from_i32: converting {:?} to {:?}" , value, converted_value);
-
-                            converted_value
-                        })
-                }
-                Some(wrong_value) => {
-                    return instr_error!(
-                        instruction.clone(),
-                        InstructionErrorKind::InvalidValueOnTheStack {
-                            expected_type: IType::I32,
-                            received_value: wrong_value,
-                        }
-                    )
-                },
-
-                None => {
-                    return instr_error!(
-                        instruction.clone(),
-                        InstructionErrorKind::StackIsTooSmall { needed: 1 }
-                    )
-                }
-            }
-
-            Ok(())
-        }
-    }
-);
-
-executable_instruction!(
-    i32_from_bool(instruction: Instruction) -> _ {
-        move |runtime| -> _ {
-            match runtime.stack.pop1() {
-                Some(IValue::Boolean(value)) => {
-                    runtime
-                        .stack
-                        .push({
-                            let converted_value = IValue::I32(value as _);
-
-                            log::trace!("i32.from_bool: converting {:?} to {:?}" , value, converted_value);
 
                             converted_value
                         })

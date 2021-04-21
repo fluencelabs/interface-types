@@ -4,6 +4,7 @@ mod call_core;
 mod dup;
 pub(self) mod lilo;
 mod numbers;
+mod push;
 mod records;
 mod strings;
 mod swap2;
@@ -21,6 +22,7 @@ pub(crate) use arrays::*;
 pub(crate) use call_core::call_core;
 pub(crate) use dup::dup;
 pub(crate) use numbers::*;
+pub(crate) use push::*;
 pub(crate) use records::*;
 pub(crate) use strings::*;
 pub(crate) use swap2::swap2;
@@ -181,6 +183,18 @@ pub enum Instruction {
     RecordLowerMemory {
         /// The type index of the record.
         record_type_id: u32,
+    },
+
+    /// The `i32.push` instruction.
+    PushI32 {
+        /// The value that should be pushed on the stack.
+        value: i32,
+    },
+
+    /// The `i64.push` instruction.
+    PushI64 {
+        /// The value that should be pushed on the stack.
+        value: i64,
     },
 
     /// The `dup` instructions.

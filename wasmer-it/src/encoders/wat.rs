@@ -108,11 +108,6 @@ impl ToString for &Instruction {
             Instruction::ArrayLowerMemory { value_type } => {
                 format!("array.lower_memory {}", value_type.to_string())
             }
-            /*
-            Instruction::ArraySize => "byte_array.size".into(),
-            Instruction::RecordLift { type_index } => format!("record.lift {}", type_index),
-            Instruction::RecordLower { type_index } => format!("record.lower {}", type_index),
-             */
             Instruction::RecordLiftMemory {
                 record_type_id: type_index,
             } => format!("record.lift_memory {}", type_index),
@@ -121,6 +116,8 @@ impl ToString for &Instruction {
             } => format!("record.lower_memory {}", type_index),
             Instruction::Dup => "dup".into(),
             Instruction::Swap2 => "swap2".into(),
+            Instruction::PushI32 { value } => format!("i32.push {}", value),
+            Instruction::PushI64 { value } => format!("i64.push {}", value),
         }
     }
 }

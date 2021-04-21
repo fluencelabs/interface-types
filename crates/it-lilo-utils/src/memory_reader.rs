@@ -15,6 +15,8 @@
  */
 
 use crate::error::MemoryAccessError;
+use crate::read_array_ty;
+use crate::read_ty;
 use crate::IValue;
 use crate::MResult;
 
@@ -25,96 +27,11 @@ pub struct MemoryReader<'m> {
 }
 
 /// Reads values of basic types sequentially from the provided reader.
-/// It don't check memory limits for the optimization purposes,
-/// so it could created by the MemoryReader::sequential_reader method.
+/// It doesn't check memory limits for the optimization purposes,
+/// so it could be created only by the MemoryReader::sequential_reader method.
 pub struct SequentialReader<'r, 'm> {
     reader: &'r MemoryReader<'m>,
     offset: Cell<usize>,
-}
-
-macro_rules! value_der {
-    ($self:expr, $offset:expr, @seq_start $($ids:tt),* @seq_end) => {
-        [$($self.reader.memory[$offset + $ids].get()),+]
-    };
-
-    ($self:expr, $offset:expr, 1) => {
-        value_der!($self, $offset, @seq_start 0 @seq_end);
-    };
-
-    ($self:expr, $offset:expr, 2) => {
-        value_der!($self, $offset, @seq_start 0, 1 @seq_end);
-    };
-
-    ($self:expr, $offset:expr, 4) => {
-        value_der!($self, $offset, @seq_start 0, 1, 2, 3 @seq_end);
-    };
-
-    ($self:expr, $offset:expr, 8) => {
-        value_der!($self, $offset, @seq_start 0, 1, 2, 3, 4, 5, 6, 7 @seq_end);
-    };
-}
-
-macro_rules! read_ty {
-    ($func_name:ident, $ty:ty, 1) => {
-        pub fn $func_name(&self) -> $ty {
-            let offset = self.offset.get();
-            let result = <$ty>::from_le_bytes(value_der!(self, offset, 1));
-
-            self.offset.set(offset + 1);
-            result
-        }
-    };
-
-    ($func_name:ident, $ty:ty, 2) => {
-        pub fn $func_name(&self) -> $ty {
-            let offset = self.offset.get();
-            let result = <$ty>::from_le_bytes(value_der!(self, offset, 2));
-
-            self.offset.set(offset + 2);
-            result
-        }
-    };
-
-    ($func_name:ident, $ty:ty, 4) => {
-        pub fn $func_name(&self) -> $ty {
-            let offset = self.offset.get();
-            let result = <$ty>::from_le_bytes(value_der!(self, offset, 4));
-
-            self.offset.set(offset + 4);
-            result
-        }
-    };
-
-    ($func_name:ident, $ty:ty, 8) => {
-        pub fn $func_name(&self) -> $ty {
-            let offset = self.offset.get();
-            let result = <$ty>::from_le_bytes(value_der!(self, offset, 8));
-
-            self.offset.set(offset + 8);
-            result
-        }
-    };
-}
-
-macro_rules! read_array_ty {
-    ($func_name:ident, $ty:ident, $ity:ident) => {
-        pub fn $func_name(
-            &self,
-            offset: usize,
-            elements_count: usize,
-        ) -> crate::MResult<Vec<crate::IValue>> {
-            let reader =
-                self.sequential_reader(offset, std::mem::size_of::<$ty>() * elements_count)?;
-            let mut result = Vec::with_capacity(elements_count);
-
-            for _ in 0..elements_count {
-                let value = paste::paste! { reader.[<read_ $ty>]()};
-                result.push(IValue::$ity(value));
-            }
-
-            Ok(result)
-        }
-    };
 }
 
 impl<'m> MemoryReader<'m> {
@@ -161,6 +78,8 @@ impl<'m> MemoryReader<'m> {
 
     pub fn check_access(&self, offset: usize, size: usize) -> MResult<()> {
         let right = offset + size;
+
+        // the first condition is a check for overflow
         if right < offset || right >= self.memory.len() {
             return Err(MemoryAccessError::InvalidAccess {
                 offset,

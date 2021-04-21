@@ -233,6 +233,8 @@ where
                 Instruction::I64FromU16 => instructions::i64_from_u16(instruction),
                 Instruction::I64FromU32 => instructions::i64_from_u32(instruction),
                 Instruction::I64FromU64 => instructions::i64_from_u64(instruction),
+                Instruction::PushI32 { value } => instructions::push_i32(value),
+                Instruction::PushI64 { value } => instructions::push_i64(value),
 
                 Instruction::StringLiftMemory => instructions::string_lift_memory(instruction),
                 Instruction::StringLowerMemory => instructions::string_lower_memory(instruction),

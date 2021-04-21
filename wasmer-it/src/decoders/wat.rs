@@ -53,10 +53,12 @@ mod keyword {
     custom_keyword!(i32_from_s16 = "i32.from_s16");
     custom_keyword!(i32_from_s32 = "i32.from_s32");
     custom_keyword!(i32_from_s64 = "i32.from_s64");
+    custom_keyword!(i32_push = "i32.push");
     custom_keyword!(i64_from_s8 = "i64.from_s8");
     custom_keyword!(i64_from_s16 = "i64.from_s16");
     custom_keyword!(i64_from_s32 = "i64.from_s32");
     custom_keyword!(i64_from_s64 = "i64.from_s64");
+    custom_keyword!(i64_push = "i64.push");
     custom_keyword!(u8_from_i32 = "u8.from_i32");
     custom_keyword!(u8_from_i64 = "u8.from_i64");
     custom_keyword!(u16_from_i32 = "u16.from_i32");
@@ -73,6 +75,8 @@ mod keyword {
     custom_keyword!(i64_from_u16 = "i64.from_u16");
     custom_keyword!(i64_from_u32 = "i64.from_u32");
     custom_keyword!(i64_from_u64 = "i64.from_u64");
+    custom_keyword!(f32_push = "f32.push");
+    custom_keyword!(f64_push = "f64.push");
     custom_keyword!(string_lift_memory = "string.lift_memory");
     custom_keyword!(string_lower_memory = "string.lower_memory");
     custom_keyword!(string_size = "string.size");
@@ -153,6 +157,12 @@ impl<'a> Parse<'a> for Instruction {
             parser.parse::<keyword::i32_from_s64>()?;
 
             Ok(Instruction::I32FromS64)
+        } else if lookahead.peek::<keyword::i32_push>() {
+            parser.parse::<keyword::i32_push>()?;
+
+            Ok(Instruction::PushI32 {
+                value: parser.parse()?,
+            })
         } else if lookahead.peek::<keyword::i64_from_s8>() {
             parser.parse::<keyword::i64_from_s8>()?;
 
@@ -169,6 +179,12 @@ impl<'a> Parse<'a> for Instruction {
             parser.parse::<keyword::i64_from_s64>()?;
 
             Ok(Instruction::I64FromS64)
+        } else if lookahead.peek::<keyword::i64_push>() {
+            parser.parse::<keyword::i64_push>()?;
+
+            Ok(Instruction::PushI64 {
+                value: parser.parse()?,
+            })
         } else if lookahead.peek::<keyword::u8_from_i32>() {
             parser.parse::<keyword::u8_from_i32>()?;
 

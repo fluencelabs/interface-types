@@ -9,7 +9,6 @@ use it_lilo_utils::memory_reader::MemoryReader;
 use it_lilo_utils::memory_reader::SequentialReader;
 use it_lilo_utils::record_size;
 
-#[rustfmt::skip]
 pub(crate) fn record_lift_memory_impl(
     li_helper: &LiHelper<'_>,
     record_type: &IRecordType,
@@ -38,8 +37,10 @@ pub(crate) fn record_lift_memory_impl(
             IType::F64 => values.push(IValue::F64(seq_reader.read_f64())),
             IType::String => values.push(IValue::String(read_string(reader, &seq_reader)?)),
             IType::ByteArray => values.push(read_byte_array(reader, &seq_reader)?),
-            IType::Array(ty) =>  values.push(read_array(&li_helper, &seq_reader, &**ty)?),
-            IType::Record(record_type_id) => values.push(read_record(li_helper, &seq_reader, *record_type_id)?),
+            IType::Array(ty) => values.push(read_array(&li_helper, &seq_reader, &**ty)?),
+            IType::Record(record_type_id) => {
+                values.push(read_record(li_helper, &seq_reader, *record_type_id)?)
+            }
         }
     }
 
