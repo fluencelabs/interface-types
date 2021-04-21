@@ -3,7 +3,7 @@ use super::lilo::*;
 use crate::IValue;
 
 use it_lilo_utils::ser_value_size;
-use it_lilo_utils::type_code_form_ivalue;
+use it_lilo_utils::type_tag_form_ivalue;
 
 pub(crate) fn array_lower_memory_impl(
     lo_helper: &LoHelper,
@@ -17,7 +17,7 @@ pub(crate) fn array_lower_memory_impl(
     let size_to_allocate = ser_value_size(&array_values[0]) * elements_count;
     let offset = (lo_helper.allocate)(
         size_to_allocate as _,
-        type_code_form_ivalue(&array_values[0]) as _,
+        type_tag_form_ivalue(&array_values[0]) as _,
     )?;
 
     let seq_writer = lo_helper

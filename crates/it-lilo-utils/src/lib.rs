@@ -44,7 +44,7 @@ pub fn record_size(record_type: &IRecordType) -> usize {
         .sum()
 }
 
-pub fn type_code_form_itype(itype: &IType) -> u32 {
+pub fn type_tag_form_itype(itype: &IType) -> u32 {
     const POINTER_CODE: u32 = 3; // u32 on the sdk
 
     match itype {
@@ -63,7 +63,7 @@ pub fn type_code_form_itype(itype: &IType) -> u32 {
     }
 }
 
-pub fn type_code_form_ivalue(itype: &IValue) -> u32 {
+pub fn type_tag_form_ivalue(itype: &IValue) -> u32 {
     const POINTER_CODE: u32 = 3; // u32 on the sdk
 
     match itype {

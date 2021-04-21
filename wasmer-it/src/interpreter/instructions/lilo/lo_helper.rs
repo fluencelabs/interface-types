@@ -5,7 +5,7 @@ use crate::interpreter::wasm;
 use crate::IType;
 
 use it_lilo_utils::memory_writer::MemoryWriter;
-use it_lilo_utils::type_code_form_itype;
+use it_lilo_utils::type_tag_form_itype;
 
 use std::cell::Cell;
 
@@ -35,8 +35,8 @@ impl<'instance> LoHelper<'instance> {
     }
 
     pub(crate) fn write_to_mem(&self, bytes: &[u8]) -> LiLoResult<usize> {
-        let alloc_type_code = type_code_form_itype(&IType::U8);
-        let offset = (self.allocate)(bytes.len() as _, alloc_type_code as _)?;
+        let alloc_type_tag = type_tag_form_itype(&IType::U8);
+        let offset = (self.allocate)(bytes.len() as _, alloc_type_tag as _)?;
 
         self.writer.write_bytes(offset, bytes)?;
 
