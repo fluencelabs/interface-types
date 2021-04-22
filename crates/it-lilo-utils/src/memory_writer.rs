@@ -111,6 +111,8 @@ impl<'w, 'm> SequentialWriter<'w, 'm> {
     pub fn write_array<const N: usize>(&self, values: [u8; N]) {
         let offset = self.offset.get();
 
+        log::trace!("write array: offset {} {:?}", offset, values);
+
         self.writer.memory[offset..offset + N]
             .iter()
             .zip(values.iter())
