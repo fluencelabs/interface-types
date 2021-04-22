@@ -23,6 +23,7 @@ where
     Instance: wasm::structures::Instance<Export, LocalImport, Memory, MemoryView>,
 {
     let closure = move |size: usize, ty: usize| {
+        log::trace!("call allocate closure 1: {} {}", size, ty);
         let index = FunctionIndex::new(ALLOCATE_FUNC_INDEX as usize);
         let local_or_import =
             instance
@@ -30,6 +31,8 @@ where
                 .ok_or(LiLoError::AllocateFuncIsMissing {
                     function_index: ALLOCATE_FUNC_INDEX,
                 })?;
+
+        log::trace!("call allocate closure 2");
 
         let inputs = vec![IValue::I32(size as _), IValue::I32(ty as _)];
         // TODO: we could check it only once on the module startup or memorize check result
@@ -40,13 +43,19 @@ where
         )
         .map_err(|_| LiLoError::AllocateFuncIncompatibleSignature)?;
 
+        log::trace!("call allocate closure 3: {:?}", inputs);
+
         let outcome = local_or_import
             .call(&inputs)
             .map_err(|_| LiLoError::AllocateCallFailed)?;
 
+        log::trace!("call allocate closure 4: {:?}", outcome);
+
         if outcome.len() != 1 {
             return Err(LiLoError::AllocateFuncIncompatibleOutput);
         }
+
+        log::trace!("call allocate closure 5");
 
         match outcome[0] {
             IValue::I32(offset) => Ok(offset as _),
