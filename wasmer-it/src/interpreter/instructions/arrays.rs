@@ -119,6 +119,7 @@ where
                             })?;
                     }
 
+                    log::trace!("array.lower_memory: 1");
                     let memory_index = 0;
                     let memory_view = instance
                         .memory(memory_index)
@@ -129,10 +130,12 @@ where
                             )
                         })?
                         .view();
+                    log::trace!("array.lower_memory: 1");
                     let memory = memory_view.deref();
 
                     let lo_helper = lilo::LoHelper::new(&**instance, memory)
                         .map_err(|e| InstructionError::from_lilo(instruction.clone(), e))?;
+                    log::trace!("array.lower_memory: 3");
                     let (offset, size) = array_lower_memory_impl(&lo_helper, values)
                         .map_err(|e| InstructionError::from_lilo(instruction.clone(), e))?;
 

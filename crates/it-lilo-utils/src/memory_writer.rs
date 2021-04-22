@@ -122,6 +122,7 @@ impl<'w, 'm> SequentialWriter<'w, 'm> {
     // specialization of write_array for u8
     pub fn write_u8(&self, value: u8) {
         let offset = self.offset.get();
+        log::trace!("write_u8: write {} to {}", value, offset);
 
         self.writer.memory[offset].set(value);
 

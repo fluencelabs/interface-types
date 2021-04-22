@@ -41,6 +41,7 @@ name = "it-lilo-utils"
 version = "0.1.0"
 dependencies = [
  "fluence-it-types",
+ "log",
  "paste",
  "thiserror",
 ]

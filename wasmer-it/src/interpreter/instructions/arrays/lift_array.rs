@@ -43,6 +43,7 @@ pub(crate) fn array_lift_memory_impl(
     Ok(IValue::Array(ivalues))
 }
 
+// Vec<String> => Vec<u32> (2 * len of prev)
 fn read_string_array(
     li_helper: &LiHelper,
     offset: usize,

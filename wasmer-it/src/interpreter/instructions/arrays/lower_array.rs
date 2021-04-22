@@ -9,6 +9,7 @@ pub(crate) fn array_lower_memory_impl(
     lo_helper: &LoHelper,
     array_values: Vec<IValue>,
 ) -> LiLoResult<(usize, usize)> {
+    log::trace!("array_lower_memory_impl: 1");
     if array_values.is_empty() {
         return Ok((0, 0));
     }
@@ -19,13 +20,16 @@ pub(crate) fn array_lower_memory_impl(
         size_to_allocate as _,
         type_tag_form_ivalue(&array_values[0]) as _,
     )?;
+    log::trace!("array_lower_memory_impl: 2");
 
     let seq_writer = lo_helper
         .writer
         .sequential_writer(offset, size_to_allocate)?;
+    log::trace!("array_lower_memory_impl: 3");
 
     // here it's known that all interface values have the same type
     for value in array_values {
+        log::trace!("array_lower_memory_impl: write {:?}", value);
         match value {
             IValue::Boolean(value) => seq_writer.write_u8(value as _),
             IValue::S8(value) => seq_writer.write_u8(value as _),
