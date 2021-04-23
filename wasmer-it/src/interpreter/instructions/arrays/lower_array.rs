@@ -31,7 +31,6 @@ pub(crate) fn array_lower_memory_impl<T: Heapable>(
             IValue::U16(value) => seq_writer.write_array(writer, value.to_le_bytes()),
             IValue::U32(value) => seq_writer.write_array(writer, value.to_le_bytes()),
             IValue::U64(value) => seq_writer.write_array(writer, value.to_le_bytes()),
-            IValue::U128(value) => seq_writer.write_array(writer, value.to_le_bytes()),
             IValue::I32(value) => seq_writer.write_array(writer, value.to_le_bytes()),
             IValue::I64(value) => seq_writer.write_array(writer, value.to_le_bytes()),
             IValue::F32(value) => seq_writer.write_array(writer, value.to_le_bytes()),
