@@ -22,14 +22,14 @@ macro_rules! native {
             }
         }
 
-        impl TryFrom<&IValue> for $native_type {
+        impl TryFrom<IValue> for $native_type {
             type Error = WasmValueNativeCastError;
 
-            fn try_from(w: &IValue) -> Result<Self, Self::Error> {
+            fn try_from(w: IValue) -> Result<Self, Self::Error> {
                 match w {
-                    IValue::$variant(n) => Ok(n.clone()),
+                    IValue::$variant(n) => Ok(n),
                     _ => Err(WasmValueNativeCastError {
-                        from: w.clone(),
+                        from: w,
                         to: <$native_type>::INTERFACE_TYPE,
                     }),
                 }
@@ -48,4 +48,6 @@ native!(u32, U32);
 native!(u64, U64);
 native!(f32, F32);
 native!(f64, F64);
+native!(u128, U128);
 native!(String, String);
+native!(Vec<u8>, ByteArray);

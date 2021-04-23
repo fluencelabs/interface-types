@@ -235,6 +235,10 @@ where
             Instruction::StringLowerMemory => 0x23_u8.to_bytes(writer)?,
             Instruction::StringSize => 0x24_u8.to_bytes(writer)?,
 
+            Instruction::ByteArrayLiftMemory => 0x43_u8.to_bytes(writer)?,
+            Instruction::ByteArrayLowerMemory => 0x44_u8.to_bytes(writer)?,
+            Instruction::ByteArraySize => 0x45_u8.to_bytes(writer)?,
+
             Instruction::ArrayLiftMemory { value_type } => {
                 0x37_u8.to_bytes(writer)?;
                 value_type.to_bytes(writer)?

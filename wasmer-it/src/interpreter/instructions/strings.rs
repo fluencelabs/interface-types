@@ -12,7 +12,7 @@ use std::{cell::Cell, convert::TryInto};
 executable_instruction!(
     string_lift_memory(instruction: Instruction) -> _ {
         move |runtime| -> _ {
-            let inputs = runtime.stack.pop(2).ok_or_else(|| {
+            let mut inputs = runtime.stack.pop(2).ok_or_else(|| {
                 InstructionError::from_error_kind(
                     instruction.clone(),
                     InstructionErrorKind::StackIsTooSmall { needed: 2 },
@@ -30,11 +30,11 @@ executable_instruction!(
                     )
                 })?;
 
-            let pointer: usize = to_native::<i32>(&inputs[0], instruction.clone())?
+            let pointer: usize = to_native::<i32>(inputs.remove(0), instruction.clone())?
                 .try_into()
                 .map_err(|e| (e, "pointer").into())
                 .map_err(|k| InstructionError::from_error_kind(instruction.clone(), k))?;
-            let length: usize = to_native::<i32>(&inputs[1], instruction.clone())?
+            let length: usize = to_native::<i32>(inputs.remove(0), instruction.clone())?
                 .try_into()
                 .map_err(|e| (e, "length").into())
                 .map_err(|k| InstructionError::from_error_kind(instruction.clone(), k))?;
@@ -75,18 +75,18 @@ executable_instruction!(
 executable_instruction!(
     string_lower_memory(instruction: Instruction) -> _ {
         move |runtime| -> _ {
-            let inputs = runtime.stack.pop(2).ok_or_else(|| {
+            let mut inputs = runtime.stack.pop(2).ok_or_else(|| {
                 InstructionError::from_error_kind(
                     instruction.clone(),
                     InstructionErrorKind::StackIsTooSmall { needed: 2 },
                 )
             })?;
 
-            let string_pointer: usize = to_native::<i32>(&inputs[0], instruction.clone())?
+            let string_pointer: usize = to_native::<i32>(inputs.remove(0), instruction.clone())?
                 .try_into()
                 .map_err(|e| (e, "pointer").into())
                 .map_err(|k| InstructionError::from_error_kind(instruction.clone(), k))?;
-            let string: String = to_native(&inputs[1], instruction.clone())?;
+            let string: String = to_native(inputs.remove(0), instruction.clone())?;
             let string_bytes = string.as_bytes();
             let string_length: i32 = string_bytes.len().try_into().map_err(|_| {
                 InstructionError::from_error_kind(

@@ -298,6 +298,10 @@ fn instruction<'input, E: ParseError<&'input [u8]>>(
         0x23 => (input, Instruction::StringLowerMemory),
         0x24 => (input, Instruction::StringSize),
 
+        0x43 => (input, Instruction::ByteArrayLiftMemory),
+        0x44 => (input, Instruction::ByteArrayLowerMemory),
+        0x45 => (input, Instruction::ByteArraySize),
+
         0x37 => {
             consume!((input, value_type) = ty(input)?);
 

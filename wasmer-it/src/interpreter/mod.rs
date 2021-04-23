@@ -239,6 +239,15 @@ where
                 Instruction::StringLiftMemory => instructions::string_lift_memory(instruction),
                 Instruction::StringLowerMemory => instructions::string_lower_memory(instruction),
                 Instruction::StringSize => instructions::string_size(instruction),
+
+                Instruction::ByteArrayLiftMemory => {
+                    instructions::byte_array_lift_memory(instruction)
+                }
+                Instruction::ByteArrayLowerMemory => {
+                    instructions::byte_array_lower_memory(instruction)
+                }
+                Instruction::ByteArraySize => instructions::byte_array_size(instruction),
+
                 Instruction::ArrayLiftMemory { ref value_type } => {
                     let value_type = value_type.clone();
                     instructions::array_lift_memory(instruction, value_type)

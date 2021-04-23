@@ -80,6 +80,9 @@ mod keyword {
     custom_keyword!(string_lift_memory = "string.lift_memory");
     custom_keyword!(string_lower_memory = "string.lower_memory");
     custom_keyword!(string_size = "string.size");
+    custom_keyword!(byte_array_lift_memory = "byte_array.lift_memory");
+    custom_keyword!(byte_array_lower_memory = "byte_array.lower_memory");
+    custom_keyword!(byte_array_size = "byte_array.size");
     custom_keyword!(array_lift_memory = "array.lift_memory");
     custom_keyword!(array_lower_memory = "array.lower_memory");
     custom_keyword!(array_size = "array.size");
@@ -259,6 +262,18 @@ impl<'a> Parse<'a> for Instruction {
             Ok(Instruction::StringLowerMemory)
         } else if lookahead.peek::<keyword::string_size>() {
             parser.parse::<keyword::string_size>()?;
+
+            Ok(Instruction::StringSize)
+        } else if lookahead.peek::<keyword::byte_array_lift_memory>() {
+            parser.parse::<keyword::byte_array_lift_memory>()?;
+
+            Ok(Instruction::StringLiftMemory)
+        } else if lookahead.peek::<keyword::byte_array_lower_memory>() {
+            parser.parse::<keyword::byte_array_lower_memory>()?;
+
+            Ok(Instruction::StringLowerMemory)
+        } else if lookahead.peek::<keyword::byte_array_size>() {
+            parser.parse::<keyword::byte_array_size>()?;
 
             Ok(Instruction::StringSize)
         } else if lookahead.peek::<keyword::array_lift_memory>() {

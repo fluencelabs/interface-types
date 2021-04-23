@@ -41,6 +41,9 @@ pub enum IType {
     /// A 64-bits float.
     F64,
 
+    /// A 128-bit unsigned integer.
+    U128,
+
     /// A string.
     String,
 
@@ -112,6 +115,7 @@ impl ToString for &IType {
             IType::U64 => "u64".to_string(),
             IType::F32 => "f32".to_string(),
             IType::F64 => "f64".to_string(),
+            IType::U128 => "u128".to_string(),
             IType::String => "string".to_string(),
             IType::ByteArray => "array (u8)".to_string(),
             IType::Array(ty) => format!("array ({})", ty.as_ref().to_string()),

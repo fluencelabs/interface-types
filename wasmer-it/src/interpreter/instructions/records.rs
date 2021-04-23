@@ -32,14 +32,14 @@ where
     use crate::interpreter::stack::Stackable;
     Box::new({
         move |runtime| -> _ {
-            let inputs = runtime.stack.pop(1).ok_or_else(|| {
+            let mut inputs = runtime.stack.pop(1).ok_or_else(|| {
                 InstructionError::from_error_kind(
                     instruction.clone(),
                     InstructionErrorKind::StackIsTooSmall { needed: 1 },
                 )
             })?;
 
-            let offset: usize = to_native::<i32>(&inputs[0], instruction.clone())?
+            let offset: usize = to_native::<i32>(inputs.remove(0), instruction.clone())?
                 .try_into()
                 .map_err(|e| (e, "offset").into())
                 .map_err(|k| InstructionError::from_error_kind(instruction.clone(), k))?;

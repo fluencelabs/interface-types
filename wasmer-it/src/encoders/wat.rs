@@ -102,6 +102,11 @@ impl ToString for &Instruction {
             Instruction::StringLiftMemory => "string.lift_memory".into(),
             Instruction::StringLowerMemory => "string.lower_memory".into(),
             Instruction::StringSize => "string.size".into(),
+
+            Instruction::ByteArrayLiftMemory => "byte_array.lift_memory".into(),
+            Instruction::ByteArrayLowerMemory => "byte_array.lower_memory".into(),
+            Instruction::ByteArraySize => "byte_array.size".into(),
+
             Instruction::ArrayLiftMemory { value_type } => {
                 format!("array.lift_memory {}", value_type.to_string())
             }

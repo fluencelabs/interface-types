@@ -1,5 +1,6 @@
 mod argument_get;
 mod arrays;
+mod byte_arrays;
 mod call_core;
 mod dup;
 pub(self) mod lilo;
@@ -19,6 +20,7 @@ use crate::NEVec;
 
 pub(crate) use argument_get::argument_get;
 pub(crate) use arrays::*;
+pub(crate) use byte_arrays::*;
 pub(crate) use call_core::call_core;
 pub(crate) use dup::dup;
 pub(crate) use numbers::*;
@@ -158,6 +160,15 @@ pub enum Instruction {
     /// The `string.lower_memory` instruction.
     StringLowerMemory,
 
+    /// The `byte_array.size` instruction.
+    ByteArraySize,
+
+    /// The `byte_array.lift_memory` instruction.
+    ByteArrayLiftMemory,
+
+    /// The `byte_array.lower_memory` instruction.
+    ByteArrayLowerMemory,
+
     /// The `string.size` instruction.
     StringSize,
 
@@ -206,12 +217,9 @@ pub enum Instruction {
 
 /// Just a short helper to map the error of a cast from an
 /// `IValue` to a native value.
-pub(crate) fn to_native<'a, T>(
-    wit_value: &'a IValue,
-    instruction: Instruction,
-) -> InstructionResult<T>
+pub(crate) fn to_native<'a, T>(wit_value: IValue, instruction: Instruction) -> InstructionResult<T>
 where
-    T: NativeType + TryFrom<&'a IValue, Error = WasmValueNativeCastError>,
+    T: NativeType + TryFrom<IValue, Error = WasmValueNativeCastError>,
 {
     T::try_from(wit_value).map_err(|error| {
         InstructionError::from_error_kind(instruction, InstructionErrorKind::ToNative(error))

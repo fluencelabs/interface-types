@@ -35,6 +35,10 @@ macro_rules! value_der {
     ($self:expr, $offset:expr, 8) => {
         crate::value_der!($self, $offset, @seq_start 0, 1, 2, 3, 4, 5, 6, 7 @seq_end);
     };
+
+    ($self:expr, $offset:expr, 16) => {
+        crate::value_der!($self, $offset, @seq_start 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 @seq_end);
+    };
 }
 
 #[macro_export]
@@ -75,6 +79,16 @@ macro_rules! read_ty {
             let result = <$ty>::from_le_bytes(crate::value_der!(self, offset, 8));
 
             self.offset.set(offset + 8);
+            result
+        }
+    };
+
+    ($func_name:ident, $ty:ty, 16) => {
+        pub fn $func_name(&self) -> $ty {
+            let offset = self.offset.get();
+            let result = <$ty>::from_le_bytes(crate::value_der!(self, offset, 16));
+
+            self.offset.set(offset + 16);
             result
         }
     };
