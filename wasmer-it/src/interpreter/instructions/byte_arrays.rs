@@ -129,10 +129,21 @@ executable_instruction!(
                     Ok(())
                 },
 
+                Some(IValue::Array(array)) => {
+                    let array = check_array_type(array, &instruction)?;
+
+                    let length = array.len() as i32;
+
+                    log::debug!("byte_array.size: pushing {} on the stack", length);
+                    runtime.stack.push(IValue::I32(length));
+
+                    Ok(())
+                },
+
                 Some(value) => instr_error!(
                     instruction.clone(),
                     InstructionErrorKind::InvalidValueOnTheStack {
-                        expected_type: IType::String,
+                        expected_type: IType::ByteArray,
                         received_value: (&value).clone(),
                     }
                 ),
@@ -145,3 +156,23 @@ executable_instruction!(
         }
     }
 );
+
+fn check_array_type(
+    ivalues: Vec<IValue>,
+    instruction: &Instruction,
+) -> Result<Vec<IValue>, InstructionError> {
+    if ivalues.is_empty() {
+        return Ok(ivalues);
+    }
+
+    match &ivalues[0] {
+        IValue::U8(_) => Ok(ivalues),
+        _ => instr_error!(
+            instruction.clone(),
+            InstructionErrorKind::InvalidValueOnTheStack {
+                expected_type: IType::ByteArray,
+                received_value: IValue::Array(ivalues),
+            }
+        ),
+    }
+}

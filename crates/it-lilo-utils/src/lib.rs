@@ -23,7 +23,8 @@ pub use fluence_it_types::IRecordType;
 pub use fluence_it_types::IType;
 pub use fluence_it_types::IValue;
 
-pub type MResult<T> = std::result::Result<T, error::MemoryAccessError>;
+pub type ReadResult<T> = std::result::Result<T, error::MemoryAccessError>;
+pub type WriteResult<T> = std::result::Result<T, error::MemoryWriteError>;
 
 /// Size of a value in a serialized view.
 pub fn ser_type_size(ty: &IType) -> usize {
@@ -42,7 +43,7 @@ pub fn ser_type_size(ty: &IType) -> usize {
 }
 
 /// Size of a value in a serialized view.
-pub fn ser_value_size(value: &IValue) -> usize {
+pub fn ser_value_size(value: &IValue) -> u32 {
     match value {
         IValue::Boolean(_) | IValue::S8(_) | IValue::U8(_) => 1,
         IValue::S16(_) | IValue::U16(_) => 2,

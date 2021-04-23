@@ -14,6 +14,7 @@ use crate::{
     interpreter::Instruction,
     IType, IValue,
 };
+use it_lilo_utils::memory_writer::MemoryWriter;
 
 use std::convert::TryInto;
 
@@ -119,25 +120,12 @@ where
                             })?;
                     }
 
-                    log::trace!("array.lower_memory: 1");
-                    let memory_index = 0;
-                    let memory_view = instance
-                        .memory(memory_index)
-                        .ok_or_else(|| {
-                            InstructionError::from_error_kind(
-                                instruction.clone(),
-                                InstructionErrorKind::MemoryIsMissing { memory_index },
-                            )
-                        })?
-                        .view();
-                    log::trace!("array.lower_memory: 1");
-                    let memory = memory_view.deref();
+                    let lo_helper = lilo::LoHelper::new(&**instance);
+                    let memory_writer = MemoryWriter::new(&lo_helper)
+                        .map_err(|e| InstructionError::from_write_error(instruction.clone(), e))?;
 
-                    let lo_helper = lilo::LoHelper::new(&**instance, memory)
-                        .map_err(|e| InstructionError::from_lilo(instruction.clone(), e))?;
-                    log::trace!("array.lower_memory: 3");
-                    let (offset, size) = array_lower_memory_impl(&lo_helper, values)
-                        .map_err(|e| InstructionError::from_lilo(instruction.clone(), e))?;
+                    let (offset, size) = array_lower_memory_impl(&memory_writer, values)
+                        .map_err(|e| InstructionError::from_write_error(instruction.clone(), e))?;
 
                     log::trace!(
                         "array.lower_memory: pushing {}, {} on the stack",

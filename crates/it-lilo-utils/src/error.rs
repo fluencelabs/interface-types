@@ -27,3 +27,38 @@ pub enum MemoryAccessError {
         memory_size: usize,
     },
 }
+
+#[derive(Debug, ThisError)]
+pub enum MemoryWriteError {
+    /// The memory doesn't exist.
+    #[error("memory `{memory_index}` does not exist")]
+    MemoryIsMissing {
+        /// The memory index.
+        memory_index: usize,
+    },
+
+    /// The local or import function doesn't exist.
+    #[error("the allocate function with index `{function_index}` doesn't exist in Wasm module")]
+    AllocateFuncIsMissing {
+        /// The local or import function index.
+        function_index: u32,
+    },
+
+    /// Failed to call a allocate function.
+    #[error("call to allocated was failed")]
+    AllocateCallFailed,
+
+    /// Allocate input types doesn't match with needed.
+    #[error(
+        "allocate func doesn't receive two i32 values,\
+             probably a Wasm module's built with unsupported sdk version"
+    )]
+    AllocateFuncIncompatibleSignature,
+
+    /// Allocate output types doesn't match with needed.
+    #[error(
+        "allocate func doesn't return a one value of I32 type,\
+             probably a Wasm module's built with unsupported sdk version"
+    )]
+    AllocateFuncIncompatibleOutput,
+}

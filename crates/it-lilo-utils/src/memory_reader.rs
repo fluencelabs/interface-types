@@ -18,7 +18,7 @@ use crate::error::MemoryAccessError;
 use crate::read_array_ty;
 use crate::read_ty;
 use crate::IValue;
-use crate::MResult;
+use crate::ReadResult;
 
 use std::cell::Cell;
 
@@ -46,13 +46,13 @@ impl<'m> MemoryReader<'m> {
         &self,
         offset: usize,
         size: usize,
-    ) -> MResult<SequentialReader<'_, '_>> {
+    ) -> ReadResult<SequentialReader<'_, '_>> {
         self.check_access(offset, size)?;
 
         Ok(SequentialReader::new(&self, offset))
     }
 
-    pub fn read_raw_u8_array(&self, offset: usize, elements_count: usize) -> MResult<Vec<u8>> {
+    pub fn read_raw_u8_array(&self, offset: usize, elements_count: usize) -> ReadResult<Vec<u8>> {
         let reader = self.sequential_reader(offset, elements_count)?;
         let mut result = Vec::with_capacity(elements_count);
 
@@ -64,7 +64,7 @@ impl<'m> MemoryReader<'m> {
         Ok(result)
     }
 
-    pub fn read_bool_array(&self, offset: usize, elements_count: usize) -> MResult<Vec<IValue>> {
+    pub fn read_bool_array(&self, offset: usize, elements_count: usize) -> ReadResult<Vec<IValue>> {
         let reader = self.sequential_reader(offset, elements_count)?;
         let mut result = Vec::with_capacity(elements_count);
 
@@ -76,7 +76,7 @@ impl<'m> MemoryReader<'m> {
         Ok(result)
     }
 
-    pub fn check_access(&self, offset: usize, size: usize) -> MResult<()> {
+    pub fn check_access(&self, offset: usize, size: usize) -> ReadResult<()> {
         let right = offset + size;
 
         // the first condition is a check for overflow

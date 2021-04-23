@@ -12,6 +12,7 @@ use std::{
     string::{self, ToString},
 };
 
+use it_lilo_utils::error::MemoryWriteError;
 use thiserror::Error as ThisError;
 
 pub use fluence_it_types::WasmValueNativeCastError;
@@ -45,6 +46,14 @@ impl InstructionError {
 
     pub(crate) fn from_lilo(instruction: Instruction, lilo: LiLoError) -> Self {
         let error_kind = InstructionErrorKind::LiLoError(lilo);
+        Self::from_error_kind(instruction, error_kind)
+    }
+
+    pub(crate) fn from_write_error(
+        instruction: Instruction,
+        write_error: MemoryWriteError,
+    ) -> Self {
+        let error_kind = InstructionErrorKind::MemoryWriteError(write_error);
         Self::from_error_kind(instruction, error_kind)
     }
 }
@@ -221,6 +230,10 @@ pub enum InstructionErrorKind {
     /// Errors related to lifting/lowering records.
     #[error("{0}")]
     LiLoError(#[from] LiLoError),
+
+    /// Errors related to incorrect writing to memory.
+    #[error("{0}")]
+    MemoryWriteError(#[from] MemoryWriteError),
 }
 
 impl From<(TryFromIntError, &'static str)> for InstructionErrorKind {

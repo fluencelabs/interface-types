@@ -1,12 +1,13 @@
-use super::lilo::*;
-
 use crate::IValue;
 use crate::NEVec;
+use it_lilo_utils::memory_writer::Heapable;
+use it_lilo_utils::memory_writer::MemoryWriter;
+use it_lilo_utils::WriteResult;
 
-pub(crate) fn record_lower_memory_impl(
-    lo_helper: &LoHelper,
+pub(crate) fn record_lower_memory_impl<T: Heapable>(
+    writer: &MemoryWriter<T>,
     values: NEVec<IValue>,
-) -> LiLoResult<i32> {
+) -> WriteResult<i32> {
     let average_field_size = 4;
     let mut result: Vec<u8> = Vec::with_capacity(average_field_size * values.len());
 
@@ -27,34 +28,34 @@ pub(crate) fn record_lower_memory_impl(
             IValue::F32(value) => result.extend_from_slice(&value.to_le_bytes()),
             IValue::F64(value) => result.extend_from_slice(&value.to_le_bytes()),
             IValue::String(value) => {
-                let offset = lo_helper.write_to_mem(value.as_bytes())? as u32;
+                let offset = writer.write_bytes(value.as_bytes())? as u32;
 
                 result.extend_from_slice(&offset.to_le_bytes());
                 result.extend_from_slice(&(value.len() as u32).to_le_bytes());
             }
             IValue::ByteArray(value) => {
-                let offset = lo_helper.write_to_mem(&value)? as u32;
+                let offset = writer.write_bytes(&value)? as u32;
 
                 result.extend_from_slice(&offset.to_le_bytes());
                 result.extend_from_slice(&(value.len() as u32).to_le_bytes());
             }
 
             IValue::Array(values) => {
-                let (offset, size) = super::array_lower_memory_impl(lo_helper, values)?;
+                let (offset, size) = super::array_lower_memory_impl(writer, values)?;
 
                 result.extend_from_slice(&(offset as u32).to_le_bytes());
                 result.extend_from_slice(&(size as u32).to_le_bytes());
             }
 
             IValue::Record(values) => {
-                let offset = record_lower_memory_impl(lo_helper, values)? as u32;
+                let offset = record_lower_memory_impl(writer, values)? as u32;
 
                 result.extend_from_slice(&offset.to_le_bytes());
             }
         }
     }
 
-    let result_pointer = lo_helper.write_to_mem(&result)?;
+    let result_pointer = writer.write_bytes(&result)?;
 
     Ok(result_pointer as _)
 }
