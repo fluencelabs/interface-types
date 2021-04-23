@@ -37,7 +37,6 @@ pub fn ser_type_size(ty: &IType) -> usize {
         // Vec-like types are passed by pointer and size
         IType::String | IType::ByteArray | IType::Array(_) => 2 * WASM_POINTER_SIZE,
         IType::S64 | IType::U64 | IType::I64 | IType::F64 => 8,
-        IType::U128 => 16,
     }
 }
 
@@ -72,7 +71,6 @@ pub fn type_tag_form_itype(itype: &IType) -> u32 {
         IType::U16 => 2,              // u16
         IType::U32 => 3,              // u32
         IType::U64 => 4,              // u64
-        IType::U128 => 5,             // u128
         IType::S8 => 6,               // i8
         IType::S16 => 7,              // i16
         IType::S32 | IType::I32 => 8, // i32

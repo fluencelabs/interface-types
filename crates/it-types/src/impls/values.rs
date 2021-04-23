@@ -48,6 +48,5 @@ native!(u32, U32);
 native!(u64, U64);
 native!(f32, F32);
 native!(f64, F64);
-native!(u128, U128);
 native!(String, String);
 native!(Vec<u8>, ByteArray);

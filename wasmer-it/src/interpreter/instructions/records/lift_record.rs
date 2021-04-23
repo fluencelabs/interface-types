@@ -33,7 +33,6 @@ pub(crate) fn record_lift_memory_impl(
             IType::U16 => values.push(IValue::U16(seq_reader.read_u16())),
             IType::U32 => values.push(IValue::U32(seq_reader.read_u32())),
             IType::U64 => values.push(IValue::U64(seq_reader.read_u64())),
-            IType::U128 => values.push(IValue::U128(seq_reader.read_u128())),
             IType::F32 => values.push(IValue::F32(seq_reader.read_f32())),
             IType::F64 => values.push(IValue::F64(seq_reader.read_f64())),
             IType::String => values.push(IValue::String(read_string(reader, &seq_reader)?)),

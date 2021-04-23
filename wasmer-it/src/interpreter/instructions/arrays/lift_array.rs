@@ -30,7 +30,6 @@ pub(crate) fn array_lift_memory_impl(
         IType::U16 => reader.read_u16_array(offset, elements_count)?,
         IType::U32 => reader.read_u32_array(offset, elements_count)?,
         IType::U64 => reader.read_u64_array(offset, elements_count)?,
-        IType::U128 => reader.read_u128_array(offset, elements_count)?,
         IType::F32 => reader.read_f32_array(offset, elements_count)?,
         IType::F64 => reader.read_f64_array(offset, elements_count)?,
         IType::String => read_string_array(li_helper, offset, elements_count)?,

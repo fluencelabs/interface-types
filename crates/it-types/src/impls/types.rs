@@ -29,7 +29,6 @@ where
             IType::U64 => 0x07_u8.to_bytes(writer),
             IType::F32 => 0x08_u8.to_bytes(writer),
             IType::F64 => 0x09_u8.to_bytes(writer),
-            IType::U128 => 0x46_u8.to_bytes(writer),
             IType::String => 0x0a_u8.to_bytes(writer),
             IType::ByteArray => 0x3C_u8.to_bytes(writer),
             IType::Array(ty) => {
@@ -140,10 +139,6 @@ impl Parse<'_> for IType {
             parser.parse::<keyword::f64>()?;
 
             Ok(IType::F64)
-        } else if lookahead.peek::<keyword::u128>() {
-            parser.parse::<keyword::u128>()?;
-
-            Ok(IType::U128)
         } else if lookahead.peek::<keyword::string>() {
             parser.parse::<keyword::string>()?;
 
