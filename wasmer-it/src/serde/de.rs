@@ -215,7 +215,6 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
             Some(IValue::U16(_)) => self.deserialize_u16(visitor),
             Some(IValue::U32(_)) => self.deserialize_u32(visitor),
             Some(IValue::U64(_)) => self.deserialize_u64(visitor),
-            Some(IValue::U128(_)) => self.deserialize_u64(visitor),
             Some(IValue::F32(_)) => self.deserialize_f32(visitor),
             Some(IValue::F64(_)) => self.deserialize_f64(visitor),
             Some(IValue::String(_)) => self.deserialize_string(visitor),

@@ -103,7 +103,6 @@ impl<'m> MemoryReader<'m> {
     read_array_ty!(read_s64_array, i64, S64);
     read_array_ty!(read_i64_array, i64, I64);
     read_array_ty!(read_f64_array, f64, F64);
-    read_array_ty!(read_u128_array, u128, U128);
 }
 
 impl<'r, 'm> SequentialReader<'r, 'm> {
@@ -130,5 +129,4 @@ impl<'r, 'm> SequentialReader<'r, 'm> {
     read_ty!(read_u64, u64, 8);
     read_ty!(read_i64, i64, 8);
     read_ty!(read_f64, f64, 8);
-    read_ty!(read_u128, u128, 16);
 }
