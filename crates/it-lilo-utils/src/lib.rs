@@ -47,7 +47,6 @@ pub fn ser_value_size(value: &IValue) -> usize {
         IValue::S16(_) | IValue::U16(_) => 2,
         IValue::S32(_) | IValue::U32(_) | IValue::F32(_) | IValue::I32(_) => 4,
         IValue::S64(_) | IValue::U64(_) | IValue::F64(_) | IValue::I64(_) => 8,
-        IValue::U128(_) => 16,
         IValue::String(_) | IValue::ByteArray(_) | IValue::Array(_) => 2 * 4,
         IValue::Record(_) => 4,
     }
@@ -90,7 +89,6 @@ pub fn type_tag_form_ivalue(itype: &IValue) -> u32 {
         IValue::U16(_) => 2,                  // u16
         IValue::U32(_) => 3,                  // u32
         IValue::U64(_) => 4,                  // u64
-        IValue::U128(_) => 5,                 // u128
         IValue::S8(_) => 6,                   // i8
         IValue::S16(_) => 7,                  // i16
         IValue::S32(_) | IValue::I32(_) => 8, // i32

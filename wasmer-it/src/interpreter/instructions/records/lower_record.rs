@@ -21,7 +21,6 @@ pub(crate) fn record_lower_memory_impl(
             IValue::U16(value) => result.extend_from_slice(&value.to_le_bytes()),
             IValue::U32(value) => result.extend_from_slice(&value.to_le_bytes()),
             IValue::U64(value) => result.extend_from_slice(&value.to_le_bytes()),
-            IValue::U128(value) => result.extend_from_slice(&value.to_le_bytes()),
             IValue::I32(value) => result.extend_from_slice(&value.to_le_bytes()),
             IValue::I64(value) => result.extend_from_slice(&value.to_le_bytes()),
             IValue::F32(value) => result.extend_from_slice(&value.to_le_bytes()),

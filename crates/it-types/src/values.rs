@@ -37,10 +37,7 @@ pub enum IValue {
 
     /// A 64-bits float.
     F64(f64),
-
-    /// A 128-bits integer.
-    U128(u128),
-
+    
     /// A string.
     String(String),
 

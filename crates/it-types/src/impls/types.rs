@@ -87,7 +87,6 @@ mod keyword {
     custom_keyword!(u16);
     custom_keyword!(u32);
     custom_keyword!(u64);
-    custom_keyword!(u128);
     custom_keyword!(string);
     custom_keyword!(array);
 }
