@@ -12,8 +12,8 @@ use std::{
     string::{self, ToString},
 };
 
-use it_lilo_utils::lifter::LiError;
-use it_lilo_utils::lowerer::LoError;
+use it_lilo::lifter::LiError;
+use it_lilo::lowerer::LoError;
 use thiserror::Error as ThisError;
 
 pub use fluence_it_types::WasmValueNativeCastError;

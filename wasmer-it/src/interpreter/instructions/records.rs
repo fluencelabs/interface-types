@@ -5,8 +5,8 @@ use crate::IType;
 use crate::IValue;
 use crate::{errors::InstructionError, errors::InstructionErrorKind, interpreter::Instruction};
 
-use it_lilo_utils::lifter::ILifter;
-use it_lilo_utils::lowerer::ILowerer;
+use it_lilo::lifter::ILifter;
+use it_lilo::lowerer::ILowerer;
 
 use std::convert::TryInto;
 
@@ -67,7 +67,7 @@ where
 
             let li_helper = lilo::LiHelper::new(&**instance);
             let lifter = ILifter::new(memory, &li_helper);
-            let record = it_lilo_utils::lifter::record_lift_memory(&lifter, record_type, offset)
+            let record = it_lilo::lifter::record_lift_memory(&lifter, record_type, offset)
                 .map_err(|e| InstructionError::from_li(instruction.clone(), e))?;
 
             log::debug!("record.lift_memory: pushing {:?} on the stack", record);
@@ -111,7 +111,7 @@ where
                     let memory_writer = ILowerer::new(&lo_helper)
                         .map_err(|e| InstructionError::from_lo(instruction.clone(), e))?;
                     let offset =
-                        it_lilo_utils::lowerer::record_lower_memory(&memory_writer, record_fields)
+                        it_lilo::lowerer::record_lower_memory(&memory_writer, record_fields)
                             .map_err(|e| InstructionError::from_lo(instruction.clone(), e))?;
 
                     log::debug!("record.lower_memory: pushing {} on the stack", offset);

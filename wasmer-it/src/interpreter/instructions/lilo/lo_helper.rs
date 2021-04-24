@@ -2,9 +2,9 @@ use crate::interpreter::wasm;
 use crate::interpreter::wasm::structures::FunctionIndex;
 use crate::IValue;
 
-use it_lilo_utils::traits::Allocatable;
-use it_lilo_utils::traits::AllocatableError;
-use it_lilo_utils::traits::MemSlice;
+use it_lilo::traits::Allocatable;
+use it_lilo::traits::AllocatableError;
+use it_lilo::traits::MemSlice;
 
 use std::marker::PhantomData;
 

@@ -1,6 +1,6 @@
 [workspace]
 members = [
-    "crates/it-lilo-utils",
+    "crates/it-lilo",
     "crates/to-bytes",
     "crates/it-types",
     "wasmer-it",

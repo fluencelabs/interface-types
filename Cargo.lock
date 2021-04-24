@@ -37,7 +37,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "it-lilo-utils"
+name = "it-lilo"
 version = "0.1.0"
 dependencies = [
  "fluence-it-types",
@@ -264,7 +264,7 @@ name = "wasmer-interface-types-fl"
 version = "0.20.0"
 dependencies = [
  "fluence-it-types",
- "it-lilo-utils",
+ "it-lilo",
  "it-to-bytes",
  "itertools",
  "log",

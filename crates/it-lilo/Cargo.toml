@@ -1,5 +1,5 @@
 [package]
-name = "it-lilo-utils"
+name = "it-lilo"
 version = "0.1.0"
 authors = ["Fluence Labs"]
 description = "Defines some helper utils for lifting/lowering IT"
@@ -7,7 +7,7 @@ edition = "2018"
 license = "Apache-2.0"
 
 [lib]
-name = "it_lilo_utils"
+name = "it_lilo"
 path = "src/lib.rs"
 
 [dependencies]

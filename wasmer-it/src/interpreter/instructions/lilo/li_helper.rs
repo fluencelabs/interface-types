@@ -1,8 +1,8 @@
 use crate::interpreter::wasm;
 use crate::IRecordType;
 
-use it_lilo_utils::traits::RecordResolvable;
-use it_lilo_utils::traits::RecordResolvableError;
+use it_lilo::traits::RecordResolvable;
+use it_lilo::traits::RecordResolvableError;
 
 use std::marker::PhantomData;
 
