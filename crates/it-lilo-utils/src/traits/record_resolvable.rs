@@ -14,23 +14,16 @@
  * limitations under the License.
  */
 
-#![deny(
-    dead_code,
-    nonstandard_style,
-    unused_imports,
-    unused_mut,
-    unused_variables,
-    unused_unsafe,
-    unreachable_patterns
-)]
-#![warn(rust_2018_idioms)]
+use crate::IRecordType;
+use thiserror::Error as ThisError;
 
-pub mod lifter;
-pub mod lowerer;
-pub mod traits;
-pub mod utils;
+pub trait RecordResolvable {
+    fn resolve_record(&self, record_type_id: u64) -> Result<&IRecordType, RecordResolvableError>;
+}
 
-pub use fluence_it_types::ne_vec::NEVec;
-pub use fluence_it_types::IRecordType;
-pub use fluence_it_types::IType;
-pub use fluence_it_types::IValue;
+#[derive(Debug, ThisError)]
+pub enum RecordResolvableError {
+    /// Record for such type is wasn't found.
+    #[error("Record with type id '{0}' not found")]
+    RecordNotFound(u64),
+}

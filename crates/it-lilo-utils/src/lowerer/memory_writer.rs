@@ -14,21 +14,16 @@
  * limitations under the License.
  */
 
-use crate::WriteResult;
+use super::LoResult;
+use crate::traits::Allocatable;
+use crate::traits::MemSlice;
+use crate::traits::DEFAULT_MEMORY_INDEX;
+use crate::utils::type_tag_form_itype;
+
 use std::cell::Cell;
 
-pub type MemSlice<'m> = &'m [Cell<u8>];
-
-const MEMORY_INDEX: usize = 0;
-
-pub trait Heapable {
-    fn allocate(&self, size: u32, type_tag: u32) -> WriteResult<usize>;
-
-    fn memory_slice(&self, memory_index: usize) -> WriteResult<MemSlice<'_>>;
-}
-
-pub struct MemoryWriter<'i, T: Heapable> {
-    heap_manager: &'i T,
+pub struct MemoryWriter<'i, R: Allocatable> {
+    heap_manager: &'i R,
     pub(self) memory: Cell<MemSlice<'i>>,
 }
 
@@ -37,9 +32,9 @@ pub struct SequentialWriter {
     offset: Cell<usize>,
 }
 
-impl<'i, T: Heapable> MemoryWriter<'i, T> {
-    pub fn new(heap_manager: &'i T) -> WriteResult<Self> {
-        let mem_slice = heap_manager.memory_slice(MEMORY_INDEX)?;
+impl<'i, A: Allocatable> MemoryWriter<'i, A> {
+    pub fn new(heap_manager: &'i A) -> LoResult<Self> {
+        let mem_slice = heap_manager.memory_slice(DEFAULT_MEMORY_INDEX)?;
         let memory = Cell::new(mem_slice);
 
         let writer = Self {
@@ -49,17 +44,17 @@ impl<'i, T: Heapable> MemoryWriter<'i, T> {
         Ok(writer)
     }
 
-    pub fn write_bytes(&self, bytes: &[u8]) -> WriteResult<usize> {
-        let byte_type_tag = crate::type_tag_form_itype(&crate::IType::U8);
+    pub fn write_bytes(&self, bytes: &[u8]) -> LoResult<usize> {
+        let byte_type_tag = type_tag_form_itype(&crate::IType::U8);
         let seq_writer = self.sequential_writer(bytes.len() as _, byte_type_tag)?;
         seq_writer.write_bytes(self, bytes);
 
         Ok(seq_writer.start_offset())
     }
 
-    pub fn sequential_writer(&self, size: u32, type_tag: u32) -> WriteResult<SequentialWriter> {
+    pub fn sequential_writer(&self, size: u32, type_tag: u32) -> LoResult<SequentialWriter> {
         let offset = self.heap_manager.allocate(size, type_tag)?;
-        let new_mem_slice = self.heap_manager.memory_slice(MEMORY_INDEX)?;
+        let new_mem_slice = self.heap_manager.memory_slice(DEFAULT_MEMORY_INDEX)?;
         self.memory.set(new_mem_slice);
 
         Ok(SequentialWriter::new(offset))
@@ -78,9 +73,9 @@ impl SequentialWriter {
         self.start_offset
     }
 
-    pub fn write_array<T: Heapable, const N: usize>(
+    pub fn write_array<A: Allocatable, const N: usize>(
         &self,
-        writer: &MemoryWriter<T>,
+        writer: &MemoryWriter<'_, A>,
         values: [u8; N],
     ) {
         let offset = self.offset.get();
@@ -94,7 +89,7 @@ impl SequentialWriter {
     }
 
     // specialization of write_array for u8
-    pub fn write_u8<T: Heapable>(&self, writer: &MemoryWriter<T>, value: u8) {
+    pub fn write_u8<A: Allocatable>(&self, writer: &MemoryWriter<'_, A>, value: u8) {
         let offset = self.offset.get();
 
         writer.memory.get()[offset].set(value);
@@ -103,7 +98,7 @@ impl SequentialWriter {
     }
 
     // specialization of write_array for u32
-    pub fn write_u32<T: Heapable>(&self, writer: &MemoryWriter<T>, value: u32) {
+    pub fn write_u32<A: Allocatable>(&self, writer: &MemoryWriter<'_, A>, value: u32) {
         let offset = self.offset.get();
 
         let value = value.to_le_bytes();
@@ -118,7 +113,7 @@ impl SequentialWriter {
     }
 
     #[allow(dead_code)]
-    pub fn write_bytes<T: Heapable>(&self, writer: &MemoryWriter<T>, bytes: &[u8]) {
+    pub fn write_bytes<A: Allocatable>(&self, writer: &MemoryWriter<'_, A>, bytes: &[u8]) {
         let offset = self.offset.get();
 
         let memory = writer.memory.get();

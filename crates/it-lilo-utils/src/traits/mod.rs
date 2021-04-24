@@ -14,23 +14,8 @@
  * limitations under the License.
  */
 
-#![deny(
-    dead_code,
-    nonstandard_style,
-    unused_imports,
-    unused_mut,
-    unused_variables,
-    unused_unsafe,
-    unreachable_patterns
-)]
-#![warn(rust_2018_idioms)]
+mod heapable;
+mod record_resolvable;
 
-pub mod lifter;
-pub mod lowerer;
-pub mod traits;
-pub mod utils;
-
-pub use fluence_it_types::ne_vec::NEVec;
-pub use fluence_it_types::IRecordType;
-pub use fluence_it_types::IType;
-pub use fluence_it_types::IValue;
+pub use heapable::*;
+pub use record_resolvable::*;

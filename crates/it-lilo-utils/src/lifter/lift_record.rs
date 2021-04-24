@@ -1,23 +1,40 @@
-use super::lilo::*;
+/*
+ * Copyright 2021 Fluence Labs Limited
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
+use super::ILifter;
+use super::LiError;
+use super::LiResult;
+use super::MemoryReader;
+use super::SequentialReader;
+use crate::traits::RecordResolvable;
+use crate::utils::record_size;
 use crate::IRecordType;
 use crate::IType;
 use crate::IValue;
 use crate::NEVec;
 
-use it_lilo_utils::memory_reader::MemoryReader;
-use it_lilo_utils::memory_reader::SequentialReader;
-use it_lilo_utils::record_size;
-
-pub(crate) fn record_lift_memory_impl(
-    li_helper: &LiHelper<'_>,
+pub fn record_lift_memory<R: RecordResolvable>(
+    lifter: &ILifter<'_, '_, R>,
     record_type: &IRecordType,
     offset: usize,
-) -> LiLoResult<IValue> {
+) -> LiResult<IValue> {
     let mut values = Vec::with_capacity(record_type.fields.len());
 
     let size = record_size(record_type);
-    let reader = &li_helper.reader;
+    let reader = &lifter.reader;
     let seq_reader = reader.sequential_reader(offset, size)?;
 
     for field in (*record_type.fields).iter() {
@@ -37,20 +54,23 @@ pub(crate) fn record_lift_memory_impl(
             IType::F64 => values.push(IValue::F64(seq_reader.read_f64())),
             IType::String => values.push(IValue::String(read_string(reader, &seq_reader)?)),
             IType::ByteArray => values.push(read_byte_array(reader, &seq_reader)?),
-            IType::Array(ty) => values.push(read_array(&li_helper, &seq_reader, &**ty)?),
+            IType::Array(ty) => values.push(read_array(&lifter, &seq_reader, &**ty)?),
             IType::Record(record_type_id) => {
-                values.push(read_record(li_helper, &seq_reader, *record_type_id)?)
+                values.push(read_record(lifter, &seq_reader, *record_type_id)?)
             }
         }
     }
 
     let record = NEVec::new(values.into_iter().collect())
-        .map_err(|_| LiLoError::EmptyRecord(record_type.name.clone()))?;
+        .map_err(|_| LiError::EmptyRecord(record_type.name.clone()))?;
 
     Ok(IValue::Record(record))
 }
 
-fn read_string(reader: &MemoryReader, seq_reader: &SequentialReader) -> LiLoResult<String> {
+fn read_string(
+    reader: &MemoryReader<'_>,
+    seq_reader: &SequentialReader<'_, '_>,
+) -> LiResult<String> {
     let offset = seq_reader.read_u32();
     let size = seq_reader.read_u32();
 
@@ -60,7 +80,10 @@ fn read_string(reader: &MemoryReader, seq_reader: &SequentialReader) -> LiLoResu
     Ok(string)
 }
 
-fn read_byte_array(reader: &MemoryReader, seq_reader: &SequentialReader) -> LiLoResult<IValue> {
+fn read_byte_array(
+    reader: &MemoryReader<'_>,
+    seq_reader: &SequentialReader<'_, '_>,
+) -> LiResult<IValue> {
     let offset = seq_reader.read_u32();
     let size = seq_reader.read_u32();
 
@@ -69,25 +92,25 @@ fn read_byte_array(reader: &MemoryReader, seq_reader: &SequentialReader) -> LiLo
     Ok(IValue::ByteArray(array))
 }
 
-fn read_array(
-    li_helper: &LiHelper,
-    seq_reader: &SequentialReader,
+fn read_array<R: RecordResolvable>(
+    lifter: &ILifter<'_, '_, R>,
+    seq_reader: &SequentialReader<'_, '_>,
     value_type: &IType,
-) -> LiLoResult<IValue> {
+) -> LiResult<IValue> {
     let offset = seq_reader.read_u32();
     let size = seq_reader.read_u32();
 
-    super::array_lift_memory_impl(li_helper, value_type, offset as _, size as _)
+    super::array_lift_memory(lifter, value_type, offset as _, size as _)
 }
 
-fn read_record(
-    li_helper: &LiHelper,
-    seq_reader: &SequentialReader,
+fn read_record<R: RecordResolvable>(
+    lifter: &ILifter<'_, '_, R>,
+    seq_reader: &SequentialReader<'_, '_>,
     record_type_id: u64,
-) -> LiLoResult<IValue> {
+) -> LiResult<IValue> {
     let offset = seq_reader.read_u32();
 
-    let record_type = (li_helper.record_resolver)(record_type_id)?;
+    let record_type = lifter.resolver.resolve_record(record_type_id)?;
 
-    record_lift_memory_impl(li_helper, &record_type, offset as _)
+    record_lift_memory(lifter, &record_type, offset as _)
 }

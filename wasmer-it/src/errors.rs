@@ -12,7 +12,8 @@ use std::{
     string::{self, ToString},
 };
 
-use it_lilo_utils::error::MemoryWriteError;
+use it_lilo_utils::lifter::LiError;
+use it_lilo_utils::lowerer::LoError;
 use thiserror::Error as ThisError;
 
 pub use fluence_it_types::WasmValueNativeCastError;
@@ -44,16 +45,13 @@ impl InstructionError {
         }
     }
 
-    pub(crate) fn from_lilo(instruction: Instruction, lilo: LiLoError) -> Self {
-        let error_kind = InstructionErrorKind::LiLoError(lilo);
+    pub(crate) fn from_li(instruction: Instruction, li: LiError) -> Self {
+        let error_kind = InstructionErrorKind::LiError(li);
         Self::from_error_kind(instruction, error_kind)
     }
 
-    pub(crate) fn from_write_error(
-        instruction: Instruction,
-        write_error: MemoryWriteError,
-    ) -> Self {
-        let error_kind = InstructionErrorKind::MemoryWriteError(write_error);
+    pub(crate) fn from_lo(instruction: Instruction, lo: LoError) -> Self {
+        let error_kind = InstructionErrorKind::LoError(lo);
         Self::from_error_kind(instruction, error_kind)
     }
 }
@@ -229,74 +227,15 @@ pub enum InstructionErrorKind {
 
     /// Errors related to lifting/lowering records.
     #[error("{0}")]
-    LiLoError(#[from] LiLoError),
+    LiError(#[from] LiError),
 
     /// Errors related to incorrect writing to memory.
     #[error("{0}")]
-    MemoryWriteError(#[from] MemoryWriteError),
+    LoError(#[from] LoError),
 }
 
 impl From<(TryFromIntError, &'static str)> for InstructionErrorKind {
     fn from((_, subject): (TryFromIntError, &'static str)) -> Self {
         InstructionErrorKind::NegativeValue { subject }
     }
-}
-
-/// Contains various errors encountered while lifting/lowering records and arrays.
-#[derive(Debug, ThisError)]
-pub enum LiLoError {
-    /// This error occurred from out-of-bound memory access.
-    #[error("{0}")]
-    MemoryAccessError(#[from] it_lilo_utils::error::MemoryAccessError),
-
-    /// An error related to not found record in module record types.
-    #[error("Record with type id {0} not found")]
-    RecordTypeNotFound(u64),
-
-    /// The memory doesn't exist.
-    #[error("memory `{memory_index}` does not exist")]
-    MemoryIsMissing {
-        /// The memory index.
-        memory_index: usize,
-    },
-
-    /// The local or import function doesn't exist.
-    #[error("the allocate function with index `{function_index}` doesn't exist in Wasm module")]
-    AllocateFuncIsMissing {
-        /// The local or import function index.
-        function_index: u32,
-    },
-
-    /// Failed to call a allocate function.
-    #[error("call to allocated was failed")]
-    AllocateCallFailed,
-
-    /// Allocate input types doesn't match with needed.
-    #[error(
-        "allocate func doesn't receive two i32 values,\
-             probably a Wasm module's built with unsupported sdk version"
-    )]
-    AllocateFuncIncompatibleSignature,
-
-    /// Allocate output types doesn't match with needed.
-    #[error(
-        "allocate func doesn't return a one value of I32 type,\
-             probably a Wasm module's built with unsupported sdk version"
-    )]
-    AllocateFuncIncompatibleOutput,
-
-    /// The searched by id type doesn't exist.
-    #[error("type with `{record_type_id}` is missing in a Wasm binary")]
-    RecordTypeByNameIsMissing {
-        /// The record type name.
-        record_type_id: u64,
-    },
-
-    /// Errors related to lifting incorrect UTF8 string from a Wasm module.
-    #[error("corrupted UTF8 string {0}")]
-    CorruptedUTF8String(#[from] std::string::FromUtf8Error),
-
-    /// This error occurred when a record is created from empty values array.
-    #[error("Record with name '{0}' can't be empty")]
-    EmptyRecord(String),
 }

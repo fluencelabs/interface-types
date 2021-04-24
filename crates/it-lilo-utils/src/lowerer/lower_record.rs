@@ -1,14 +1,32 @@
+/*
+ * Copyright 2021 Fluence Labs Limited
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+use super::ILowerer;
+use super::LoResult;
+use super::LoweredArray;
+use crate::traits::Allocatable;
 use crate::IValue;
 use crate::NEVec;
-use it_lilo_utils::memory_writer::Heapable;
-use it_lilo_utils::memory_writer::MemoryWriter;
-use it_lilo_utils::WriteResult;
 
-pub(crate) fn record_lower_memory_impl<T: Heapable>(
-    writer: &MemoryWriter<T>,
+pub fn record_lower_memory<A: Allocatable>(
+    lowerer: &ILowerer<'_, A>,
     values: NEVec<IValue>,
-) -> WriteResult<i32> {
+) -> LoResult<i32> {
     let average_field_size = 4;
+    // TODO: avoid this additional allocation after fixing github.com/fluencelabs/fce/issues/77
     let mut result: Vec<u8> = Vec::with_capacity(average_field_size * values.len());
 
     for value in values.into_vec() {
@@ -27,34 +45,34 @@ pub(crate) fn record_lower_memory_impl<T: Heapable>(
             IValue::F32(value) => result.extend_from_slice(&value.to_le_bytes()),
             IValue::F64(value) => result.extend_from_slice(&value.to_le_bytes()),
             IValue::String(value) => {
-                let offset = writer.write_bytes(value.as_bytes())? as u32;
+                let offset = lowerer.writer.write_bytes(value.as_bytes())? as u32;
 
                 result.extend_from_slice(&offset.to_le_bytes());
                 result.extend_from_slice(&(value.len() as u32).to_le_bytes());
             }
             IValue::ByteArray(value) => {
-                let offset = writer.write_bytes(&value)? as u32;
+                let offset = lowerer.writer.write_bytes(&value)? as u32;
 
                 result.extend_from_slice(&offset.to_le_bytes());
                 result.extend_from_slice(&(value.len() as u32).to_le_bytes());
             }
 
             IValue::Array(values) => {
-                let (offset, size) = super::array_lower_memory_impl(writer, values)?;
+                let LoweredArray { offset, size } = super::array_lower_memory(lowerer, values)?;
 
                 result.extend_from_slice(&(offset as u32).to_le_bytes());
                 result.extend_from_slice(&(size as u32).to_le_bytes());
             }
 
             IValue::Record(values) => {
-                let offset = record_lower_memory_impl(writer, values)? as u32;
+                let offset = record_lower_memory(lowerer, values)? as u32;
 
                 result.extend_from_slice(&offset.to_le_bytes());
             }
         }
     }
 
-    let result_pointer = writer.write_bytes(&result)?;
+    let result_pointer = lowerer.writer.write_bytes(&result)?;
 
     Ok(result_pointer as _)
 }

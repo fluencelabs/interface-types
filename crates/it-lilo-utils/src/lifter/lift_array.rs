@@ -1,22 +1,38 @@
-use super::lilo::*;
+/*
+ * Copyright 2021 Fluence Labs Limited
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
+use super::record_lift_memory;
+use super::ILifter;
+use super::LiResult;
+use crate::traits::RecordResolvable;
+use crate::utils::ser_type_size;
 use crate::IType;
 use crate::IValue;
 
-use crate::interpreter::instructions::record_lift_memory_impl;
-use it_lilo_utils::ser_type_size;
-
-pub(crate) fn array_lift_memory_impl(
-    li_helper: &LiHelper,
+pub fn array_lift_memory<R: RecordResolvable>(
+    lifter: &ILifter<'_, '_, R>,
     value_type: &IType,
     offset: usize,
     elements_count: usize,
-) -> LiLoResult<IValue> {
+) -> LiResult<IValue> {
     if elements_count == 0 {
         return Ok(IValue::Array(vec![]));
     }
 
-    let reader = &li_helper.reader;
+    let reader = &lifter.reader;
 
     let ivalues = match value_type {
         IType::Boolean => reader.read_bool_array(offset, elements_count)?,
@@ -32,25 +48,24 @@ pub(crate) fn array_lift_memory_impl(
         IType::U64 => reader.read_u64_array(offset, elements_count)?,
         IType::F32 => reader.read_f32_array(offset, elements_count)?,
         IType::F64 => reader.read_f64_array(offset, elements_count)?,
-        IType::String => read_string_array(li_helper, offset, elements_count)?,
-        IType::ByteArray => read_array_array(li_helper, &IType::ByteArray, offset, elements_count)?,
-        IType::Array(ty) => read_array_array(li_helper, &ty, offset, elements_count)?,
+        IType::String => read_string_array(lifter, offset, elements_count)?,
+        IType::ByteArray => read_array_array(lifter, &IType::ByteArray, offset, elements_count)?,
+        IType::Array(ty) => read_array_array(lifter, &ty, offset, elements_count)?,
         IType::Record(record_type_id) => {
-            read_record_array(li_helper, *record_type_id, offset, elements_count)?
+            read_record_array(lifter, *record_type_id, offset, elements_count)?
         }
     };
 
     Ok(IValue::Array(ivalues))
 }
 
-// Vec<String> => Vec<u32> (2 * len of prev)
-fn read_string_array(
-    li_helper: &LiHelper,
+fn read_string_array<R: RecordResolvable>(
+    lifter: &ILifter<'_, '_, R>,
     offset: usize,
     elements_count: usize,
-) -> LiLoResult<Vec<IValue>> {
+) -> LiResult<Vec<IValue>> {
     let mut result = Vec::with_capacity(elements_count);
-    let seq_reader = li_helper
+    let seq_reader = lifter
         .reader
         .sequential_reader(offset, ser_type_size(&IType::String) * elements_count)?;
 
@@ -58,7 +73,7 @@ fn read_string_array(
         let offset = seq_reader.read_u32();
         let size = seq_reader.read_u32();
 
-        let raw_str = li_helper.reader.read_raw_u8_array(offset as _, size as _)?;
+        let raw_str = lifter.reader.read_raw_u8_array(offset as _, size as _)?;
         let str = String::from_utf8(raw_str)?;
         result.push(IValue::String(str));
     }
@@ -66,14 +81,14 @@ fn read_string_array(
     Ok(result)
 }
 
-fn read_array_array(
-    li_helper: &LiHelper,
+fn read_array_array<R: RecordResolvable>(
+    lifter: &ILifter<'_, '_, R>,
     ty: &IType,
     offset: usize,
     elements_count: usize,
-) -> LiLoResult<Vec<IValue>> {
+) -> LiResult<Vec<IValue>> {
     let mut result = Vec::with_capacity(elements_count);
-    let seq_reader = li_helper
+    let seq_reader = lifter
         .reader
         .sequential_reader(offset, ser_type_size(ty) * elements_count)?;
 
@@ -81,29 +96,29 @@ fn read_array_array(
         let offset = seq_reader.read_u32();
         let size = seq_reader.read_u32();
 
-        let array = array_lift_memory_impl(li_helper, ty, offset as _, size as _)?;
+        let array = array_lift_memory(lifter, ty, offset as _, size as _)?;
         result.push(array);
     }
 
     Ok(result)
 }
 
-fn read_record_array(
-    li_helper: &LiHelper,
+fn read_record_array<R: RecordResolvable>(
+    lifter: &ILifter<'_, '_, R>,
     record_type_id: u64,
     offset: usize,
     elements_count: usize,
-) -> LiLoResult<Vec<IValue>> {
+) -> LiResult<Vec<IValue>> {
     let mut result = Vec::with_capacity(elements_count);
-    let seq_reader = li_helper
+    let seq_reader = lifter
         .reader
         .sequential_reader(offset, ser_type_size(&IType::Record(0)) * elements_count)?;
 
     for _ in 0..elements_count {
         let offset = seq_reader.read_u32();
-        let record_ty = (li_helper.record_resolver)(record_type_id)?;
+        let record_ty = lifter.resolver.resolve_record(record_type_id)?;
 
-        let record = record_lift_memory_impl(li_helper, &record_ty, offset as _)?;
+        let record = record_lift_memory(lifter, &record_ty, offset as _)?;
         result.push(record);
     }
 

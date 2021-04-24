@@ -1,11 +1,4 @@
-mod lift_array;
-mod lower_array;
-
-pub(crate) use lift_array::array_lift_memory_impl;
-pub(crate) use lower_array::array_lower_memory_impl;
-
 use super::lilo;
-use super::record_lower_memory_impl;
 
 use crate::instr_error;
 use crate::interpreter::instructions::to_native;
@@ -14,7 +7,9 @@ use crate::{
     interpreter::Instruction,
     IType, IValue,
 };
-use it_lilo_utils::memory_writer::MemoryWriter;
+use it_lilo_utils::lifter::ILifter;
+use it_lilo_utils::lowerer::ILowerer;
+use it_lilo_utils::lowerer::LoweredArray;
 
 use std::convert::TryInto;
 
@@ -72,10 +67,15 @@ where
                 .view();
             let memory = memory_view.deref();
 
-            let li_helper = lilo::LiHelper::new(&**instance, memory)
-                .map_err(|e| InstructionError::from_lilo(instruction.clone(), e))?;
-            let array = array_lift_memory_impl(&li_helper, &value_type, offset as _, size as _)
-                .map_err(|e| InstructionError::from_lilo(instruction.clone(), e))?;
+            let li_helper = lilo::LiHelper::new(&**instance);
+            let lifter = ILifter::new(memory, &li_helper);
+            let array = it_lilo_utils::lifter::array_lift_memory(
+                &lifter,
+                &value_type,
+                offset as _,
+                size as _,
+            )
+            .map_err(|e| InstructionError::from_li(instruction.clone(), e))?;
 
             log::trace!("array.lift_memory: pushing {:?} on the stack", array);
             runtime.stack.push(array);
@@ -121,11 +121,12 @@ where
                     }
 
                     let lo_helper = lilo::LoHelper::new(&**instance);
-                    let memory_writer = MemoryWriter::new(&lo_helper)
-                        .map_err(|e| InstructionError::from_write_error(instruction.clone(), e))?;
+                    let lowerer = ILowerer::new(&lo_helper)
+                        .map_err(|e| InstructionError::from_lo(instruction.clone(), e))?;
 
-                    let (offset, size) = array_lower_memory_impl(&memory_writer, values)
-                        .map_err(|e| InstructionError::from_write_error(instruction.clone(), e))?;
+                    let LoweredArray { offset, size } =
+                        it_lilo_utils::lowerer::array_lower_memory(&lowerer, values)
+                            .map_err(|e| InstructionError::from_lo(instruction.clone(), e))?;
 
                     log::trace!(
                         "array.lower_memory: pushing {}, {} on the stack",

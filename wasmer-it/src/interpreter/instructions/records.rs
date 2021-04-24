@@ -1,11 +1,3 @@
-mod lift_record;
-mod lower_record;
-
-pub(crate) use lift_record::record_lift_memory_impl;
-pub(crate) use lower_record::record_lower_memory_impl;
-
-use super::array_lift_memory_impl;
-use super::array_lower_memory_impl;
 use super::lilo;
 use crate::instr_error;
 use crate::interpreter::instructions::{is_record_fields_compatible_to_type, to_native};
@@ -13,7 +5,9 @@ use crate::IType;
 use crate::IValue;
 use crate::{errors::InstructionError, errors::InstructionErrorKind, interpreter::Instruction};
 
-use it_lilo_utils::memory_writer::MemoryWriter;
+use it_lilo_utils::lifter::ILifter;
+use it_lilo_utils::lowerer::ILowerer;
+
 use std::convert::TryInto;
 
 pub(crate) fn record_lift_memory<Instance, Export, LocalImport, Memory, MemoryView>(
@@ -71,10 +65,10 @@ where
                 .view();
             let memory = memory_view.deref();
 
-            let li_helper = lilo::LiHelper::new(&**instance, memory)
-                .map_err(|e| InstructionError::from_lilo(instruction.clone(), e))?;
-            let record = record_lift_memory_impl(&li_helper, record_type, offset)
-                .map_err(|e| InstructionError::from_lilo(instruction.clone(), e))?;
+            let li_helper = lilo::LiHelper::new(&**instance);
+            let lifter = ILifter::new(memory, &li_helper);
+            let record = it_lilo_utils::lifter::record_lift_memory(&lifter, record_type, offset)
+                .map_err(|e| InstructionError::from_li(instruction.clone(), e))?;
 
             log::debug!("record.lift_memory: pushing {:?} on the stack", record);
             runtime.stack.push(record);
@@ -114,10 +108,11 @@ where
                     log::debug!("record.lower_memory: obtained {:?} values on the stack for record type = {}", record_fields, record_type_id);
 
                     let lo_helper = lilo::LoHelper::new(&**instance);
-                    let memory_writer = MemoryWriter::new(&lo_helper)
-                        .map_err(|e| InstructionError::from_write_error(instruction.clone(), e))?;
-                    let offset = record_lower_memory_impl(&memory_writer, record_fields)
-                        .map_err(|e| InstructionError::from_write_error(instruction.clone(), e))?;
+                    let memory_writer = ILowerer::new(&lo_helper)
+                        .map_err(|e| InstructionError::from_lo(instruction.clone(), e))?;
+                    let offset =
+                        it_lilo_utils::lowerer::record_lower_memory(&memory_writer, record_fields)
+                            .map_err(|e| InstructionError::from_lo(instruction.clone(), e))?;
 
                     log::debug!("record.lower_memory: pushing {} on the stack", offset);
                     runtime.stack.push(IValue::I32(offset));

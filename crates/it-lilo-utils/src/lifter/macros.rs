@@ -101,7 +101,7 @@ macro_rules! read_array_ty {
             &self,
             offset: usize,
             elements_count: usize,
-        ) -> crate::ReadResult<Vec<crate::IValue>> {
+        ) -> super::LiResult<Vec<crate::IValue>> {
             let reader =
                 self.sequential_reader(offset, std::mem::size_of::<$ty>() * elements_count)?;
             let mut result = Vec::with_capacity(elements_count);

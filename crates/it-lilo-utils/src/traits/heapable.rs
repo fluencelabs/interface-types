@@ -14,22 +14,21 @@
  * limitations under the License.
  */
 
+use std::cell::Cell;
 use thiserror::Error as ThisError;
 
-#[derive(Debug, ThisError)]
-pub enum MemoryAccessError {
-    #[error(
-        "Out-of-bound Wasm memory access: offset {offset}, size {size}, while memory_size {memory_size}"
-    )]
-    InvalidAccess {
-        offset: usize,
-        size: usize,
-        memory_size: usize,
-    },
+pub const DEFAULT_MEMORY_INDEX: usize = 0;
+
+pub type MemSlice<'m> = &'m [Cell<u8>];
+
+pub trait Allocatable {
+    fn allocate(&self, size: u32, type_tag: u32) -> Result<usize, AllocatableError>;
+
+    fn memory_slice(&self, memory_index: usize) -> Result<MemSlice<'_>, AllocatableError>;
 }
 
 #[derive(Debug, ThisError)]
-pub enum MemoryWriteError {
+pub enum AllocatableError {
     /// The memory doesn't exist.
     #[error("memory `{memory_index}` does not exist")]
     MemoryIsMissing {
@@ -61,4 +60,9 @@ pub enum MemoryWriteError {
              probably a Wasm module's built with unsupported sdk version"
     )]
     AllocateFuncIncompatibleOutput,
+
+    // TODO: make it generic in future.
+    /// User defined error.
+    #[error("{0}")]
+    UserDefinedError(String),
 }

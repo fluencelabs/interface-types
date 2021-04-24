@@ -1,61 +1,61 @@
-use super::LiLoError;
-use super::LiLoResult;
 use crate::interpreter::wasm;
 use crate::IRecordType;
 
-use it_lilo_utils::memory_reader::MemoryReader;
+use it_lilo_utils::traits::RecordResolvable;
+use it_lilo_utils::traits::RecordResolvableError;
 
-use std::cell::Cell;
-use std::rc::Rc;
+use std::marker::PhantomData;
 
-pub(crate) struct LiHelper<'i> {
-    pub(crate) reader: MemoryReader<'i>,
-    pub(crate) record_resolver: RecordResolver<'i>,
-}
-
-impl<'instance> LiHelper<'instance> {
-    pub(crate) fn new<Instance, Export, LocalImport, Memory, MemoryView>(
-        instance: &'instance Instance,
-        memory: &'instance [Cell<u8>],
-    ) -> LiLoResult<Self>
-    where
-        Export: wasm::structures::Export + 'instance,
-        LocalImport: wasm::structures::LocalImport + 'instance,
-        Memory: wasm::structures::Memory<MemoryView> + 'instance,
-        MemoryView: wasm::structures::MemoryView,
-        Instance: wasm::structures::Instance<Export, LocalImport, Memory, MemoryView>,
-    {
-        let record_resolver = build_record_resolver(instance)?;
-        let reader = MemoryReader::new(memory);
-
-        let helper = Self {
-            reader,
-            record_resolver,
-        };
-
-        Ok(helper)
-    }
-}
-
-pub(crate) type RecordResolver<'i> = Box<dyn Fn(u64) -> LiLoResult<Rc<IRecordType>> + 'i>;
-
-pub(super) fn build_record_resolver<'instance, Instance, Export, LocalImport, Memory, MemoryView>(
-    instance: &'instance Instance,
-) -> LiLoResult<RecordResolver<'instance>>
+pub struct LiHelper<'i, Instance, Export, LocalImport, Memory, MemoryView>
 where
-    Export: wasm::structures::Export + 'instance,
-    LocalImport: wasm::structures::LocalImport + 'instance,
-    Memory: wasm::structures::Memory<MemoryView> + 'instance,
+    Export: wasm::structures::Export + 'i,
+    LocalImport: wasm::structures::LocalImport + 'i,
+    Memory: wasm::structures::Memory<MemoryView> + 'i,
     MemoryView: wasm::structures::MemoryView,
     Instance: wasm::structures::Instance<Export, LocalImport, Memory, MemoryView>,
 {
-    let resolver = move |record_type_id: u64| {
-        let record = instance
+    pub(crate) instance: &'i Instance,
+    _export: PhantomData<Export>,
+    _local_import: PhantomData<LocalImport>,
+    _memory: PhantomData<Memory>,
+    _memory_view: PhantomData<MemoryView>,
+}
+
+impl<'i, Instance, Export, LocalImport, Memory, MemoryView>
+    LiHelper<'i, Instance, Export, LocalImport, Memory, MemoryView>
+where
+    Export: wasm::structures::Export + 'i,
+    LocalImport: wasm::structures::LocalImport + 'i,
+    Memory: wasm::structures::Memory<MemoryView> + 'i,
+    MemoryView: wasm::structures::MemoryView,
+    Instance: wasm::structures::Instance<Export, LocalImport, Memory, MemoryView>,
+{
+    pub(crate) fn new(instance: &'i Instance) -> Self {
+        Self {
+            instance,
+            _export: PhantomData,
+            _local_import: PhantomData,
+            _memory: PhantomData,
+            _memory_view: PhantomData,
+        }
+    }
+}
+
+impl<'i, Instance, Export, LocalImport, Memory, MemoryView> RecordResolvable
+    for LiHelper<'i, Instance, Export, LocalImport, Memory, MemoryView>
+where
+    Export: wasm::structures::Export + 'i,
+    LocalImport: wasm::structures::LocalImport + 'i,
+    Memory: wasm::structures::Memory<MemoryView> + 'i,
+    MemoryView: wasm::structures::MemoryView,
+    Instance: wasm::structures::Instance<Export, LocalImport, Memory, MemoryView>,
+{
+    fn resolve_record(&self, record_type_id: u64) -> Result<&IRecordType, RecordResolvableError> {
+        let record = self
+            .instance
             .wit_record_by_id(record_type_id)
-            .ok_or(LiLoError::RecordTypeByNameIsMissing { record_type_id })?;
+            .ok_or(RecordResolvableError::RecordNotFound(record_type_id))?;
 
-        Ok(record.clone())
-    };
-
-    Ok(Box::new(resolver))
+        Ok(record)
+    }
 }
