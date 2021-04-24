@@ -20,9 +20,6 @@ use thiserror::Error as ThisError;
 
 #[derive(Debug, ThisError)]
 pub enum LoError {
-    #[error("Allocator of Wasm module returns 0 which means that it's out of memory")]
-    AllocateWasInvalid,
-
     #[error("{0}")]
     AllocatableError(#[from] AllocatableError),
 
