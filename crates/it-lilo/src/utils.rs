@@ -63,12 +63,12 @@ pub fn type_tag_form_itype(itype: &IType) -> u32 {
         IType::U16 => 2,              // u16
         IType::U32 => 3,              // u32
         IType::U64 => 4,              // u64
-        IType::S8 => 6,               // i8
-        IType::S16 => 7,              // i16
-        IType::S32 | IType::I32 => 8, // i32
-        IType::S64 | IType::I64 => 9, // i64
-        IType::F32 => 10,             // f32
-        IType::F64 => 11,             // f64
+        IType::S8 => 5,               // i8
+        IType::S16 => 6,              // i16
+        IType::S32 | IType::I32 => 7, // i32
+        IType::S64 | IType::I64 => 8, // i64
+        IType::F32 => 9,              // f32
+        IType::F64 => 10,             // f64
         IType::ByteArray | IType::Array(_) | IType::Record(_) | IType::String => POINTER_CODE,
     }
 }
@@ -82,12 +82,12 @@ pub fn type_tag_form_ivalue(itype: &IValue) -> u32 {
         IValue::U16(_) => 2,                  // u16
         IValue::U32(_) => 3,                  // u32
         IValue::U64(_) => 4,                  // u64
-        IValue::S8(_) => 6,                   // i8
-        IValue::S16(_) => 7,                  // i16
-        IValue::S32(_) | IValue::I32(_) => 8, // i32
-        IValue::S64(_) | IValue::I64(_) => 9, // i64
-        IValue::F32(_) => 10,                 // f32
-        IValue::F64(_) => 11,                 // f64
+        IValue::S8(_) => 5,                   // i8
+        IValue::S16(_) => 6,                  // i16
+        IValue::S32(_) | IValue::I32(_) => 7, // i32
+        IValue::S64(_) | IValue::I64(_) => 8, // i64
+        IValue::F32(_) => 9,                  // f32
+        IValue::F64(_) => 10,                 // f64
         IValue::ByteArray(_) | IValue::Array(_) | IValue::Record(_) | IValue::String(_) => {
             POINTER_CODE
         }
