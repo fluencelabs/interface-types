@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-mod heapable;
+mod allocatable;
 mod record_resolvable;
 
-pub use heapable::*;
+pub use allocatable::*;
 pub use record_resolvable::*;
