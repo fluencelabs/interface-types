@@ -21,6 +21,7 @@ use crate::traits::DEFAULT_MEMORY_INDEX;
 use crate::utils::type_tag_form_itype;
 
 use std::cell::Cell;
+use crate::lowerer::LoError;
 
 pub struct MemoryWriter<'i, R: Allocatable> {
     heap_manager: &'i R,
@@ -54,6 +55,10 @@ impl<'i, A: Allocatable> MemoryWriter<'i, A> {
 
     pub fn sequential_writer(&self, size: u32, type_tag: u32) -> LoResult<SequentialWriter> {
         let offset = self.heap_manager.allocate(size, type_tag)?;
+        if offset == 0 {
+            return Err(LoError::AllocateWasInvalid);
+        }
+
         let new_mem_slice = self.heap_manager.memory_slice(DEFAULT_MEMORY_INDEX)?;
         self.memory.set(new_mem_slice);
 
