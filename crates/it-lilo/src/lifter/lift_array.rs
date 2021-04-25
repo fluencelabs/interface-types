@@ -49,7 +49,7 @@ pub fn array_lift_memory<R: RecordResolvable>(
         IType::F32 => reader.read_f32_array(offset, elements_count)?,
         IType::F64 => reader.read_f64_array(offset, elements_count)?,
         IType::String => read_string_array(lifter, offset, elements_count)?,
-        IType::ByteArray => read_array_array(lifter, &IType::ByteArray, offset, elements_count)?,
+        IType::ByteArray => read_array_array(lifter, &IType::U8, offset, elements_count)?,
         IType::Array(ty) => read_array_array(lifter, &ty, offset, elements_count)?,
         IType::Record(record_type_id) => {
             read_record_array(lifter, *record_type_id, offset, elements_count)?
