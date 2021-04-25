@@ -21,7 +21,6 @@ use crate::traits::DEFAULT_MEMORY_INDEX;
 use crate::utils::type_tag_form_itype;
 
 use std::cell::Cell;
-use crate::lowerer::LoError;
 
 pub struct MemoryWriter<'i, R: Allocatable> {
     heap_manager: &'i R,

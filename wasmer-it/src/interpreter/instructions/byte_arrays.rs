@@ -18,7 +18,6 @@ executable_instruction!(
                     InstructionErrorKind::StackIsTooSmall { needed: 2 },
                 )
             })?;
-            println!("byte_array lift memory: {:?}", inputs);
 
             let memory_index = 0;
             let memory = runtime
@@ -39,8 +38,6 @@ executable_instruction!(
                 .try_into()
                 .map_err(|e| (e, "length").into())
                 .map_err(|k| InstructionError::from_error_kind(instruction.clone(), k))?;
-
-            println!("byte_array lift memory: pointer {} length {}", pointer, length);
 
             let memory_view = memory.view();
 

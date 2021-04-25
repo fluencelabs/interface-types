@@ -134,6 +134,27 @@ where
 
                     Ok(())
                 }
+                IValue::ByteArray(bytearray) => {
+                    let lo_helper = lilo::LoHelper::new(&**instance);
+                    let lowerer = ILowerer::new(&lo_helper)
+                        .map_err(|e| InstructionError::from_lo(instruction.clone(), e))?;
+
+                    let offset = lowerer
+                        .writer
+                        .write_bytes(&bytearray)
+                        .map_err(|e| InstructionError::from_lo(instruction.clone(), e))?;
+                    let size = bytearray.len();
+
+                    log::trace!(
+                        "array.lower_memory: pushing bytes {}, {} on the stack",
+                        offset,
+                        size
+                    );
+                    runtime.stack.push(IValue::I32(offset as _));
+                    runtime.stack.push(IValue::I32(size as _));
+
+                    Ok(())
+                }
                 _ => instr_error!(
                     instruction.clone(),
                     InstructionErrorKind::InvalidValueOnTheStack {
