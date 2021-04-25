@@ -40,7 +40,7 @@
 
 #![deny(
     dead_code,
-    broken_intra_doc_links,
+    rustdoc::broken_intra_doc_links,
     missing_docs,
     nonstandard_style,
     unreachable_patterns,
@@ -65,6 +65,7 @@ mod serde;
 mod values;
 
 // re-exports
+pub use fluence_it_types::ne_vec;
 pub use fluence_it_types::ne_vec::NEVec;
 pub use fluence_it_types::IRecordFieldType;
 pub use fluence_it_types::IRecordType;

@@ -206,6 +206,7 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
         V: de::Visitor<'de>,
     {
         match self.iterator.peek() {
+            Some(IValue::Boolean(_)) => self.deserialize_bool(visitor),
             Some(IValue::S8(_)) => self.deserialize_i8(visitor),
             Some(IValue::S16(_)) => self.deserialize_i16(visitor),
             Some(IValue::S32(_)) => self.deserialize_i32(visitor),
@@ -217,6 +218,7 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
             Some(IValue::F32(_)) => self.deserialize_f32(visitor),
             Some(IValue::F64(_)) => self.deserialize_f64(visitor),
             Some(IValue::String(_)) => self.deserialize_string(visitor),
+            Some(IValue::ByteArray(_)) => self.deserialize_bytes(visitor),
             Some(IValue::Array(_)) => self.deserialize_bytes(visitor),
             Some(IValue::I32(_)) => self.deserialize_i32(visitor),
             Some(IValue::I64(_)) => self.deserialize_i64(visitor),
@@ -225,11 +227,11 @@ impl<'de, 'a> de::Deserializer<'de> for &'a mut Deserializer<'de> {
         }
     }
 
-    fn deserialize_bool<V>(self, _visitor: V) -> Result<V::Value, Self::Error>
+    fn deserialize_bool<V>(self, visitor: V) -> Result<V::Value, Self::Error>
     where
         V: de::Visitor<'de>,
     {
-        unimplemented!("`bool` is not supported by WIT for the moment.")
+        visitor.visit_bool(self.next_u8()? != 0)
     }
 
     fn deserialize_i8<V>(self, visitor: V) -> Result<V::Value, Self::Error>

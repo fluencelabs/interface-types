@@ -5,3 +5,7 @@ authors = ["Fluence Labs"]
 description = "Defines trait ToBytes used for IT serialization"
 edition = "2018"
 license = "Apache-2.0"
+
+[lib]
+name = "it_to_bytes"
+path = "src/lib.rs"

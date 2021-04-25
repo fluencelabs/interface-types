@@ -196,6 +196,7 @@ where
                 (*function_index as u64).to_bytes(writer)?;
             }
 
+            Instruction::BoolFromI32 => 0x3E_u8.to_bytes(writer)?,
             Instruction::S8FromI32 => 0x02_u8.to_bytes(writer)?,
             Instruction::S8FromI64 => 0x03_u8.to_bytes(writer)?,
             Instruction::S16FromI32 => 0x04_u8.to_bytes(writer)?,
@@ -204,6 +205,7 @@ where
             Instruction::S32FromI64 => 0x07_u8.to_bytes(writer)?,
             Instruction::S64FromI32 => 0x08_u8.to_bytes(writer)?,
             Instruction::S64FromI64 => 0x09_u8.to_bytes(writer)?,
+            Instruction::I32FromBool => 0x3F_u8.to_bytes(writer)?,
             Instruction::I32FromS8 => 0x0a_u8.to_bytes(writer)?,
             Instruction::I32FromS16 => 0x0b_u8.to_bytes(writer)?,
             Instruction::I32FromS32 => 0x0c_u8.to_bytes(writer)?,
@@ -233,6 +235,10 @@ where
             Instruction::StringLowerMemory => 0x23_u8.to_bytes(writer)?,
             Instruction::StringSize => 0x24_u8.to_bytes(writer)?,
 
+            Instruction::ByteArrayLiftMemory => 0x43_u8.to_bytes(writer)?,
+            Instruction::ByteArrayLowerMemory => 0x44_u8.to_bytes(writer)?,
+            Instruction::ByteArraySize => 0x45_u8.to_bytes(writer)?,
+
             Instruction::ArrayLiftMemory { value_type } => {
                 0x37_u8.to_bytes(writer)?;
                 value_type.to_bytes(writer)?
@@ -241,17 +247,6 @@ where
                 0x38_u8.to_bytes(writer)?;
                 value_type.to_bytes(writer)?
             }
-            /*
-            Instruction::ArraySize => 0x39_u8.to_bytes(writer)?,
-            Instruction::RecordLift { type_index } => {
-                0x25_u8.to_bytes(writer)?;
-                (*type_index as u64).to_bytes(writer)?
-            }
-            Instruction::RecordLower { type_index } => {
-                0x26_u8.to_bytes(writer)?;
-                (*type_index as u64).to_bytes(writer)?
-            }
-             */
             Instruction::RecordLiftMemory {
                 record_type_id: type_index,
             } => {
@@ -266,6 +261,14 @@ where
             }
             Instruction::Dup => 0x34_u8.to_bytes(writer)?,
             Instruction::Swap2 => 0x35_u8.to_bytes(writer)?,
+            Instruction::PushI32 { value } => {
+                0x40_u8.to_bytes(writer)?;
+                (*value as u64).to_bytes(writer)?
+            }
+            Instruction::PushI64 { value } => {
+                0x41_u8.to_bytes(writer)?;
+                (*value as u64).to_bytes(writer)?
+            }
         }
 
         Ok(())

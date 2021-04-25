@@ -65,6 +65,7 @@ impl ToString for &Instruction {
         match self {
             Instruction::ArgumentGet { index } => format!("arg.get {}", index),
             Instruction::CallCore { function_index } => format!("call-core {}", function_index),
+            Instruction::BoolFromI32 => "bool.from_i32".into(),
             Instruction::S8FromI32 => "s8.from_i32".into(),
             Instruction::S8FromI64 => "s8.from_i64".into(),
             Instruction::S16FromI32 => "s16.from_i32".into(),
@@ -73,6 +74,7 @@ impl ToString for &Instruction {
             Instruction::S32FromI64 => "s32.from_i64".into(),
             Instruction::S64FromI32 => "s64.from_i32".into(),
             Instruction::S64FromI64 => "s64.from_i64".into(),
+            Instruction::I32FromBool => "i32.from_bool".into(),
             Instruction::I32FromS8 => "i32.from_s8".into(),
             Instruction::I32FromS16 => "i32.from_s16".into(),
             Instruction::I32FromS32 => "i32.from_s32".into(),
@@ -100,17 +102,17 @@ impl ToString for &Instruction {
             Instruction::StringLiftMemory => "string.lift_memory".into(),
             Instruction::StringLowerMemory => "string.lower_memory".into(),
             Instruction::StringSize => "string.size".into(),
+
+            Instruction::ByteArrayLiftMemory => "byte_array.lift_memory".into(),
+            Instruction::ByteArrayLowerMemory => "byte_array.lower_memory".into(),
+            Instruction::ByteArraySize => "byte_array.size".into(),
+
             Instruction::ArrayLiftMemory { value_type } => {
                 format!("array.lift_memory {}", value_type.to_string())
             }
             Instruction::ArrayLowerMemory { value_type } => {
                 format!("array.lower_memory {}", value_type.to_string())
             }
-            /*
-            Instruction::ArraySize => "byte_array.size".into(),
-            Instruction::RecordLift { type_index } => format!("record.lift {}", type_index),
-            Instruction::RecordLower { type_index } => format!("record.lower {}", type_index),
-             */
             Instruction::RecordLiftMemory {
                 record_type_id: type_index,
             } => format!("record.lift_memory {}", type_index),
@@ -119,6 +121,8 @@ impl ToString for &Instruction {
             } => format!("record.lower_memory {}", type_index),
             Instruction::Dup => "dup".into(),
             Instruction::Swap2 => "swap2".into(),
+            Instruction::PushI32 { value } => format!("i32.push {}", value),
+            Instruction::PushI64 { value } => format!("i64.push {}", value),
         }
     }
 }
@@ -354,7 +358,6 @@ mod tests {
             (&IType::F32).to_string(),
             (&IType::F64).to_string(),
             (&IType::String).to_string(),
-            (&IType::Anyref).to_string(),
             (&IType::I32).to_string(),
             (&IType::I64).to_string(),
             (&IType::Record(RecordType {

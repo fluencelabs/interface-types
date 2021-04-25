@@ -112,6 +112,7 @@ fn ty<'input, E: ParseError<&'input [u8]>>(
     consume!((input, opcode) = byte(input)?);
 
     let ty = match opcode {
+        0x0b => IType::Boolean,
         0x00 => IType::S8,
         0x01 => IType::S16,
         0x02 => IType::S32,
@@ -123,12 +124,12 @@ fn ty<'input, E: ParseError<&'input [u8]>>(
         0x08 => IType::F32,
         0x09 => IType::F64,
         0x0a => IType::String,
+        0x3c => IType::ByteArray,
         0x36 => {
             consume!((input, array_value_type) = ty(input)?);
 
             IType::Array(Box::new(array_value_type))
         }
-        0x0b => IType::Anyref,
         0x0c => IType::I32,
         0x0d => IType::I64,
         0x0e => {
@@ -297,6 +298,10 @@ fn instruction<'input, E: ParseError<&'input [u8]>>(
         0x23 => (input, Instruction::StringLowerMemory),
         0x24 => (input, Instruction::StringSize),
 
+        0x43 => (input, Instruction::ByteArrayLiftMemory),
+        0x44 => (input, Instruction::ByteArrayLowerMemory),
+        0x45 => (input, Instruction::ByteArraySize),
+
         0x37 => {
             consume!((input, value_type) = ty(input)?);
 
@@ -307,30 +312,6 @@ fn instruction<'input, E: ParseError<&'input [u8]>>(
 
             (input, Instruction::ArrayLowerMemory { value_type })
         }
-        /*
-        0x39 => (input, Instruction::ArraySize),
-
-               0x25 => {
-                   consume!((input, argument_0) = uleb(input)?);
-
-                   (
-                       input,
-                       Instruction::RecordLift {
-                           type_index: argument_0 as u32,
-                       },
-                   )
-               }
-               0x26 => {
-                   consume!((input, argument_0) = uleb(input)?);
-
-                   (
-                       input,
-                       Instruction::RecordLower {
-                           type_index: argument_0 as u32,
-                       },
-                   )
-               }
-        */
         0x3A => {
             consume!((input, record_type_id) = uleb(input)?);
 
@@ -355,6 +336,31 @@ fn instruction<'input, E: ParseError<&'input [u8]>>(
         0x34 => (input, Instruction::Dup),
 
         0x35 => (input, Instruction::Swap2),
+
+        0x3E => (input, Instruction::BoolFromI32),
+        0x3F => (input, Instruction::I32FromBool),
+
+        0x40 => {
+            consume!((input, value) = uleb(input)?);
+
+            (
+                input,
+                Instruction::PushI32 {
+                    value: value as i32,
+                },
+            )
+        }
+
+        0x41 => {
+            consume!((input, value) = uleb(input)?);
+
+            (
+                input,
+                Instruction::PushI64 {
+                    value: value as i64,
+                },
+            )
+        }
 
         _ => return Err(Err::Error(make_error(input, ErrorKind::ParseTo))),
     })

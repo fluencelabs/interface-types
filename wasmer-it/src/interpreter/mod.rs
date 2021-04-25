@@ -4,9 +4,10 @@ mod instructions;
 pub mod stack;
 pub mod wasm;
 
+pub use instructions::Instruction;
+
 use crate::errors::{InstructionResult, InterpreterResult};
 use crate::IValue;
-pub use instructions::Instruction;
 use stack::Stack;
 use std::{convert::TryFrom, marker::PhantomData};
 
@@ -198,6 +199,7 @@ where
                     instructions::call_core(function_index, instruction)
                 }
 
+                Instruction::BoolFromI32 => instructions::bool_from_i32(instruction),
                 Instruction::S8FromI32 => instructions::s8_from_i32(instruction),
                 Instruction::S8FromI64 => instructions::s8_from_i64(instruction),
                 Instruction::S16FromI32 => instructions::s16_from_i32(instruction),
@@ -206,6 +208,7 @@ where
                 Instruction::S32FromI64 => instructions::s32_from_i64(instruction),
                 Instruction::S64FromI32 => instructions::s64_from_i32(instruction),
                 Instruction::S64FromI64 => instructions::s64_from_i64(instruction),
+                Instruction::I32FromBool => instructions::i32_from_bool(instruction),
                 Instruction::I32FromS8 => instructions::i32_from_s8(instruction),
                 Instruction::I32FromS16 => instructions::i32_from_s16(instruction),
                 Instruction::I32FromS32 => instructions::i32_from_s32(instruction),
@@ -230,10 +233,21 @@ where
                 Instruction::I64FromU16 => instructions::i64_from_u16(instruction),
                 Instruction::I64FromU32 => instructions::i64_from_u32(instruction),
                 Instruction::I64FromU64 => instructions::i64_from_u64(instruction),
+                Instruction::PushI32 { value } => instructions::push_i32(value),
+                Instruction::PushI64 { value } => instructions::push_i64(value),
 
                 Instruction::StringLiftMemory => instructions::string_lift_memory(instruction),
                 Instruction::StringLowerMemory => instructions::string_lower_memory(instruction),
                 Instruction::StringSize => instructions::string_size(instruction),
+
+                Instruction::ByteArrayLiftMemory => {
+                    instructions::byte_array_lift_memory(instruction)
+                }
+                Instruction::ByteArrayLowerMemory => {
+                    instructions::byte_array_lower_memory(instruction)
+                }
+                Instruction::ByteArraySize => instructions::byte_array_size(instruction),
+
                 Instruction::ArrayLiftMemory { ref value_type } => {
                     let value_type = value_type.clone();
                     instructions::array_lift_memory(instruction, value_type)
@@ -242,15 +256,6 @@ where
                     let value_type = value_type.clone();
                     instructions::array_lower_memory(instruction, value_type)
                 }
-
-                /*
-                Instruction::RecordLift { type_index } => {
-                    instructions::record_lift(*type_index, instruction)
-                }
-                Instruction::RecordLower { type_index } => {
-                    instructions::record_lower(*type_index, instruction)
-                }
-                */
                 Instruction::RecordLiftMemory { record_type_id } => {
                     instructions::record_lift_memory(record_type_id as _, instruction)
                 }

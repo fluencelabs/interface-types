@@ -7,7 +7,7 @@ executable_instruction!(
     swap2(instruction: Instruction) -> _ {
         move |runtime| -> _ {
             let mut values = runtime.stack.pop(2).ok_or_else(|| {
-                InstructionError::new(
+                InstructionError::from_error_kind(
                     instruction.clone(),
                     InstructionErrorKind::StackIsTooSmall { needed: 1 },
                 )

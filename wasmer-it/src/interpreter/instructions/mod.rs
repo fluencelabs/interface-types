@@ -1,12 +1,14 @@
 mod argument_get;
 mod arrays;
+mod byte_arrays;
 mod call_core;
 mod dup;
+pub(self) mod lilo;
 mod numbers;
+mod push;
 mod records;
 mod strings;
 mod swap2;
-mod utils;
 
 use crate::errors::{
     InstructionError, InstructionErrorKind, InstructionResult, WasmValueNativeCastError,
@@ -15,15 +17,17 @@ use crate::interpreter::wasm;
 use crate::IType;
 use crate::IValue;
 use crate::NEVec;
+
 pub(crate) use argument_get::argument_get;
 pub(crate) use arrays::*;
+pub(crate) use byte_arrays::*;
 pub(crate) use call_core::call_core;
 pub(crate) use dup::dup;
 pub(crate) use numbers::*;
+pub(crate) use push::*;
 pub(crate) use records::*;
 pub(crate) use strings::*;
 pub(crate) use swap2::swap2;
-pub(self) use utils::*;
 
 use fluence_it_types::NativeType;
 use serde::Deserialize;
@@ -48,6 +52,9 @@ pub enum Instruction {
         function_index: u32,
     },
 
+    /// The bool.from_i32` instruction.
+    BoolFromI32,
+
     /// The `s8.from_i32` instruction.
     S8FromI32,
 
@@ -71,6 +78,9 @@ pub enum Instruction {
 
     /// The `s64.from_i64` instruction.
     S64FromI64,
+
+    /// The i32.from_bool instruction.
+    I32FromBool,
 
     /// The `i32.from_s8` instruction.
     I32FromS8,
@@ -150,6 +160,15 @@ pub enum Instruction {
     /// The `string.lower_memory` instruction.
     StringLowerMemory,
 
+    /// The `byte_array.size` instruction.
+    ByteArraySize,
+
+    /// The `byte_array.lift_memory` instruction.
+    ByteArrayLiftMemory,
+
+    /// The `byte_array.lower_memory` instruction.
+    ByteArrayLowerMemory,
+
     /// The `string.size` instruction.
     StringSize,
 
@@ -165,20 +184,6 @@ pub enum Instruction {
         value_type: IType,
     },
 
-    /*
-    /// The `record.lift` instruction.
-    RecordLift {
-        /// The type index of the record.
-        type_index: u32,
-    },
-
-    /// The `record.lower` instruction.
-    RecordLower {
-        /// The type index of the record.
-        type_index: u32,
-    },
-
-     */
     /// The `record.lift_memory` instruction.
     RecordLiftMemory {
         /// The type index of the record.
@@ -191,6 +196,18 @@ pub enum Instruction {
         record_type_id: u32,
     },
 
+    /// The `i32.push` instruction.
+    PushI32 {
+        /// The value that should be pushed on the stack.
+        value: i32,
+    },
+
+    /// The `i64.push` instruction.
+    PushI64 {
+        /// The value that should be pushed on the stack.
+        value: i64,
+    },
+
     /// The `dup` instructions.
     Dup,
 
@@ -200,15 +217,13 @@ pub enum Instruction {
 
 /// Just a short helper to map the error of a cast from an
 /// `IValue` to a native value.
-pub(crate) fn to_native<'a, T>(
-    wit_value: &'a IValue,
-    instruction: Instruction,
-) -> InstructionResult<T>
+pub(crate) fn to_native<'a, T>(wit_value: IValue, instruction: Instruction) -> InstructionResult<T>
 where
-    T: NativeType + TryFrom<&'a IValue, Error = WasmValueNativeCastError>,
+    T: NativeType + TryFrom<IValue, Error = WasmValueNativeCastError>,
 {
-    T::try_from(wit_value)
-        .map_err(|error| InstructionError::new(instruction, InstructionErrorKind::ToNative(error)))
+    T::try_from(wit_value).map_err(|error| {
+        InstructionError::from_error_kind(instruction, InstructionErrorKind::ToNative(error))
+    })
 }
 
 pub(crate) fn check_function_signature<
@@ -222,8 +237,7 @@ pub(crate) fn check_function_signature<
     instance: &'instance Instance,
     local_import: &LocalImport,
     values: &[IValue],
-    instruction: Instruction,
-) -> Result<(), InstructionError>
+) -> Result<(), InstructionErrorKind>
 where
     Export: wasm::structures::Export + 'instance,
     LocalImport: wasm::structures::LocalImport + 'instance,
@@ -234,7 +248,7 @@ where
     let func_inputs = local_import.arguments();
 
     for (func_input_arg, value) in func_inputs.iter().zip(values.iter()) {
-        is_value_compatible_to_type(instance, &func_input_arg.ty, value, instruction.clone())?;
+        is_value_compatible_to_type(instance, &func_input_arg.ty, value)?;
     }
 
     Ok(())
@@ -252,8 +266,7 @@ pub(crate) fn is_value_compatible_to_type<
     instance: &'instance Instance,
     interface_type: &IType,
     interface_value: &IValue,
-    instruction: Instruction,
-) -> Result<(), InstructionError>
+) -> Result<(), InstructionErrorKind>
 where
     Export: wasm::structures::Export + 'instance,
     LocalImport: wasm::structures::LocalImport + 'instance,
@@ -262,6 +275,7 @@ where
     Instance: wasm::structures::Instance<Export, LocalImport, Memory, MemoryView>,
 {
     match (&interface_type, interface_value) {
+        (IType::Boolean, IValue::Boolean(_)) => Ok(()),
         (IType::S8, IValue::S8(_)) => Ok(()),
         (IType::S16, IValue::S16(_)) => Ok(()),
         (IType::S32, IValue::S32(_)) => Ok(()),
@@ -275,30 +289,40 @@ where
         (IType::F32, IValue::F32(_)) => Ok(()),
         (IType::F64, IValue::F64(_)) => Ok(()),
         (IType::String, IValue::String(_)) => Ok(()),
+        (IType::ByteArray, IValue::ByteArray(_)) => Ok(()),
         (IType::Array(ty), IValue::Array(values)) => {
             for value in values {
-                is_value_compatible_to_type(instance, ty, value, instruction.clone())?
+                is_value_compatible_to_type(instance, ty, value)?
             }
 
             Ok(())
         }
-        (IType::Record(ref record_type_id), IValue::Record(record_fields)) => {
-            is_record_fields_compatible_to_type(
-                instance,
-                *record_type_id,
-                record_fields,
-                instruction,
-            )?;
+        (IType::ByteArray, IValue::Array(values)) => {
+            for value in values {
+                is_value_compatible_to_type(instance, &IType::U8, value)?
+            }
 
             Ok(())
         }
-        _ => Err(InstructionError::new(
-            instruction,
-            InstructionErrorKind::InvalidValueOnTheStack {
+        (IType::Array(ty), IValue::ByteArray(_)) => {
+            if ty.as_ref() == &IType::U8 {
+                return Ok(());
+            }
+
+            Err(InstructionErrorKind::InvalidValueOnTheStack {
                 expected_type: interface_type.clone(),
                 received_value: interface_value.clone(),
-            },
-        )),
+            })
+        }
+        (IType::Record(ref record_type_id), IValue::Record(record_fields)) => {
+            is_record_fields_compatible_to_type(instance, *record_type_id, record_fields)?;
+
+            Ok(())
+        }
+        _ => Err(InstructionErrorKind::InvalidValueOnTheStack {
+            expected_type: interface_type.clone(),
+            received_value: interface_value.clone(),
+        }),
     }
 }
 
@@ -313,8 +337,7 @@ pub(crate) fn is_record_fields_compatible_to_type<
     instance: &'instance Instance,
     record_type_id: u64,
     record_fields: &[IValue],
-    instruction: Instruction,
-) -> Result<(), InstructionError>
+) -> Result<(), InstructionErrorKind>
 where
     Export: wasm::structures::Export + 'instance,
     LocalImport: wasm::structures::LocalImport + 'instance,
@@ -322,33 +345,22 @@ where
     MemoryView: wasm::structures::MemoryView,
     Instance: wasm::structures::Instance<Export, LocalImport, Memory, MemoryView>,
 {
-    let record_type = instance.wit_record_by_id(record_type_id).ok_or_else(|| {
-        InstructionError::new(
-            instruction.clone(),
-            InstructionErrorKind::RecordTypeByNameIsMissing { record_type_id },
-        )
-    })?;
+    let record_type = instance
+        .wit_record_by_id(record_type_id)
+        .ok_or(InstructionErrorKind::RecordTypeByNameIsMissing { record_type_id })?;
 
     if record_fields.len() != record_type.fields.len() {
-        return Err(InstructionError::new(
-            instruction.clone(),
-            InstructionErrorKind::InvalidValueOnTheStack {
-                expected_type: IType::Record(record_type_id),
-                // unwrap is safe here - len's been already checked
-                received_value: IValue::Record(NEVec::new(record_fields.to_vec()).unwrap()),
-            },
-        ));
+        return Err(InstructionErrorKind::InvalidValueOnTheStack {
+            expected_type: IType::Record(record_type_id),
+            // unwrap is safe here - len's been already checked
+            received_value: IValue::Record(NEVec::new(record_fields.to_vec()).unwrap()),
+        });
     }
 
     for (record_type_field, record_value_field) in
         record_type.fields.iter().zip(record_fields.iter())
     {
-        is_value_compatible_to_type(
-            instance,
-            &record_type_field.ty,
-            record_value_field,
-            instruction.clone(),
-        )?;
+        is_value_compatible_to_type(instance, &record_type_field.ty, record_value_field)?;
     }
 
     Ok(())

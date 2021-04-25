@@ -5,6 +5,9 @@ use crate::ne_vec::NEVec;
 /// A WIT value.
 #[derive(Debug, Clone, PartialEq)]
 pub enum IValue {
+    /// Boolean value.
+    Boolean(bool),
+
     /// A 8-bits signed integer.
     S8(i8),
 
@@ -38,14 +41,16 @@ pub enum IValue {
     /// A string.
     String(String),
 
+    /// Specialization of array type for byte vector.
+    ByteArray(Vec<u8>),
+
     /// A byte array.
     Array(Vec<IValue>),
 
-    //Anyref(?),
     /// A 32-bits integer (as defined in WebAssembly core).
     I32(i32),
 
-    /// A 64-bits integer (as defiend in WebAssembly core).
+    /// A 64-bits integer (as defined in WebAssembly core).
     I64(i64),
 
     /// A record.

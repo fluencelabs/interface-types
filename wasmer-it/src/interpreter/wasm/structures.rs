@@ -80,6 +80,7 @@ where
     fn export(&self, export_name: &str) -> Option<&E>;
     fn local_or_import<I: TypedIndex + LocalImportIndex>(&self, index: I) -> Option<&LI>;
     fn memory(&self, index: usize) -> Option<&M>;
+    fn memory_slice(&self, index: usize) -> Option<&[Cell<u8>]>;
     fn wit_record_by_id(&self, index: u64) -> Option<&Rc<IRecordType>>;
 }
 
@@ -165,6 +166,10 @@ where
     }
 
     fn memory(&self, _: usize) -> Option<&M> {
+        None
+    }
+
+    fn memory_slice(&self, _: usize) -> Option<&[Cell<u8>]> {
         None
     }
 
