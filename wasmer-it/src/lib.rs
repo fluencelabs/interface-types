@@ -40,7 +40,6 @@
 
 #![deny(
     dead_code,
-    rustdoc::broken_intra_doc_links,
     missing_docs,
     nonstandard_style,
     unreachable_patterns,
