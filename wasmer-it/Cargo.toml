@@ -8,7 +8,7 @@ repository = "https://github.com/wasmerio/wasmer"
 edition = "2018"
 
 [dependencies]
-fluence-it-types = { path = "../crates/it-types", version = "0.3.0", features = ["impls"] }
+fluence-it-types = { path = "../crates/it-types", version = "0.3.1", features = ["impls"] }
 it-to-bytes = { path = "../crates/to-bytes", version = "0.1.0" }
 it-lilo = { path = "../crates/it-lilo", version = "0.1.0" }
 

@@ -4,9 +4,9 @@ use crate::ne_vec::NEVec;
 
 use serde::Deserialize;
 use serde::Serialize;
-
+use variant_count::VariantCount;
 /// Represents the types supported by WIT.
-#[derive(PartialEq, Eq, Debug, Clone, Hash, Serialize, Deserialize)]
+#[derive(PartialEq, Eq, Debug, Clone, Hash, Serialize, Deserialize, VariantCount)]
 pub enum IType {
     /// Boolean.
     Boolean,
