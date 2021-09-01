@@ -2,8 +2,10 @@
 
 use crate::ne_vec::NEVec;
 
+use variant_count::VariantCount;
+
 /// A WIT value.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, VariantCount)]
 pub enum IValue {
     /// Boolean value.
     Boolean(bool),
