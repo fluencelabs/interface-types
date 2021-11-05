@@ -7,7 +7,55 @@ use crate::{
     interpreter::Instruction,
 };
 
-use std::{cell::Cell, convert::TryInto};
+use std::{convert::TryInto};
+
+executable_instruction!(
+    byte_array_lower_memory(instruction: Instruction) -> _ {
+        move |runtime| -> _ {
+            let mut inputs = runtime.stack.pop(2).ok_or_else(|| {
+                InstructionError::from_error_kind(
+                    instruction.clone(),
+                    InstructionErrorKind::StackIsTooSmall { needed: 2 },
+                )
+            })?;
+
+            let array_pointer: usize = to_native::<i32>(inputs.remove(0), instruction.clone())?
+                .try_into()
+                .map_err(|e| (e, "pointer").into())
+                .map_err(|k| InstructionError::from_error_kind(instruction.clone(), k))?;
+            let array: Vec<u8> = to_native(inputs.remove(0), instruction.clone())?;
+            let length: i32 = array.len().try_into().map_err(|_| {
+                InstructionError::from_error_kind(
+                    instruction.clone(),
+                    InstructionErrorKind::NegativeValue { subject: "array_length" },
+                )
+            })?;
+
+            let instance = &mut runtime.wasm_instance;
+            let memory_index = 0;
+            let memory_view = instance
+                .memory(memory_index)
+                .ok_or_else(|| {
+                    InstructionError::from_error_kind(
+                        instruction.clone(),
+                        InstructionErrorKind::MemoryIsMissing { memory_index },
+                    )
+                })?
+                .view();
+
+            for (nth, byte) in array.iter().enumerate() {
+                memory_view.index(array_pointer as usize + nth).set(*byte);
+                //memory_view[array_pointer as usize + nth].set(*byte);
+            }
+
+            log::debug!("string.lower_memory: pushing {}, {} on the stack", array_pointer, length);
+            runtime.stack.push(IValue::I32(array_pointer as i32));
+            runtime.stack.push(IValue::I32(length));
+
+            Ok(())
+        }
+    }
+);
 
 executable_instruction!(
     byte_array_lift_memory(instruction: Instruction) -> _ {
@@ -57,60 +105,13 @@ executable_instruction!(
                 );
             }
 
-            let data: Vec<u8> = (&memory_view[pointer..pointer + length])
-                .iter()
-                .map(Cell::get)
+            //let data: Vec<u8> = (&memory_view[pointer..pointer + length])
+            let data: Vec<u8> = memory_view.range_iter(pointer, pointer + length)
+                .map(|val| {val.get()})
                 .collect();
 
             log::debug!("byte_array.lift_memory: pushing {:?} on the stack", data);
             runtime.stack.push(IValue::ByteArray(data));
-
-            Ok(())
-        }
-    }
-);
-
-executable_instruction!(
-    byte_array_lower_memory(instruction: Instruction) -> _ {
-        move |runtime| -> _ {
-            let mut inputs = runtime.stack.pop(2).ok_or_else(|| {
-                InstructionError::from_error_kind(
-                    instruction.clone(),
-                    InstructionErrorKind::StackIsTooSmall { needed: 2 },
-                )
-            })?;
-
-            let array_pointer: usize = to_native::<i32>(inputs.remove(0), instruction.clone())?
-                .try_into()
-                .map_err(|e| (e, "pointer").into())
-                .map_err(|k| InstructionError::from_error_kind(instruction.clone(), k))?;
-            let array: Vec<u8> = to_native(inputs.remove(0), instruction.clone())?;
-            let length: i32 = array.len().try_into().map_err(|_| {
-                InstructionError::from_error_kind(
-                    instruction.clone(),
-                    InstructionErrorKind::NegativeValue { subject: "array_length" },
-                )
-            })?;
-
-            let instance = &mut runtime.wasm_instance;
-            let memory_index = 0;
-            let memory_view = instance
-                .memory(memory_index)
-                .ok_or_else(|| {
-                    InstructionError::from_error_kind(
-                        instruction.clone(),
-                        InstructionErrorKind::MemoryIsMissing { memory_index },
-                    )
-                })?
-                .view();
-
-            for (nth, byte) in array.iter().enumerate() {
-                memory_view[array_pointer as usize + nth].set(*byte);
-            }
-
-            log::debug!("string.lower_memory: pushing {}, {} on the stack", array_pointer, length);
-            runtime.stack.push(IValue::I32(array_pointer as i32));
-            runtime.stack.push(IValue::I32(length));
 
             Ok(())
         }

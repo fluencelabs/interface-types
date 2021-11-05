@@ -42,6 +42,7 @@ name = "it-lilo"
 version = "0.1.0"
 dependencies = [
  "fluence-it-types",
+ "it-utils",
  "log",
  "paste",
  "thiserror",
@@ -49,6 +50,10 @@ dependencies = [
 
 [[package]]
 name = "it-to-bytes"
+version = "0.1.0"
+
+[[package]]
+name = "it-utils"
 version = "0.1.0"
 
 [[package]]
@@ -272,11 +277,12 @@ checksum = "5fecdca9a5291cc2b8dcf7dc02453fee791a280f3743cb0905f8822ae463b3fe"
 
 [[package]]
 name = "wasmer-interface-types-fl"
-version = "0.20.1"
+version = "0.20.2"
 dependencies = [
  "fluence-it-types",
  "it-lilo",
  "it-to-bytes",
+ "it-utils",
  "itertools",
  "log",
  "nom",

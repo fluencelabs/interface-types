@@ -14,17 +14,17 @@
  * limitations under the License.
  */
 
+use std::cell::{Cell};
 use super::LoResult;
 use crate::traits::Allocatable;
-use crate::traits::MemSlice;
 use crate::traits::DEFAULT_MEMORY_INDEX;
 use crate::utils::type_tag_form_itype;
 
-use std::cell::Cell;
+use it_utils::MemSlice2;
 
 pub struct MemoryWriter<'i, R: Allocatable> {
     heap_manager: &'i R,
-    pub(self) memory: Cell<MemSlice<'i>>,
+    pub(self) memory: Cell<MemSlice2<'i>>,
 }
 
 pub struct SequentialWriter {
@@ -56,7 +56,7 @@ impl<'i, A: Allocatable> MemoryWriter<'i, A> {
         let offset = self.heap_manager.allocate(size, type_tag)?;
 
         let new_mem_slice = self.heap_manager.memory_slice(DEFAULT_MEMORY_INDEX)?;
-        self.memory.set(new_mem_slice);
+        self.memory.replace(new_mem_slice);
 
         Ok(SequentialWriter::new(offset))
     }
@@ -81,8 +81,7 @@ impl SequentialWriter {
     ) {
         let offset = self.offset.get();
 
-        writer.memory.get()[offset..offset + N]
-            .iter()
+        writer.memory.get().range_iter(offset,offset + N)
             .zip(values.iter())
             .for_each(|(cell, &byte)| cell.set(byte));
 
@@ -93,7 +92,7 @@ impl SequentialWriter {
     pub fn write_u8<A: Allocatable>(&self, writer: &MemoryWriter<'_, A>, value: u8) {
         let offset = self.offset.get();
 
-        writer.memory.get()[offset].set(value);
+        writer.memory.get().set(offset, value);
 
         self.offset.set(offset + 1);
     }
@@ -105,10 +104,10 @@ impl SequentialWriter {
         let value = value.to_le_bytes();
         let memory = writer.memory.get();
 
-        memory[offset].set(value[0]);
-        memory[offset + 1].set(value[1]);
-        memory[offset + 2].set(value[2]);
-        memory[offset + 3].set(value[3]);
+        memory.index(offset).set(value[0]);
+        memory.index(offset + 1).set(value[1]);
+        memory.index(offset + 2).set(value[2]);
+        memory.index(offset + 3).set(value[3]);
 
         self.offset.set(offset + 4);
     }
@@ -118,8 +117,7 @@ impl SequentialWriter {
         let offset = self.offset.get();
 
         let memory = writer.memory.get();
-        memory[offset..offset + bytes.len()]
-            .iter()
+        memory.range_iter(offset,offset + bytes.len())
             .zip(bytes)
             .for_each(|(cell, &byte)| cell.set(byte));
 

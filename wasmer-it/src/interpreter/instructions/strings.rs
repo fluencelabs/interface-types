@@ -7,7 +7,7 @@ use crate::{
     interpreter::Instruction,
 };
 
-use std::{cell::Cell, convert::TryInto};
+use std::{convert::TryInto};
 
 executable_instruction!(
     string_lift_memory(instruction: Instruction) -> _ {
@@ -56,9 +56,9 @@ executable_instruction!(
                 );
             }
 
-            let data: Vec<u8> = (&memory_view[pointer..pointer + length])
-                .iter()
-                .map(Cell::get)
+            //let data: Vec<u8> = (&memory_view[pointer..pointer + length])
+            let data: Vec<u8> = memory_view.range_iter(pointer,pointer + length)
+                .map(|val| val.get())
                 .collect();
 
             let string = String::from_utf8(data)
@@ -108,7 +108,8 @@ executable_instruction!(
                 .view();
 
             for (nth, byte) in string_bytes.iter().enumerate() {
-                memory_view[string_pointer as usize + nth].set(*byte);
+                memory_view.index(string_pointer as usize + nth).set(*byte);
+                //memory_view[string_pointer as usize + nth].set(*byte);
             }
 
             log::debug!("string.lower_memory: pushing {}, {} on the stack", string_pointer, string_length);

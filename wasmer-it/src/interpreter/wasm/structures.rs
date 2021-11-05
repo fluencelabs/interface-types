@@ -5,7 +5,8 @@ use crate::IRecordType;
 use crate::IType;
 use crate::IValue;
 use std::rc::Rc;
-use std::{cell::Cell, ops::Deref};
+use std::{ops::Deref};
+pub use it_utils::MemSlice2;
 
 pub trait TypedIndex: Copy + Clone {
     fn new(index: usize) -> Self;
@@ -61,7 +62,7 @@ pub trait LocalImport {
     fn call(&self, arguments: &[IValue]) -> Result<Vec<IValue>, ()>;
 }
 
-pub trait MemoryView: Deref<Target = [Cell<u8>]> {}
+pub trait MemoryView: Deref<Target = MemSlice2<'static>>{}
 
 pub trait Memory<View>
 where
@@ -69,6 +70,8 @@ where
 {
     fn view(&self) -> View;
 }
+
+
 
 pub trait Instance<E, LI, M, MV>
 where
@@ -80,7 +83,7 @@ where
     fn export(&self, export_name: &str) -> Option<&E>;
     fn local_or_import<I: TypedIndex + LocalImportIndex>(&self, index: I) -> Option<&LI>;
     fn memory(&self, index: usize) -> Option<&M>;
-    fn memory_slice(&self, index: usize) -> Option<&[Cell<u8>]>;
+    fn memory_slice(&self, index: usize) -> Option<MemSlice2>;
     fn wit_record_by_id(&self, index: u64) -> Option<&Rc<IRecordType>>;
 }
 
@@ -141,10 +144,10 @@ pub(crate) struct EmptyMemoryView;
 impl MemoryView for EmptyMemoryView {}
 
 impl Deref for EmptyMemoryView {
-    type Target = [Cell<u8>];
+    type Target = MemSlice2<'static>;//[Cell<u8>];
 
     fn deref(&self) -> &Self::Target {
-        &[]
+        todo!()
     }
 }
 
@@ -169,7 +172,7 @@ where
         None
     }
 
-    fn memory_slice(&self, _: usize) -> Option<&[Cell<u8>]> {
+    fn memory_slice(&self, _: usize) -> Option<MemSlice2> {
         None
     }
 

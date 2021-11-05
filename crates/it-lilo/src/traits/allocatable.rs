@@ -14,17 +14,17 @@
  * limitations under the License.
  */
 
-use std::cell::Cell;
 use thiserror::Error as ThisError;
+use it_utils::MemSlice2;
 
 pub const DEFAULT_MEMORY_INDEX: usize = 0;
 
-pub type MemSlice<'m> = &'m [Cell<u8>];
+//pub type MemSlice<'m> = &'m [Cell<u8>];
 
 pub trait Allocatable {
     fn allocate(&self, size: u32, type_tag: u32) -> Result<usize, AllocatableError>;
 
-    fn memory_slice(&self, memory_index: usize) -> Result<MemSlice<'_>, AllocatableError>;
+    fn memory_slice(&self, memory_index: usize) -> Result<MemSlice2, AllocatableError>;
 }
 
 #[derive(Debug, ThisError)]

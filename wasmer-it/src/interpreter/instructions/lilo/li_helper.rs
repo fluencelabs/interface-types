@@ -11,7 +11,7 @@ where
     Export: wasm::structures::Export + 'i,
     LocalImport: wasm::structures::LocalImport + 'i,
     Memory: wasm::structures::Memory<MemoryView> + 'i,
-    MemoryView: wasm::structures::MemoryView,
+    MemoryView: wasm::structures::MemoryView + 'i,
     Instance: wasm::structures::Instance<Export, LocalImport, Memory, MemoryView>,
 {
     pub(crate) instance: &'i Instance,

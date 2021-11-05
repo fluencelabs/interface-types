@@ -1,0 +1,11 @@
+[package]
+name = "it-utils"
+version = "0.1.0"
+authors = ["Fluence Labs"]
+description = "Defines utility types for marine IT"
+edition = "2018"
+license = "Apache-2.0"
+
+[lib]
+name = "it_utils"
+path = "src/lib.rs"

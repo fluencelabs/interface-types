@@ -26,9 +26,10 @@ pub use lift_record::record_lift_memory;
 pub use memory_reader::MemoryReader;
 pub use memory_reader::SequentialReader;
 
+
 use super::traits::RecordResolvable;
 
-use std::cell::Cell;
+use it_utils::MemSlice2;
 
 pub type LiResult<T> = std::result::Result<T, error::LiError>;
 
@@ -38,7 +39,7 @@ pub struct ILifter<'m, 'r, R: RecordResolvable> {
 }
 
 impl<'m, 'r, R: RecordResolvable> ILifter<'m, 'r, R> {
-    pub fn new(memory: &'m [Cell<u8>], resolver: &'r R) -> Self {
+    pub fn new(memory: MemSlice2<'m>, resolver: &'r R) -> Self {
         let reader = MemoryReader::new(memory);
         Self { reader, resolver }
     }

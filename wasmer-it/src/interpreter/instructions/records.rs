@@ -66,7 +66,7 @@ where
             let memory = memory_view.deref();
 
             let li_helper = lilo::LiHelper::new(&**instance);
-            let lifter = ILifter::new(memory, &li_helper);
+            let lifter = ILifter::new(memory.clone(), &li_helper);
             let record = it_lilo::lifter::record_lift_memory(&lifter, record_type, offset)
                 .map_err(|e| InstructionError::from_li(instruction.clone(), e))?;
 

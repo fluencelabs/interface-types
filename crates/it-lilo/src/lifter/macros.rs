@@ -17,7 +17,7 @@
 #[macro_export]
 macro_rules! value_der {
     ($self:expr, $offset:expr, @seq_start $($ids:tt),* @seq_end) => {
-        [$($self.reader.memory[$offset + $ids].get()),+]
+        [$($self.reader.memory.get($offset + $ids)),+]
     };
 
     ($self:expr, $offset:expr, 1) => {

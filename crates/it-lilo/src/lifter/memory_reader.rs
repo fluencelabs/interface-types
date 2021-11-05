@@ -21,9 +21,10 @@ use crate::read_ty;
 use crate::IValue;
 
 use std::cell::Cell;
+use it_utils::MemSlice2;
 
 pub struct MemoryReader<'m> {
-    pub(self) memory: &'m [Cell<u8>],
+    pub(self) memory: MemSlice2<'m>,
 }
 
 /// Reads values of basic types sequentially from the provided reader.
@@ -35,7 +36,7 @@ pub struct SequentialReader<'r, 'm> {
 }
 
 impl<'m> MemoryReader<'m> {
-    pub fn new(memory: &'m [Cell<u8>]) -> Self {
+    pub fn new(memory: MemSlice2<'m>) -> Self {
         Self { memory }
     }
 
@@ -113,7 +114,7 @@ impl<'r, 'm> SequentialReader<'r, 'm> {
 
     pub fn read_bool(&self) -> bool {
         let offset = self.offset.get();
-        let result = self.reader.memory[offset].get() != 0;
+        let result = self.reader.memory.get(offset) != 0;
 
         self.offset.set(offset + 1);
         result
