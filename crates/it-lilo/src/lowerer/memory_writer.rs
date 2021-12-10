@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-use std::cell::{Cell};
 use super::LoResult;
 use crate::traits::Allocatable;
 use crate::traits::DEFAULT_MEMORY_INDEX;
 use crate::utils::type_tag_form_itype;
+use std::cell::Cell;
 
 use it_utils::MemSlice2;
 
@@ -81,7 +81,10 @@ impl SequentialWriter {
     ) {
         let offset = self.offset.get();
 
-        writer.memory.get().range_iter(offset,offset + N)
+        writer
+            .memory
+            .get()
+            .range_iter(offset, offset + N)
             .zip(values.iter())
             .for_each(|(cell, &byte)| cell.set(byte));
 
@@ -117,7 +120,8 @@ impl SequentialWriter {
         let offset = self.offset.get();
 
         let memory = writer.memory.get();
-        memory.range_iter(offset,offset + bytes.len())
+        memory
+            .range_iter(offset, offset + bytes.len())
             .zip(bytes)
             .for_each(|(cell, &byte)| cell.set(byte));
 

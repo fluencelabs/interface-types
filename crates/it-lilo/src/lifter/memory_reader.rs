@@ -20,8 +20,8 @@ use crate::read_array_ty;
 use crate::read_ty;
 use crate::IValue;
 
-use std::cell::Cell;
 use it_utils::MemSlice2;
+use std::cell::Cell;
 
 pub struct MemoryReader<'m> {
     pub(self) memory: MemSlice2<'m>,

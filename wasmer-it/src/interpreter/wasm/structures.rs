@@ -4,9 +4,9 @@ use crate::ast::FunctionArg;
 use crate::IRecordType;
 use crate::IType;
 use crate::IValue;
-use std::rc::Rc;
-use std::{ops::Deref};
 pub use it_utils::MemSlice2;
+use std::ops::Deref;
+use std::rc::Rc;
 
 pub trait TypedIndex: Copy + Clone {
     fn new(index: usize) -> Self;
@@ -62,7 +62,7 @@ pub trait LocalImport {
     fn call(&self, arguments: &[IValue]) -> Result<Vec<IValue>, ()>;
 }
 
-pub trait MemoryView: Deref<Target = MemSlice2<'static>>{}
+pub trait MemoryView: Deref<Target = MemSlice2<'static>> {}
 
 pub trait Memory<View>
 where
@@ -70,8 +70,6 @@ where
 {
     fn view(&self) -> View;
 }
-
-
 
 pub trait Instance<E, LI, M, MV>
 where
@@ -144,7 +142,7 @@ pub(crate) struct EmptyMemoryView;
 impl MemoryView for EmptyMemoryView {}
 
 impl Deref for EmptyMemoryView {
-    type Target = MemSlice2<'static>;//[Cell<u8>];
+    type Target = MemSlice2<'static>; //[Cell<u8>];
 
     fn deref(&self) -> &Self::Target {
         todo!()

@@ -1,6 +1,6 @@
 pub struct ByteAccess<'a> {
     pub slice: MemSlice2<'a>,
-    pub index: usize
+    pub index: usize,
 }
 
 impl ByteAccess<'_> {
@@ -11,7 +11,7 @@ impl ByteAccess<'_> {
         self.slice.set(self.index, val)
     }
 }
-use std::{cell::Cell};
+use std::cell::Cell;
 use std::ptr::slice_from_raw_parts;
 
 pub trait MemSlice3 {
@@ -56,11 +56,7 @@ pub struct MemSliceIter<'a> {
 
 impl<'a> MemSliceIter<'a> {
     pub fn new(begin: usize, end: usize, slice: MemSlice2<'a>) -> Self {
-        Self {
-            begin,
-            end,
-            slice
-        }
+        Self { begin, end, slice }
     }
 }
 

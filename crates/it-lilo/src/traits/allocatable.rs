@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-use thiserror::Error as ThisError;
 use it_utils::MemSlice2;
+use thiserror::Error as ThisError;
 
 pub const DEFAULT_MEMORY_INDEX: usize = 0;
 

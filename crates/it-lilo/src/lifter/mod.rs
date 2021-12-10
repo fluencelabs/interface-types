@@ -26,7 +26,6 @@ pub use lift_record::record_lift_memory;
 pub use memory_reader::MemoryReader;
 pub use memory_reader::SequentialReader;
 
-
 use super::traits::RecordResolvable;
 
 use it_utils::MemSlice2;

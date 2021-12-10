@@ -7,7 +7,7 @@ use crate::{
     interpreter::Instruction,
 };
 
-use std::{convert::TryInto};
+use std::convert::TryInto;
 
 executable_instruction!(
     string_lift_memory(instruction: Instruction) -> _ {

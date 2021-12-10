@@ -7,7 +7,7 @@ use crate::{
     interpreter::Instruction,
 };
 
-use std::{convert::TryInto};
+use std::convert::TryInto;
 
 executable_instruction!(
     byte_array_lower_memory(instruction: Instruction) -> _ {
