@@ -17,13 +17,13 @@
 use super::record_lift_memory;
 use super::ILifter;
 use super::LiResult;
-use crate::traits::RecordResolvable;
+use crate::traits::LiftHelper;
 use crate::utils::ser_type_size;
 use crate::IType;
 use crate::IValue;
 
-pub fn array_lift_memory<R: RecordResolvable>(
-    lifter: &ILifter<'_, '_, R>,
+pub fn array_lift_memory<R: LiftHelper>(
+    lifter: &ILifter<'_, R>,
     value_type: &IType,
     offset: usize,
     elements_count: usize,
@@ -59,8 +59,8 @@ pub fn array_lift_memory<R: RecordResolvable>(
     Ok(IValue::Array(ivalues))
 }
 
-fn read_string_array<R: RecordResolvable>(
-    lifter: &ILifter<'_, '_, R>,
+fn read_string_array<R: LiftHelper>(
+    lifter: &ILifter<'_, R>,
     offset: usize,
     elements_count: usize,
 ) -> LiResult<Vec<IValue>> {
@@ -81,8 +81,8 @@ fn read_string_array<R: RecordResolvable>(
     Ok(result)
 }
 
-fn read_array_array<R: RecordResolvable>(
-    lifter: &ILifter<'_, '_, R>,
+fn read_array_array<R: LiftHelper>(
+    lifter: &ILifter<'_, R>,
     ty: &IType,
     offset: usize,
     elements_count: usize,
@@ -103,8 +103,8 @@ fn read_array_array<R: RecordResolvable>(
     Ok(result)
 }
 
-fn read_record_array<R: RecordResolvable>(
-    lifter: &ILifter<'_, '_, R>,
+fn read_record_array<R: LiftHelper>(
+    lifter: &ILifter<'_, R>,
     record_type_id: u64,
     offset: usize,
     elements_count: usize,

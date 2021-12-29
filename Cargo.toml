@@ -3,7 +3,6 @@ members = [
     "crates/it-lilo",
     "crates/to-bytes",
     "crates/it-types",
-    "crates/utils",
     "wasmer-it",
 ]
 

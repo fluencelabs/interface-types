@@ -4,9 +4,8 @@ use crate::ast::FunctionArg;
 use crate::IRecordType;
 use crate::IType;
 use crate::IValue;
-pub use it_utils::MemSlice2;
-use std::ops::Deref;
 use std::rc::Rc;
+use it_lilo::traits::{SequentialReader, SequentialWriter};
 
 pub trait TypedIndex: Copy + Clone {
     fn new(index: usize) -> Self;
@@ -62,7 +61,10 @@ pub trait LocalImport {
     fn call(&self, arguments: &[IValue]) -> Result<Vec<IValue>, ()>;
 }
 
-pub trait MemoryView: Deref<Target = MemSlice2<'static>> {}
+pub trait MemoryView {
+    fn sequential_writer(&self, offset: usize, size: usize) -> Box<dyn SequentialWriter>;
+    fn sequential_reader(&self, offset: usize, size: usize) -> Box<dyn SequentialReader>;
+}
 
 pub trait Memory<View>
 where
@@ -81,7 +83,7 @@ where
     fn export(&self, export_name: &str) -> Option<&E>;
     fn local_or_import<I: TypedIndex + LocalImportIndex>(&self, index: I) -> Option<&LI>;
     fn memory(&self, index: usize) -> Option<&M>;
-    fn memory_slice(&self, index: usize) -> Option<MemSlice2>;
+    fn memory_view(&self, index: usize) -> Option<MV>;
     fn wit_record_by_id(&self, index: u64) -> Option<&Rc<IRecordType>>;
 }
 
@@ -137,15 +139,80 @@ impl LocalImport for () {
     }
 }
 
+
+struct EmptySeqWriter();
+struct EmptySeqReader();
+
+impl SequentialWriter for EmptySeqWriter {
+    fn start_offset(&self) -> usize {
+        0
+    }
+
+    fn write_u8(&self, _value: u8) {
+    }
+
+    fn write_u32(&self, _value: u32) {
+    }
+
+    fn write_bytes(&self, _bytes: &[u8]) {
+    }
+}
+
+impl SequentialReader for EmptySeqReader {
+    fn read_bool(&self) -> bool {
+        todo!()
+    }
+
+    fn read_u8(&self) -> u8 {
+        todo!()
+    }
+
+    fn read_i8(&self) -> i8 {
+        todo!()
+    }
+
+    fn read_u16(&self) -> u16 {
+        todo!()
+    }
+
+    fn read_i16(&self) -> i16 {
+        todo!()
+    }
+
+    fn read_u32(&self) -> u32 {
+        todo!()
+    }
+
+    fn read_i32(&self) -> i32 {
+        todo!()
+    }
+
+    fn read_f32(&self) -> f32 {
+        todo!()
+    }
+
+    fn read_u64(&self) -> u64 {
+        todo!()
+    }
+
+    fn read_i64(&self) -> i64 {
+        todo!()
+    }
+
+    fn read_f64(&self) -> f64 {
+        todo!()
+    }
+}
+
 pub(crate) struct EmptyMemoryView;
 
-impl MemoryView for EmptyMemoryView {}
+impl MemoryView for EmptyMemoryView {
+    fn sequential_writer(&self, _offset: usize, _size: usize) -> Box<dyn SequentialWriter> {
+        Box::new(EmptySeqWriter())
+    }
 
-impl Deref for EmptyMemoryView {
-    type Target = MemSlice2<'static>; //[Cell<u8>];
-
-    fn deref(&self) -> &Self::Target {
-        todo!()
+    fn sequential_reader(&self, _offset: usize, _size: usize) -> Box<dyn SequentialReader> {
+        Box::new(EmptySeqReader())
     }
 }
 
@@ -170,7 +237,7 @@ where
         None
     }
 
-    fn memory_slice(&self, _: usize) -> Option<MemSlice2> {
+    fn memory_view(&self, _index: usize) -> Option<MV> {
         None
     }
 

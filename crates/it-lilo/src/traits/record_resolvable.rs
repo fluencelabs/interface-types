@@ -16,9 +16,12 @@
 
 use crate::IRecordType;
 use thiserror::Error as ThisError;
+use crate::traits::SequentialReader;
 
-pub trait RecordResolvable {
+pub trait LiftHelper {
     fn resolve_record(&self, record_type_id: u64) -> Result<&IRecordType, RecordResolvableError>;
+
+    fn sequential_reader(&self, memory_index: usize, offset: usize, size: usize) -> Result<Box<dyn SequentialReader>, RecordResolvableError>;
 }
 
 #[derive(Debug, ThisError)]
@@ -26,4 +29,7 @@ pub enum RecordResolvableError {
     /// Record for such type is wasn't found.
     #[error("Record with type id '{0}' not found")]
     RecordNotFound(u64),
+
+    #[error("Memory with index '{memory_index}' not found")]
+    MemoryIsMissing { memory_index: usize }
 }

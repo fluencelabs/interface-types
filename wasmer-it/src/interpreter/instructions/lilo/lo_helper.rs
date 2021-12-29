@@ -1,10 +1,9 @@
 use crate::interpreter::wasm;
-use crate::interpreter::wasm::structures::{FunctionIndex, MemSlice2};
+use crate::interpreter::wasm::structures::{FunctionIndex};
 use crate::IValue;
 
-use it_lilo::traits::Allocatable;
+use it_lilo::traits::{Allocatable, SequentialWriter};
 use it_lilo::traits::AllocatableError;
-//use it_lilo::traits::MemSlice2;
 
 use std::marker::PhantomData;
 
@@ -89,9 +88,10 @@ where
         }
     }
 
-    fn memory_slice(&self, memory_index: usize) -> Result<MemSlice2<'_>, AllocatableError> {
+    fn sequential_writer(&self, memory_index: usize, offset: usize, size: usize) -> Result<Box<dyn SequentialWriter>, AllocatableError> {
         self.instance
-            .memory_slice(memory_index)
+            .memory_view(memory_index)
             .ok_or(AllocatableError::MemoryIsMissing { memory_index })
+            .map(|memory_view| memory_view.sequential_writer(offset, size))
     }
 }

@@ -1,7 +1,7 @@
 use crate::interpreter::wasm;
 use crate::IRecordType;
 
-use it_lilo::traits::RecordResolvable;
+use it_lilo::traits::{LiftHelper, SequentialReader};
 use it_lilo::traits::RecordResolvableError;
 
 use std::marker::PhantomData;
@@ -41,7 +41,7 @@ where
     }
 }
 
-impl<'i, Instance, Export, LocalImport, Memory, MemoryView> RecordResolvable
+impl<'i, Instance, Export, LocalImport, Memory, MemoryView> LiftHelper
     for LiHelper<'i, Instance, Export, LocalImport, Memory, MemoryView>
 where
     Export: wasm::structures::Export + 'i,
@@ -57,5 +57,12 @@ where
             .ok_or(RecordResolvableError::RecordNotFound(record_type_id))?;
 
         Ok(record)
+    }
+
+    fn sequential_reader(&self, memory_index: usize, offset: usize, size: usize) -> Result<Box<dyn SequentialReader>, RecordResolvableError> {
+        self.instance
+            .memory_view(memory_index)
+            .ok_or(RecordResolvableError::MemoryIsMissing { memory_index })
+            .map(|memory_view| memory_view.sequential_reader(offset, size))
     }
 }

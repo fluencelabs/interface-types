@@ -17,7 +17,7 @@
 #[macro_export]
 macro_rules! value_der {
     ($self:expr, $offset:expr, @seq_start $($ids:tt),* @seq_end) => {
-        [$($self.reader.memory.get($offset + $ids)),+]
+        [$($self.memory.get($offset + $ids)),+]
     };
 
     ($self:expr, $offset:expr, 1) => {
@@ -44,7 +44,7 @@ macro_rules! value_der {
 #[macro_export]
 macro_rules! read_ty {
     ($func_name:ident, $ty:ty, 1) => {
-        pub fn $func_name(&self) -> $ty {
+        fn $func_name(&self) -> $ty {
             let offset = self.offset.get();
             let result = <$ty>::from_le_bytes(crate::value_der!(self, offset, 1));
 
@@ -54,7 +54,7 @@ macro_rules! read_ty {
     };
 
     ($func_name:ident, $ty:ty, 2) => {
-        pub fn $func_name(&self) -> $ty {
+        fn $func_name(&self) -> $ty {
             let offset = self.offset.get();
             let result = <$ty>::from_le_bytes(crate::value_der!(self, offset, 2));
 
@@ -64,7 +64,7 @@ macro_rules! read_ty {
     };
 
     ($func_name:ident, $ty:ty, 4) => {
-        pub fn $func_name(&self) -> $ty {
+        fn $func_name(&self) -> $ty {
             let offset = self.offset.get();
             let result = <$ty>::from_le_bytes(crate::value_der!(self, offset, 4));
 
@@ -74,7 +74,7 @@ macro_rules! read_ty {
     };
 
     ($func_name:ident, $ty:ty, 8) => {
-        pub fn $func_name(&self) -> $ty {
+        fn $func_name(&self) -> $ty {
             let offset = self.offset.get();
             let result = <$ty>::from_le_bytes(crate::value_der!(self, offset, 8));
 
@@ -84,7 +84,7 @@ macro_rules! read_ty {
     };
 
     ($func_name:ident, $ty:ty, 16) => {
-        pub fn $func_name(&self) -> $ty {
+        fn $func_name(&self) -> $ty {
             let offset = self.offset.get();
             let result = <$ty>::from_le_bytes(crate::value_der!(self, offset, 16));
 
@@ -93,6 +93,30 @@ macro_rules! read_ty {
         }
     };
 }
+
+#[macro_export]
+macro_rules! read_ty_decl{
+    ($func_name:ident, $ty:ty, 1) => {
+        fn $func_name(&self) -> $ty;
+    };
+
+    ($func_name:ident, $ty:ty, 2) => {
+        fn $func_name(&self) -> $ty;
+    };
+
+    ($func_name:ident, $ty:ty, 4) => {
+        fn $func_name(&self) -> $ty;
+    };
+
+    ($func_name:ident, $ty:ty, 8) => {
+        fn $func_name(&self) -> $ty;
+    };
+
+    ($func_name:ident, $ty:ty, 16) => {
+        fn $func_name(&self) -> $ty;
+    };
+}
+
 
 #[macro_export]
 macro_rules! read_array_ty {

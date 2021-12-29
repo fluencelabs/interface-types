@@ -14,12 +14,15 @@
  * limitations under the License.
  */
 
-mod allocatable;
-mod record_resolvable;
-mod sequential_reader;
-mod sequential_writer;
 
-pub use allocatable::*;
-pub use record_resolvable::*;
-pub use sequential_reader::*;
-pub use sequential_writer::*;
+pub trait SequentialWriter {
+    fn start_offset(&self) -> usize;
+
+    // specialization of write_array for u8
+    fn write_u8(&self, value: u8);
+
+    // specialization of write_array for u32
+    fn write_u32(&self, value: u32);
+
+    fn write_bytes(&self, bytes: &[u8]);
+}

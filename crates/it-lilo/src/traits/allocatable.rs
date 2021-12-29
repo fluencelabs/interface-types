@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-use it_utils::MemSlice2;
 use thiserror::Error as ThisError;
+use crate::traits::{SequentialWriter};
 
 pub const DEFAULT_MEMORY_INDEX: usize = 0;
 
@@ -24,7 +24,7 @@ pub const DEFAULT_MEMORY_INDEX: usize = 0;
 pub trait Allocatable {
     fn allocate(&self, size: u32, type_tag: u32) -> Result<usize, AllocatableError>;
 
-    fn memory_slice(&self, memory_index: usize) -> Result<MemSlice2, AllocatableError>;
+    fn sequential_writer(&self, memory_index: usize, offset: usize, size: usize) -> Result<Box<dyn SequentialWriter>, AllocatableError>;
 }
 
 #[derive(Debug, ThisError)]

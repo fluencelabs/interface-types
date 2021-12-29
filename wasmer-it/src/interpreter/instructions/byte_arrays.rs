@@ -43,10 +43,8 @@ executable_instruction!(
                 })?
                 .view();
 
-            for (nth, byte) in array.iter().enumerate() {
-                memory_view.index(array_pointer as usize + nth).set(*byte);
-                //memory_view[array_pointer as usize + nth].set(*byte);
-            }
+            let writer = memory_view.sequential_writer(array_pointer, array.len());
+            writer.write_bytes(&array);
 
             log::debug!("string.lower_memory: pushing {}, {} on the stack", array_pointer, length);
             runtime.stack.push(IValue::I32(array_pointer as i32));
@@ -95,23 +93,12 @@ executable_instruction!(
                 return Ok(())
             }
 
-            if memory_view.len() < pointer + length {
-                return instr_error!(
-                    instruction.clone(),
-                    InstructionErrorKind::MemoryOutOfBoundsAccess {
-                        index: pointer + length,
-                        length: memory_view.len(),
-                    }
-                );
+            let reader = memory_view.sequential_reader(pointer, length);
+
+            let mut data = Vec::<u8>::default();
+            for _ in 0..length {
+                data.push(reader.read_u8());
             }
-
-            //let data: Vec<u8> = (&memory_view[pointer..pointer + length])
-            let data: Vec<u8> = memory_view.range_iter(pointer, pointer + length)
-                .map(|val| {val.get()})
-                .collect();
-
-            log::debug!("byte_array.lift_memory: pushing {:?} on the stack", data);
-            runtime.stack.push(IValue::ByteArray(data));
 
             Ok(())
         }

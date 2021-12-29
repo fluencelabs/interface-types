@@ -53,20 +53,8 @@ where
                 record_type_id
             );
 
-            let memory_index = 0;
-            let memory_view = instance
-                .memory(memory_index)
-                .ok_or_else(|| {
-                    InstructionError::from_error_kind(
-                        instruction.clone(),
-                        InstructionErrorKind::MemoryIsMissing { memory_index },
-                    )
-                })?
-                .view();
-            let memory = memory_view.deref();
-
             let li_helper = lilo::LiHelper::new(&**instance);
-            let lifter = ILifter::new(memory.clone(), &li_helper);
+            let lifter = ILifter::new( &li_helper);
             let record = it_lilo::lifter::record_lift_memory(&lifter, record_type, offset)
                 .map_err(|e| InstructionError::from_li(instruction.clone(), e))?;
 

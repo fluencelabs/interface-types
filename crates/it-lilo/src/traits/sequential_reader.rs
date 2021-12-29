@@ -13,13 +13,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+use crate::read_ty_decl;
 
-mod allocatable;
-mod record_resolvable;
-mod sequential_reader;
-mod sequential_writer;
+pub trait SequentialReader {
+    fn read_bool(&self) -> bool;
 
-pub use allocatable::*;
-pub use record_resolvable::*;
-pub use sequential_reader::*;
-pub use sequential_writer::*;
+    read_ty_decl!(read_u8, u8, 1);
+    read_ty_decl!(read_i8, i8, 1);
+    read_ty_decl!(read_u16, u16, 2);
+    read_ty_decl!(read_i16, i16, 2);
+    read_ty_decl!(read_u32, u32, 4);
+    read_ty_decl!(read_i32, i32, 4);
+    read_ty_decl!(read_f32, f32, 4);
+    read_ty_decl!(read_u64, u64, 8);
+    read_ty_decl!(read_i64, i64, 8);
+    read_ty_decl!(read_f64, f64, 8);
+}

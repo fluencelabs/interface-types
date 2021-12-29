@@ -24,22 +24,19 @@ pub use error::LiError;
 pub use lift_array::array_lift_memory;
 pub use lift_record::record_lift_memory;
 pub use memory_reader::MemoryReader;
-pub use memory_reader::SequentialReader;
 
-use super::traits::RecordResolvable;
-
-use it_utils::MemSlice2;
+use super::traits::LiftHelper;
 
 pub type LiResult<T> = std::result::Result<T, error::LiError>;
 
-pub struct ILifter<'m, 'r, R: RecordResolvable> {
-    pub reader: MemoryReader<'m>,
+pub struct ILifter<'r, R: LiftHelper> {
+    pub reader: MemoryReader<'r, R>,
     pub resolver: &'r R,
 }
 
-impl<'m, 'r, R: RecordResolvable> ILifter<'m, 'r, R> {
-    pub fn new(memory: MemSlice2<'m>, resolver: &'r R) -> Self {
-        let reader = MemoryReader::new(memory);
+impl<'r, R: LiftHelper> ILifter<'r, R> {
+    pub fn new(resolver: &'r R) -> Self {
+        let reader = MemoryReader::new(resolver);
         Self { reader, resolver }
     }
 }
