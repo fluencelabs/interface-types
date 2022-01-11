@@ -27,7 +27,7 @@ pub use lower_array::array_lower_memory;
 pub use lower_array::LoweredArray;
 pub use lower_record::record_lower_memory;
 
-pub use it_tratis::MemoryView;
+pub use it_traits::MemoryView;
 
 pub type LoResult<T> = std::result::Result<T, error::LoError>;
 

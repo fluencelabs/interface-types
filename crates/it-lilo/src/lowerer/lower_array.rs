@@ -21,7 +21,7 @@ use crate::utils::ser_value_size;
 use crate::utils::type_tag_form_ivalue;
 use crate::IValue;
 
-use it_tratis::MemoryView;
+use it_traits::MemoryView;
 
 pub struct LoweredArray {
     pub offset: usize,
@@ -58,12 +58,12 @@ pub fn array_lower_memory<A: Allocatable, MV: MemoryView>(
             IValue::S8(value) => seq_writer.write_u8(value as _),
             IValue::S16(value) => seq_writer.write_bytes(&value.to_le_bytes()),
             IValue::S32(value) => seq_writer.write_bytes(&value.to_le_bytes()),
-            IValue::S64(value) => seq_writer.write_bytes( &value.to_le_bytes()),
+            IValue::S64(value) => seq_writer.write_bytes(&value.to_le_bytes()),
             IValue::U8(value) => seq_writer.write_bytes(&value.to_le_bytes()),
             IValue::U16(value) => seq_writer.write_bytes(&value.to_le_bytes()),
             IValue::U32(value) => seq_writer.write_bytes(&value.to_le_bytes()),
             IValue::U64(value) => seq_writer.write_bytes(&value.to_le_bytes()),
-            IValue::I32(value) => seq_writer.write_bytes( &value.to_le_bytes()),
+            IValue::I32(value) => seq_writer.write_bytes(&value.to_le_bytes()),
             IValue::I64(value) => seq_writer.write_bytes(&value.to_le_bytes()),
             IValue::F32(value) => seq_writer.write_bytes(&value.to_le_bytes()),
             IValue::F64(value) => seq_writer.write_bytes(&value.to_le_bytes()),

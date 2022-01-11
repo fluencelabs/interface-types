@@ -18,17 +18,15 @@ use super::LiResult;
 use crate::read_array_ty;
 use crate::IValue;
 
-use it_tratis::{MemoryView, SequentialReader};
+use it_traits::{MemoryView, SequentialReader};
 
 pub struct MemoryReader<MV: MemoryView> {
     pub(self) view: MV,
 }
 
 impl<MV: MemoryView> MemoryReader<MV> {
-    pub fn new(view: MV ) -> Self {
-        Self {
-            view,
-        }
+    pub fn new(view: MV) -> Self {
+        Self { view }
     }
 
     /// Returns reader that allows read sequentially. It's important that memory limit is checked

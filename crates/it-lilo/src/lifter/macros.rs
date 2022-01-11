@@ -95,7 +95,7 @@ macro_rules! read_ty {
 }
 
 #[macro_export]
-macro_rules! read_ty_decl{
+macro_rules! read_ty_decl {
     ($func_name:ident, $ty:ty, 1) => {
         fn $func_name(&self) -> $ty;
     };
@@ -116,7 +116,6 @@ macro_rules! read_ty_decl{
         fn $func_name(&self) -> $ty;
     };
 }
-
 
 #[macro_export]
 macro_rules! read_array_ty {

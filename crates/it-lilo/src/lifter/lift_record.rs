@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-use std::ops::Deref;
 use super::ILifter;
 use super::LiError;
 use super::LiResult;
@@ -25,8 +24,9 @@ use crate::IRecordType;
 use crate::IType;
 use crate::IValue;
 use crate::NEVec;
+use std::ops::Deref;
 
-use it_tratis::{MemoryView, SequentialReader};
+use it_traits::{MemoryView, SequentialReader};
 
 pub fn record_lift_memory<R: RecordResolvable, MV: MemoryView>(
     lifter: &ILifter<'_, R, MV>,

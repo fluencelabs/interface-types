@@ -18,7 +18,7 @@ use super::LoResult;
 use crate::traits::Allocatable;
 use crate::utils::type_tag_form_itype;
 
-use it_tratis::{MemoryView, SequentialWriter};
+use it_traits::{MemoryView, SequentialWriter};
 
 pub struct MemoryWriter<'i, R: Allocatable, MV: MemoryView> {
     heap_manager: &'i R,

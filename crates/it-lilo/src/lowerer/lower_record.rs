@@ -21,7 +21,7 @@ use crate::traits::Allocatable;
 use crate::IValue;
 use crate::NEVec;
 
-use it_tratis::MemoryView;
+use it_traits::MemoryView;
 
 pub fn record_lower_memory<A: Allocatable, MV: MemoryView>(
     lowerer: &ILowerer<'_, A, MV>,

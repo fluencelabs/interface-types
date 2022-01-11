@@ -7,5 +7,5 @@ edition = "2018"
 license = "Apache-2.0"
 
 [lib]
-name = "it_tratis"
+name = "it_traits"
 path = "src/lib.rs"

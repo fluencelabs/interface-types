@@ -1,5 +1,5 @@
 use crate::interpreter::wasm;
-use crate::interpreter::wasm::structures::{FunctionIndex};
+use crate::interpreter::wasm::structures::FunctionIndex;
 use crate::IValue;
 
 use it_lilo::traits::Allocatable;

@@ -6,7 +6,7 @@ use crate::IType;
 use crate::IValue;
 use std::rc::Rc;
 
-pub use it_tratis::{Memory, MemoryView, SequentialReader, SequentialWriter};
+pub use it_traits::{Memory, MemoryView, SequentialReader, SequentialWriter};
 
 pub trait TypedIndex: Copy + Clone {
     fn new(index: usize) -> Self;
@@ -136,14 +136,11 @@ impl SequentialWriter for EmptySeqWriter {
         0
     }
 
-    fn write_u8(&self, _value: u8) {
-    }
+    fn write_u8(&self, _value: u8) {}
 
-    fn write_u32(&self, _value: u32) {
-    }
+    fn write_u32(&self, _value: u32) {}
 
-    fn write_bytes(&self, _bytes: &[u8]) {
-    }
+    fn write_bytes(&self, _bytes: &[u8]) {}
 }
 
 impl SequentialReader for EmptySeqReader {
