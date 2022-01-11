@@ -25,18 +25,20 @@ pub use lift_array::array_lift_memory;
 pub use lift_record::record_lift_memory;
 pub use memory_reader::MemoryReader;
 
-use super::traits::LiftHelper;
+use super::traits::RecordResolvable;
+
+pub use it_tratis::MemoryView;
 
 pub type LiResult<T> = std::result::Result<T, error::LiError>;
 
-pub struct ILifter<'r, R: LiftHelper> {
-    pub reader: MemoryReader<'r, R>,
+pub struct ILifter<'r, R: RecordResolvable, MV: MemoryView> {
+    pub reader: MemoryReader<MV>,
     pub resolver: &'r R,
 }
 
-impl<'r, R: LiftHelper> ILifter<'r, R> {
-    pub fn new(resolver: &'r R) -> Self {
-        let reader = MemoryReader::new(resolver);
+impl<'r, R: RecordResolvable, MV: MemoryView> ILifter<'r, R, MV> {
+    pub fn new(view: MV, resolver: &'r R) -> Self {
+        let reader = MemoryReader::new(view);
         Self { reader, resolver }
     }
 }

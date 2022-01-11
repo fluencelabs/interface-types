@@ -16,19 +16,18 @@
 
 use super::LoResult;
 use crate::traits::Allocatable;
-use crate::traits::DEFAULT_MEMORY_INDEX;
-use crate::traits::SequentialWriter;
 use crate::utils::type_tag_form_itype;
 
-pub struct MemoryWriter<'i, R: Allocatable> {
+use it_tratis::{MemoryView, SequentialWriter};
+
+pub struct MemoryWriter<'i, R: Allocatable, MV: MemoryView> {
     heap_manager: &'i R,
+    view: MV,
 }
 
-impl<'i, A: Allocatable> MemoryWriter<'i, A> {
-    pub fn new(heap_manager: &'i A) -> LoResult<Self> {
-        let writer = Self {
-            heap_manager,
-        };
+impl<'i, A: Allocatable, MV: MemoryView> MemoryWriter<'i, A, MV> {
+    pub fn new(view: MV, heap_manager: &'i A) -> LoResult<Self> {
+        let writer = Self { heap_manager, view };
         Ok(writer)
     }
 
@@ -40,9 +39,13 @@ impl<'i, A: Allocatable> MemoryWriter<'i, A> {
         Ok(seq_writer.start_offset())
     }
 
-    pub fn sequential_writer(&self, size: u32, type_tag: u32) -> LoResult<Box<dyn SequentialWriter>> {
+    pub fn sequential_writer<'s>(
+        &'s self,
+        size: u32,
+        type_tag: u32,
+    ) -> LoResult<Box<dyn SequentialWriter + 's>> {
         let offset = self.heap_manager.allocate(size, type_tag)?;
-        let seq_writer = self.heap_manager.sequential_writer(DEFAULT_MEMORY_INDEX, offset, size as usize)?;
+        let seq_writer = self.view.sequential_writer(offset, size as usize);
         Ok(seq_writer)
     }
 }

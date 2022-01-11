@@ -21,6 +21,8 @@ use crate::utils::ser_value_size;
 use crate::utils::type_tag_form_ivalue;
 use crate::IValue;
 
+use it_tratis::MemoryView;
+
 pub struct LoweredArray {
     pub offset: usize,
     pub size: usize,
@@ -36,8 +38,8 @@ impl LoweredArray {
     }
 }
 
-pub fn array_lower_memory<A: Allocatable>(
-    lowerer: &ILowerer<'_, A>,
+pub fn array_lower_memory<A: Allocatable, MV: MemoryView>(
+    lowerer: &ILowerer<'_, A, MV>,
     array_values: Vec<IValue>,
 ) -> LoResult<LoweredArray> {
     if array_values.is_empty() {

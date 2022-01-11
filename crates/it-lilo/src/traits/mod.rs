@@ -16,10 +16,6 @@
 
 mod allocatable;
 mod record_resolvable;
-mod sequential_reader;
-mod sequential_writer;
 
 pub use allocatable::*;
 pub use record_resolvable::*;
-pub use sequential_reader::*;
-pub use sequential_writer::*;

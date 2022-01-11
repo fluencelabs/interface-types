@@ -18,27 +18,28 @@ use super::LiResult;
 use crate::read_array_ty;
 use crate::IValue;
 
-use crate::traits::{DEFAULT_MEMORY_INDEX, LiftHelper, SequentialReader};
+use it_tratis::{MemoryView, SequentialReader};
 
-pub struct MemoryReader<'l, LH: LiftHelper> {
-    pub(self) lift_helper: &'l LH,
+pub struct MemoryReader<MV: MemoryView> {
+    pub(self) view: MV,
 }
 
-
-impl<'l, LH: LiftHelper> MemoryReader<'l, LH> {
-    pub fn new(lift_helper: &'l LH) -> Self {
-        Self { lift_helper}
+impl<MV: MemoryView> MemoryReader<MV> {
+    pub fn new(view: MV ) -> Self {
+        Self {
+            view,
+        }
     }
 
     /// Returns reader that allows read sequentially. It's important that memory limit is checked
     /// only inside this function. All others functions of the returned reader don't have any
     /// checks assuming that reader is well-formed.
-    pub fn sequential_reader(
-        &self,
+    pub fn sequential_reader<'s>(
+        &'s self,
         offset: usize,
         size: usize,
-    ) -> LiResult<Box<dyn SequentialReader>> {
-        let seq_reader = self.lift_helper.sequential_reader(DEFAULT_MEMORY_INDEX, offset, size)?;
+    ) -> LiResult<Box<dyn SequentialReader + 's>> {
+        let seq_reader = self.view.sequential_reader(offset, size);
         Ok(seq_reader)
     }
 

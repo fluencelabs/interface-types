@@ -1,0 +1,11 @@
+[package]
+name = "it-traits"
+version = "0.1.0"
+authors = ["Fluence Labs"]
+description = "TODO"
+edition = "2018"
+license = "Apache-2.0"
+
+[lib]
+name = "it_tratis"
+path = "src/lib.rs"

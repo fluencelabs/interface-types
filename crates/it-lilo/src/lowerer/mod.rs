@@ -27,15 +27,17 @@ pub use lower_array::array_lower_memory;
 pub use lower_array::LoweredArray;
 pub use lower_record::record_lower_memory;
 
+pub use it_tratis::MemoryView;
+
 pub type LoResult<T> = std::result::Result<T, error::LoError>;
 
-pub struct ILowerer<'m, A: Allocatable> {
-    pub writer: MemoryWriter<'m, A>,
+pub struct ILowerer<'m, A: Allocatable, MV: MemoryView> {
+    pub writer: MemoryWriter<'m, A, MV>,
 }
 
-impl<'m, A: Allocatable> ILowerer<'m, A> {
-    pub fn new(allocatable: &'m A) -> LoResult<Self> {
-        let writer = MemoryWriter::new(allocatable)?;
+impl<'m, A: Allocatable, MV: MemoryView> ILowerer<'m, A, MV> {
+    pub fn new(view: MV, allocatable: &'m A) -> LoResult<Self> {
+        let writer = MemoryWriter::new(view, allocatable)?;
         let lowerer = Self { writer };
 
         Ok(lowerer)

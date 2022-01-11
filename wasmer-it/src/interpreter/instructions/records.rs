@@ -53,8 +53,19 @@ where
                 record_type_id
             );
 
+            let memory_index = 0;
+            let memory_view = instance
+                .memory(memory_index)
+                .ok_or_else(|| {
+                    InstructionError::from_error_kind(
+                        instruction.clone(),
+                        InstructionErrorKind::MemoryIsMissing { memory_index },
+                    )
+                })?
+                .view();
+
             let li_helper = lilo::LiHelper::new(&**instance);
-            let lifter = ILifter::new( &li_helper);
+            let lifter = ILifter::new(memory_view, &li_helper);
             let record = it_lilo::lifter::record_lift_memory(&lifter, record_type, offset)
                 .map_err(|e| InstructionError::from_li(instruction.clone(), e))?;
 
@@ -95,8 +106,19 @@ where
 
                     log::debug!("record.lower_memory: obtained {:?} values on the stack for record type = {}", record_fields, record_type_id);
 
+                    let memory_index = 0;
+                    let memory_view = instance
+                        .memory(memory_index)
+                        .ok_or_else(|| {
+                            InstructionError::from_error_kind(
+                                instruction.clone(),
+                                InstructionErrorKind::MemoryIsMissing { memory_index },
+                            )
+                        })?
+                        .view();
+
                     let lo_helper = lilo::LoHelper::new(&**instance);
-                    let memory_writer = ILowerer::new(&lo_helper)
+                    let memory_writer = ILowerer::new(memory_view, &lo_helper)
                         .map_err(|e| InstructionError::from_lo(instruction.clone(), e))?;
                     let offset =
                         it_lilo::lowerer::record_lower_memory(&memory_writer, record_fields)

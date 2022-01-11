@@ -5,7 +5,8 @@ use crate::IRecordType;
 use crate::IType;
 use crate::IValue;
 use std::rc::Rc;
-use it_lilo::traits::{SequentialReader, SequentialWriter};
+
+pub use it_tratis::{Memory, MemoryView, SequentialReader, SequentialWriter};
 
 pub trait TypedIndex: Copy + Clone {
     fn new(index: usize) -> Self;
@@ -59,18 +60,6 @@ pub trait LocalImport {
     fn arguments(&self) -> &[FunctionArg];
     fn outputs(&self) -> &[IType];
     fn call(&self, arguments: &[IValue]) -> Result<Vec<IValue>, ()>;
-}
-
-pub trait MemoryView {
-    fn sequential_writer(&self, offset: usize, size: usize) -> Box<dyn SequentialWriter>;
-    fn sequential_reader(&self, offset: usize, size: usize) -> Box<dyn SequentialReader>;
-}
-
-pub trait Memory<View>
-where
-    View: MemoryView,
-{
-    fn view(&self) -> View;
 }
 
 pub trait Instance<E, LI, M, MV>
@@ -139,7 +128,6 @@ impl LocalImport for () {
     }
 }
 
-
 struct EmptySeqWriter();
 struct EmptySeqReader();
 
@@ -207,11 +195,19 @@ impl SequentialReader for EmptySeqReader {
 pub(crate) struct EmptyMemoryView;
 
 impl MemoryView for EmptyMemoryView {
-    fn sequential_writer(&self, _offset: usize, _size: usize) -> Box<dyn SequentialWriter> {
+    fn sequential_writer<'s>(
+        &'s self,
+        _offset: usize,
+        _size: usize,
+    ) -> Box<dyn SequentialWriter + 's> {
         Box::new(EmptySeqWriter())
     }
 
-    fn sequential_reader(&self, _offset: usize, _size: usize) -> Box<dyn SequentialReader> {
+    fn sequential_reader<'s>(
+        &'s self,
+        _offset: usize,
+        _size: usize,
+    ) -> Box<dyn SequentialReader + 's> {
         Box::new(EmptySeqReader())
     }
 }

@@ -19,15 +19,17 @@ use super::ILifter;
 use super::LiError;
 use super::LiResult;
 use super::MemoryReader;
-use crate::traits::{LiftHelper, SequentialReader};
+use crate::traits::RecordResolvable;
 use crate::utils::record_size;
 use crate::IRecordType;
 use crate::IType;
 use crate::IValue;
 use crate::NEVec;
 
-pub fn record_lift_memory<R: LiftHelper>(
-    lifter: &ILifter<'_, R>,
+use it_tratis::{MemoryView, SequentialReader};
+
+pub fn record_lift_memory<R: RecordResolvable, MV: MemoryView>(
+    lifter: &ILifter<'_, R, MV>,
     record_type: &IRecordType,
     offset: usize,
 ) -> LiResult<IValue> {
@@ -67,8 +69,8 @@ pub fn record_lift_memory<R: LiftHelper>(
     Ok(IValue::Record(record))
 }
 
-fn read_string<R: LiftHelper>(
-    reader: &MemoryReader<'_, R>,
+fn read_string<MV: MemoryView>(
+    reader: &MemoryReader<MV>,
     seq_reader: &dyn SequentialReader,
 ) -> LiResult<String> {
     let offset = seq_reader.read_u32();
@@ -80,8 +82,8 @@ fn read_string<R: LiftHelper>(
     Ok(string)
 }
 
-fn read_byte_array<R: LiftHelper>(
-    reader: &MemoryReader<'_, R>,
+fn read_byte_array<MV: MemoryView>(
+    reader: &MemoryReader<MV>,
     seq_reader: &dyn SequentialReader,
 ) -> LiResult<IValue> {
     let offset = seq_reader.read_u32();
@@ -92,8 +94,8 @@ fn read_byte_array<R: LiftHelper>(
     Ok(IValue::ByteArray(array))
 }
 
-fn read_array<R: LiftHelper>(
-    lifter: &ILifter<'_, R>,
+fn read_array<R: RecordResolvable, MV: MemoryView>(
+    lifter: &ILifter<'_, R, MV>,
     seq_reader: &dyn SequentialReader,
     value_type: &IType,
 ) -> LiResult<IValue> {
@@ -103,8 +105,8 @@ fn read_array<R: LiftHelper>(
     super::array_lift_memory(lifter, value_type, offset as _, size as _)
 }
 
-fn read_record<R: LiftHelper>(
-    lifter: &ILifter<'_, R>,
+fn read_record<R: RecordResolvable, MV: MemoryView>(
+    lifter: &ILifter<'_, R, MV>,
     seq_reader: &dyn SequentialReader,
     record_type_id: u64,
 ) -> LiResult<IValue> {
