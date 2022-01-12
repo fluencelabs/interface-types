@@ -54,6 +54,7 @@ pub trait MemoryView {
         offset: usize,
         size: usize,
     ) -> Box<dyn SequentialWriter + 's>;
+
     fn sequential_reader<'s>(
         &'s self,
         offset: usize,
