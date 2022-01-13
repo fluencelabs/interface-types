@@ -267,15 +267,15 @@ impl<'a> Parse<'a> for Instruction {
         } else if lookahead.peek::<keyword::byte_array_lift_memory>() {
             parser.parse::<keyword::byte_array_lift_memory>()?;
 
-            Ok(Instruction::StringLiftMemory)
+            Ok(Instruction::ByteArrayLiftMemory)
         } else if lookahead.peek::<keyword::byte_array_lower_memory>() {
             parser.parse::<keyword::byte_array_lower_memory>()?;
 
-            Ok(Instruction::StringLowerMemory)
+            Ok(Instruction::ByteArrayLowerMemory)
         } else if lookahead.peek::<keyword::byte_array_size>() {
             parser.parse::<keyword::byte_array_size>()?;
 
-            Ok(Instruction::StringSize)
+            Ok(Instruction::ByteArraySize)
         } else if lookahead.peek::<keyword::array_lift_memory>() {
             parser.parse::<keyword::array_lift_memory>()?;
 
