@@ -37,7 +37,7 @@ impl<MV: MemoryView> MemoryReader<MV> {
         offset: usize,
         size: usize,
     ) -> LiResult<Box<dyn SequentialReader + 's>> {
-        let seq_reader = self.view.sequential_reader(offset, size);
+        let seq_reader = self.view.sequential_reader(offset, size)?;
         Ok(seq_reader)
     }
 

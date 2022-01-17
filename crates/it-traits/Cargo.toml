@@ -9,3 +9,6 @@ license = "Apache-2.0"
 [lib]
 name = "it_traits"
 path = "src/lib.rs"
+
+[dependencies]
+thiserror = "1.0.24"

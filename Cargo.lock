@@ -42,6 +42,7 @@ name = "it-lilo"
 version = "0.1.0"
 dependencies = [
  "fluence-it-types",
+ "it-traits",
  "log",
  "paste",
  "thiserror",
@@ -50,6 +51,13 @@ dependencies = [
 [[package]]
 name = "it-to-bytes"
 version = "0.1.0"
+
+[[package]]
+name = "it-traits"
+version = "0.1.0"
+dependencies = [
+ "thiserror",
+]
 
 [[package]]
 name = "itertools"
@@ -277,6 +285,7 @@ dependencies = [
  "fluence-it-types",
  "it-lilo",
  "it-to-bytes",
+ "it-traits",
  "itertools",
  "log",
  "nom",

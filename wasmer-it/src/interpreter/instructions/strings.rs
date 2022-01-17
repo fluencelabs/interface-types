@@ -46,7 +46,10 @@ executable_instruction!(
                 return Ok(())
             }
 
-            let reader = memory_view.sequential_reader(pointer, length);
+            let reader = memory_view
+                .sequential_reader(pointer, length)
+                .map_err(|e| InstructionError::from_memory_access(instruction.clone(), e))?;
+
             let mut data = Vec::<u8>::default();
             for _ in 0..length {
                 data.push(reader.read_u8());
@@ -97,9 +100,12 @@ executable_instruction!(
                     )
                 })?
                 .view();
-            let seq_writer = memory_view.sequential_writer(string_pointer, string_length as usize);
-            seq_writer.write_bytes(&string_bytes);
 
+            let seq_writer = memory_view
+                .sequential_writer(string_pointer, string_length as usize)
+                .map_err(|e| InstructionError::from_memory_access(instruction.clone(), e))?;
+
+            seq_writer.write_bytes(&string_bytes);
 
             log::debug!("string.lower_memory: pushing {}, {} on the stack", string_pointer, string_length);
             runtime.stack.push(IValue::I32(string_pointer as i32));

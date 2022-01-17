@@ -17,6 +17,7 @@
 use crate::traits::AllocatableError;
 use crate::traits::RecordResolvableError;
 use thiserror::Error as ThisError;
+use it_traits::MemoryAccessError;
 
 #[derive(Debug, ThisError)]
 pub enum LoError {
@@ -25,4 +26,7 @@ pub enum LoError {
 
     #[error("{0}")]
     RecordResolvableError(#[from] RecordResolvableError),
+
+    #[error("{0}")]
+    MemoryAccessError(#[from] MemoryAccessError),
 }

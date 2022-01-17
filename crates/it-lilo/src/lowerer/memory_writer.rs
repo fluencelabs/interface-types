@@ -45,7 +45,7 @@ impl<'i, A: Allocatable, MV: MemoryView> MemoryWriter<'i, A, MV> {
         type_tag: u32,
     ) -> LoResult<Box<dyn SequentialWriter + 's>> {
         let offset = self.heap_manager.allocate(size, type_tag)?;
-        let seq_writer = self.view.sequential_writer(offset, size as usize);
+        let seq_writer = self.view.sequential_writer(offset, size as usize)?;
         Ok(seq_writer)
     }
 }

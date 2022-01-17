@@ -7,6 +7,7 @@ use crate::IValue;
 use std::rc::Rc;
 
 pub use it_traits::{Memory, MemoryView, SequentialReader, SequentialWriter};
+use it_traits::MemoryAccessError;
 
 pub trait TypedIndex: Copy + Clone {
     fn new(index: usize) -> Self;
@@ -196,16 +197,16 @@ impl MemoryView for EmptyMemoryView {
         &'s self,
         _offset: usize,
         _size: usize,
-    ) -> Box<dyn SequentialWriter + 's> {
-        Box::new(EmptySeqWriter())
+    ) -> Result<Box<dyn SequentialWriter + 's>, MemoryAccessError> {
+        Ok(Box::new(EmptySeqWriter()))
     }
 
     fn sequential_reader<'s>(
         &'s self,
         _offset: usize,
         _size: usize,
-    ) -> Box<dyn SequentialReader + 's> {
-        Box::new(EmptySeqReader())
+    ) -> Result<Box<dyn SequentialReader + 's>, MemoryAccessError> {
+        Ok(Box::new(EmptySeqReader()))
     }
 }
 

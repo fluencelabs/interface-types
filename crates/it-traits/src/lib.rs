@@ -1,3 +1,5 @@
+use thiserror::Error as ThisError;
+
 #[macro_export]
 macro_rules! read_ty_decl {
     ($func_name:ident, $ty:ty, 1) => {
@@ -53,13 +55,13 @@ pub trait MemoryView {
         &'s self,
         offset: usize,
         size: usize,
-    ) -> Box<dyn SequentialWriter + 's>;
+    ) -> Result<Box<dyn SequentialWriter + 's>, MemoryAccessError>;
 
     fn sequential_reader<'s>(
         &'s self,
         offset: usize,
         size: usize,
-    ) -> Box<dyn SequentialReader + 's>;
+    ) -> Result<Box<dyn SequentialReader + 's>, MemoryAccessError>;
 }
 
 pub trait Memory<View>
@@ -67,4 +69,14 @@ where
     View: MemoryView,
 {
     fn view(&self) -> View;
+}
+
+#[derive(Debug, ThisError)]
+pub enum MemoryAccessError {
+    #[error("Out-of-bound Wasm memory access: offset {offset}, size {size}, while memory_size {memory_size}")]
+    OutOfBounds {
+        offset: usize,
+        size: usize,
+        memory_size: usize,
+    },
 }

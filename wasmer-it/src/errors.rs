@@ -17,6 +17,7 @@ use it_lilo::lowerer::LoError;
 use thiserror::Error as ThisError;
 
 pub use fluence_it_types::WasmValueNativeCastError;
+use it_traits::MemoryAccessError;
 
 /// A type alias for instruction's results.
 pub type InstructionResult<T> = Result<T, InstructionError>;
@@ -53,6 +54,19 @@ impl InstructionError {
     pub(crate) fn from_lo(instruction: Instruction, lo: LoError) -> Self {
         let error_kind = InstructionErrorKind::LoError(lo);
         Self::from_error_kind(instruction, error_kind)
+    }
+
+    pub(crate) fn from_memory_access(instruction: Instruction, memory_access: MemoryAccessError) -> Self {
+        match memory_access {
+            MemoryAccessError::OutOfBounds { offset, size, memory_size } =>
+                Self::from_error_kind(
+                    instruction.clone(),
+                    InstructionErrorKind::MemoryOutOfBoundsAccess {
+                        index: offset + size,
+                        length: memory_size,
+                    }
+                )
+        }
     }
 }
 
