@@ -129,84 +129,31 @@ impl LocalImport for () {
     }
 }
 
-struct EmptySeqWriter();
-struct EmptySeqReader();
-
-impl SequentialWriter for EmptySeqWriter {
-    fn start_offset(&self) -> usize {
-        0
-    }
-
-    fn write_u8(&self, _value: u8) {}
-
-    fn write_u32(&self, _value: u32) {}
-
-    fn write_bytes(&self, _bytes: &[u8]) {}
-}
-
-impl SequentialReader for EmptySeqReader {
-    fn read_bool(&self) -> bool {
-        todo!()
-    }
-
-    fn read_u8(&self) -> u8 {
-        todo!()
-    }
-
-    fn read_i8(&self) -> i8 {
-        todo!()
-    }
-
-    fn read_u16(&self) -> u16 {
-        todo!()
-    }
-
-    fn read_i16(&self) -> i16 {
-        todo!()
-    }
-
-    fn read_u32(&self) -> u32 {
-        todo!()
-    }
-
-    fn read_i32(&self) -> i32 {
-        todo!()
-    }
-
-    fn read_f32(&self) -> f32 {
-        todo!()
-    }
-
-    fn read_u64(&self) -> u64 {
-        todo!()
-    }
-
-    fn read_i64(&self) -> i64 {
-        todo!()
-    }
-
-    fn read_f64(&self) -> f64 {
-        todo!()
-    }
-}
-
 pub(crate) struct EmptyMemoryView;
 
 impl MemoryView for EmptyMemoryView {
     fn sequential_writer<'s>(
         &'s self,
-        _offset: usize,
-        _size: usize,
+        offset: usize,
+        size: usize,
     ) -> Result<Box<dyn SequentialWriter + 's>, MemoryAccessError> {
-        Ok(Box::new(EmptySeqWriter()))
+        Err(MemoryAccessError::OutOfBounds {
+            offset,
+            size,
+            memory_size: 0,
+        })
     }
 
     fn sequential_reader<'s>(
         &'s self,
-        _offset: usize,
-        _size: usize,
+        offset: usize,
+        size: usize,
     ) -> Result<Box<dyn SequentialReader + 's>, MemoryAccessError> {
-        Ok(Box::new(EmptySeqReader()))
+        Err(MemoryAccessError::OutOfBounds {
+            offset,
+            size,
+            memory_size: 0,
+        })
     }
 }
 
