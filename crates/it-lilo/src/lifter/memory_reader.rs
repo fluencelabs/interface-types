@@ -20,11 +20,11 @@ use crate::IValue;
 
 use it_traits::{MemoryView, SequentialReader};
 
-pub struct MemoryReader<MV: MemoryView> {
+pub struct MemoryReader<MV> {
     pub(self) view: MV,
 }
 
-impl<MV: MemoryView> MemoryReader<MV> {
+impl<MV: for<'a> MemoryView<'a>> MemoryReader<MV> {
     pub fn new(view: MV) -> Self {
         Self { view }
     }
@@ -32,11 +32,11 @@ impl<MV: MemoryView> MemoryReader<MV> {
     /// Returns reader that allows read sequentially. It's important that memory limit is checked
     /// only inside this function. All others functions of the returned reader don't have any
     /// checks assuming that reader is well-formed.
-    pub fn sequential_reader<'s>(
-        &'s self,
+    pub fn sequential_reader(
+        &self,
         offset: usize,
         size: usize,
-    ) -> LiResult<Box<dyn SequentialReader + 's>> {
+    ) -> LiResult<<MV as MemoryView<'_>>::SR> {
         let seq_reader = self.view.sequential_reader(offset, size)?;
         Ok(seq_reader)
     }

@@ -6,8 +6,8 @@ use crate::IType;
 use crate::IValue;
 use std::rc::Rc;
 
-pub use it_traits::{Memory, MemoryView, SequentialReader, SequentialWriter};
 use it_traits::MemoryAccessError;
+pub use it_traits::{Memory, MemoryView, SequentialReader, SequentialWriter};
 
 pub trait TypedIndex: Copy + Clone {
     fn new(index: usize) -> Self;
@@ -68,7 +68,7 @@ where
     E: Export,
     LI: LocalImport,
     M: Memory<MV>,
-    MV: MemoryView,
+    MV: for<'a> MemoryView<'a>,
 {
     fn export(&self, export_name: &str) -> Option<&E>;
     fn local_or_import<I: TypedIndex + LocalImportIndex>(&self, index: I) -> Option<&LI>;
@@ -131,12 +131,72 @@ impl LocalImport for () {
 
 pub(crate) struct EmptyMemoryView;
 
-impl MemoryView for EmptyMemoryView {
-    fn sequential_writer<'s>(
-        &'s self,
-        offset: usize,
-        size: usize,
-    ) -> Result<Box<dyn SequentialWriter + 's>, MemoryAccessError> {
+pub(crate) struct EmptySequentialReader;
+pub(crate) struct EmptySequentialWriter;
+
+impl SequentialReader for EmptySequentialReader {
+    fn read_bool(&self) -> bool {
+        false
+    }
+
+    fn read_u8(&self) -> u8 {
+        0u8
+    }
+
+    fn read_i8(&self) -> i8 {
+        0i8
+    }
+
+    fn read_u16(&self) -> u16 {
+        0u16
+    }
+
+    fn read_i16(&self) -> i16 {
+        0i16
+    }
+
+    fn read_u32(&self) -> u32 {
+        0u32
+    }
+
+    fn read_i32(&self) -> i32 {
+        0i32
+    }
+
+    fn read_f32(&self) -> f32 {
+        0.0f32
+    }
+
+    fn read_u64(&self) -> u64 {
+        0u64
+    }
+
+    fn read_i64(&self) -> i64 {
+        0i64
+    }
+
+    fn read_f64(&self) -> f64 {
+        0.0f64
+    }
+}
+
+impl SequentialWriter for EmptySequentialWriter {
+    fn start_offset(&self) -> usize {
+        0
+    }
+
+    fn write_u8(&self, _value: u8) {}
+
+    fn write_u32(&self, _value: u32) {}
+
+    fn write_bytes(&self, _bytes: &[u8]) {}
+}
+
+impl<'a> MemoryView<'a> for EmptyMemoryView {
+    type SR = EmptySequentialReader;
+    type SW = EmptySequentialWriter;
+
+    fn sequential_writer(&self, offset: usize, size: usize) -> Result<Self::SW, MemoryAccessError> {
         Err(MemoryAccessError::OutOfBounds {
             offset,
             size,
@@ -144,11 +204,7 @@ impl MemoryView for EmptyMemoryView {
         })
     }
 
-    fn sequential_reader<'s>(
-        &'s self,
-        offset: usize,
-        size: usize,
-    ) -> Result<Box<dyn SequentialReader + 's>, MemoryAccessError> {
+    fn sequential_reader(&self, offset: usize, size: usize) -> Result<Self::SR, MemoryAccessError> {
         Err(MemoryAccessError::OutOfBounds {
             offset,
             size,
@@ -168,7 +224,7 @@ where
     E: Export,
     LI: LocalImport,
     M: Memory<MV>,
-    MV: MemoryView,
+    MV: for<'a> MemoryView<'a>,
 {
     fn export(&self, _export_name: &str) -> Option<&E> {
         None

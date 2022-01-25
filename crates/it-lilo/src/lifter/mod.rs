@@ -31,12 +31,12 @@ pub use it_traits::MemoryView;
 
 pub type LiResult<T> = std::result::Result<T, error::LiError>;
 
-pub struct ILifter<'r, R: RecordResolvable, MV: MemoryView> {
+pub struct ILifter<'r, R: RecordResolvable, MV> {
     pub reader: MemoryReader<MV>,
     pub resolver: &'r R,
 }
 
-impl<'r, R: RecordResolvable, MV: MemoryView> ILifter<'r, R, MV> {
+impl<'r, R: RecordResolvable, MV: for<'a> MemoryView<'a>> ILifter<'r, R, MV> {
     pub fn new(view: MV, resolver: &'r R) -> Self {
         let reader = MemoryReader::new(view);
         Self { reader, resolver }

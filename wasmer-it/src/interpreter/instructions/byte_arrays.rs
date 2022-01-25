@@ -7,6 +7,8 @@ use crate::{
     interpreter::Instruction,
 };
 
+use it_traits::{SequentialReader, SequentialWriter};
+
 use std::convert::TryInto;
 
 executable_instruction!(

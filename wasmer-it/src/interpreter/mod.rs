@@ -18,7 +18,7 @@ where
     Export: wasm::structures::Export + 'instance,
     LocalImport: wasm::structures::LocalImport + 'instance,
     Memory: wasm::structures::Memory<MemoryView> + 'instance,
-    MemoryView: wasm::structures::MemoryView,
+    MemoryView: (for<'a> wasm::structures::MemoryView<'a>),
     Instance: wasm::structures::Instance<Export, LocalImport, Memory, MemoryView> + 'instance,
 {
     /// The invocation inputs are all the arguments received by an
@@ -126,7 +126,7 @@ where
     Export: wasm::structures::Export,
     LocalImport: wasm::structures::LocalImport,
     Memory: wasm::structures::Memory<MemoryView>,
-    MemoryView: wasm::structures::MemoryView,
+    MemoryView: (for<'a> wasm::structures::MemoryView<'a>),
     Instance: wasm::structures::Instance<Export, LocalImport, Memory, MemoryView>,
 {
     executable_instructions:
@@ -139,7 +139,7 @@ where
     Export: wasm::structures::Export,
     LocalImport: wasm::structures::LocalImport,
     Memory: wasm::structures::Memory<MemoryView>,
-    MemoryView: wasm::structures::MemoryView,
+    MemoryView: (for<'a> wasm::structures::MemoryView<'a>),
     Instance: wasm::structures::Instance<Export, LocalImport, Memory, MemoryView>,
 {
     fn iter(
@@ -182,7 +182,7 @@ where
     Export: wasm::structures::Export,
     LocalImport: wasm::structures::LocalImport,
     Memory: wasm::structures::Memory<MemoryView>,
-    MemoryView: wasm::structures::MemoryView,
+    MemoryView: (for<'a> wasm::structures::MemoryView<'a>),
     Instance: wasm::structures::Instance<Export, LocalImport, Memory, MemoryView>,
 {
     type Error = ();

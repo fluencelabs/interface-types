@@ -56,16 +56,22 @@ impl InstructionError {
         Self::from_error_kind(instruction, error_kind)
     }
 
-    pub(crate) fn from_memory_access(instruction: Instruction, memory_access: MemoryAccessError) -> Self {
+    pub(crate) fn from_memory_access(
+        instruction: Instruction,
+        memory_access: MemoryAccessError,
+    ) -> Self {
         match memory_access {
-            MemoryAccessError::OutOfBounds { offset, size, memory_size } =>
-                Self::from_error_kind(
-                    instruction.clone(),
-                    InstructionErrorKind::MemoryOutOfBoundsAccess {
-                        index: offset + size,
-                        length: memory_size,
-                    }
-                )
+            MemoryAccessError::OutOfBounds {
+                offset,
+                size,
+                memory_size,
+            } => Self::from_error_kind(
+                instruction.clone(),
+                InstructionErrorKind::MemoryOutOfBoundsAccess {
+                    index: offset + size,
+                    length: memory_size,
+                },
+            ),
         }
     }
 }

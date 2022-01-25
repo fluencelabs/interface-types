@@ -31,11 +31,11 @@ pub use it_traits::MemoryView;
 
 pub type LoResult<T> = std::result::Result<T, error::LoError>;
 
-pub struct ILowerer<'m, A: Allocatable, MV: MemoryView> {
+pub struct ILowerer<'m, A: Allocatable, MV> {
     pub writer: MemoryWriter<'m, A, MV>,
 }
 
-impl<'m, A: Allocatable, MV: MemoryView> ILowerer<'m, A, MV> {
+impl<'m, A: Allocatable, MV: for<'a> MemoryView<'a>> ILowerer<'m, A, MV> {
     pub fn new(view: MV, allocatable: &'m A) -> LoResult<Self> {
         let writer = MemoryWriter::new(view, allocatable)?;
         let lowerer = Self { writer };

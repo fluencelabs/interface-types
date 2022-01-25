@@ -50,23 +50,26 @@ pub trait SequentialWriter {
     fn write_bytes(&self, bytes: &[u8]);
 }
 
-pub trait MemoryView {
-    fn sequential_writer<'s>(
-        &'s self,
-        offset: usize,
-        size: usize,
-    ) -> Result<Box<dyn SequentialWriter + 's>, MemoryAccessError>;
+pub trait MemoryView<'a> {
+    type SR: SequentialReader + 'a;
+    type SW: SequentialWriter + 'a;
 
-    fn sequential_reader<'s>(
-        &'s self,
+    fn sequential_writer(
+        &'a self,
         offset: usize,
         size: usize,
-    ) -> Result<Box<dyn SequentialReader + 's>, MemoryAccessError>;
+    ) -> Result<Self::SW, MemoryAccessError>;
+
+    fn sequential_reader(
+        &'a self,
+        offset: usize,
+        size: usize,
+    ) -> Result<Self::SR, MemoryAccessError>;
 }
 
 pub trait Memory<View>
 where
-    View: MemoryView,
+    View: for<'a> MemoryView<'a>,
 {
     fn view(&self) -> View;
 }

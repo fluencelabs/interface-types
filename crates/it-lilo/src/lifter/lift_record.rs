@@ -24,11 +24,10 @@ use crate::IRecordType;
 use crate::IType;
 use crate::IValue;
 use crate::NEVec;
-use std::ops::Deref;
 
 use it_traits::{MemoryView, SequentialReader};
 
-pub fn record_lift_memory<R: RecordResolvable, MV: MemoryView>(
+pub fn record_lift_memory<R: RecordResolvable, MV: for<'a> MemoryView<'a>>(
     lifter: &ILifter<'_, R, MV>,
     record_type: &IRecordType,
     offset: usize,
@@ -54,11 +53,11 @@ pub fn record_lift_memory<R: RecordResolvable, MV: MemoryView>(
             IType::U64 => values.push(IValue::U64(seq_reader.read_u64())),
             IType::F32 => values.push(IValue::F32(seq_reader.read_f32())),
             IType::F64 => values.push(IValue::F64(seq_reader.read_f64())),
-            IType::String => values.push(IValue::String(read_string(reader, seq_reader.deref())?)),
-            IType::ByteArray => values.push(read_byte_array(reader, seq_reader.deref())?),
-            IType::Array(ty) => values.push(read_array(&lifter, seq_reader.deref(), &**ty)?),
+            IType::String => values.push(IValue::String(read_string(reader, &seq_reader)?)),
+            IType::ByteArray => values.push(read_byte_array(reader, &seq_reader)?),
+            IType::Array(ty) => values.push(read_array(&lifter, &seq_reader, &**ty)?),
             IType::Record(record_type_id) => {
-                values.push(read_record(lifter, seq_reader.deref(), *record_type_id)?)
+                values.push(read_record(lifter, &seq_reader, *record_type_id)?)
             }
         }
     }
@@ -69,9 +68,9 @@ pub fn record_lift_memory<R: RecordResolvable, MV: MemoryView>(
     Ok(IValue::Record(record))
 }
 
-fn read_string<MV: MemoryView>(
+fn read_string<MV: for<'a> MemoryView<'a>>(
     reader: &MemoryReader<MV>,
-    seq_reader: &dyn SequentialReader,
+    seq_reader: &<MV as MemoryView<'_>>::SR,
 ) -> LiResult<String> {
     let offset = seq_reader.read_u32();
     let size = seq_reader.read_u32();
@@ -82,7 +81,7 @@ fn read_string<MV: MemoryView>(
     Ok(string)
 }
 
-fn read_byte_array<MV: MemoryView>(
+fn read_byte_array<MV: for<'a> MemoryView<'a>>(
     reader: &MemoryReader<MV>,
     seq_reader: &dyn SequentialReader,
 ) -> LiResult<IValue> {
@@ -94,9 +93,9 @@ fn read_byte_array<MV: MemoryView>(
     Ok(IValue::ByteArray(array))
 }
 
-fn read_array<R: RecordResolvable, MV: MemoryView>(
+fn read_array<R: RecordResolvable, MV: for<'a> MemoryView<'a>>(
     lifter: &ILifter<'_, R, MV>,
-    seq_reader: &dyn SequentialReader,
+    seq_reader: &<MV as MemoryView<'_>>::SR,
     value_type: &IType,
 ) -> LiResult<IValue> {
     let offset = seq_reader.read_u32();
@@ -105,7 +104,7 @@ fn read_array<R: RecordResolvable, MV: MemoryView>(
     super::array_lift_memory(lifter, value_type, offset as _, size as _)
 }
 
-fn read_record<R: RecordResolvable, MV: MemoryView>(
+fn read_record<R: RecordResolvable, MV: for<'a> MemoryView<'a>>(
     lifter: &ILifter<'_, R, MV>,
     seq_reader: &dyn SequentialReader,
     record_type_id: u64,

@@ -11,7 +11,7 @@ where
     Export: wasm::structures::Export + 'i,
     LocalImport: wasm::structures::LocalImport + 'i,
     Memory: wasm::structures::Memory<MemoryView> + 'i,
-    MemoryView: wasm::structures::MemoryView + 'i,
+    MemoryView: (for<'a> wasm::structures::MemoryView<'a>) + 'i,
     Instance: wasm::structures::Instance<Export, LocalImport, Memory, MemoryView>,
 {
     pub(crate) instance: &'i Instance,
@@ -27,7 +27,7 @@ where
     Export: wasm::structures::Export + 'i,
     LocalImport: wasm::structures::LocalImport + 'i,
     Memory: wasm::structures::Memory<MemoryView> + 'i,
-    MemoryView: wasm::structures::MemoryView,
+    MemoryView: (for<'a> wasm::structures::MemoryView<'a>),
     Instance: wasm::structures::Instance<Export, LocalImport, Memory, MemoryView>,
 {
     pub(crate) fn new(instance: &'i Instance) -> Self {
@@ -47,7 +47,7 @@ where
     Export: wasm::structures::Export + 'i,
     LocalImport: wasm::structures::LocalImport + 'i,
     Memory: wasm::structures::Memory<MemoryView> + 'i,
-    MemoryView: wasm::structures::MemoryView,
+    MemoryView: (for<'a> wasm::structures::MemoryView<'a>),
     Instance: wasm::structures::Instance<Export, LocalImport, Memory, MemoryView>,
 {
     fn resolve_record(&self, record_type_id: u64) -> Result<&IRecordType, RecordResolvableError> {

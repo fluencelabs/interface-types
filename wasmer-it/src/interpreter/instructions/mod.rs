@@ -242,7 +242,7 @@ where
     Export: wasm::structures::Export + 'instance,
     LocalImport: wasm::structures::LocalImport + 'instance,
     Memory: wasm::structures::Memory<MemoryView> + 'instance,
-    MemoryView: wasm::structures::MemoryView,
+    MemoryView: (for<'a> wasm::structures::MemoryView<'a>),
     Instance: wasm::structures::Instance<Export, LocalImport, Memory, MemoryView>,
 {
     let func_inputs = local_import.arguments();
@@ -271,7 +271,7 @@ where
     Export: wasm::structures::Export + 'instance,
     LocalImport: wasm::structures::LocalImport + 'instance,
     Memory: wasm::structures::Memory<MemoryView> + 'instance,
-    MemoryView: wasm::structures::MemoryView,
+    MemoryView: (for<'a> wasm::structures::MemoryView<'a>),
     Instance: wasm::structures::Instance<Export, LocalImport, Memory, MemoryView>,
 {
     match (&interface_type, interface_value) {
@@ -342,7 +342,7 @@ where
     Export: wasm::structures::Export + 'instance,
     LocalImport: wasm::structures::LocalImport + 'instance,
     Memory: wasm::structures::Memory<MemoryView> + 'instance,
-    MemoryView: wasm::structures::MemoryView,
+    MemoryView: (for<'a> wasm::structures::MemoryView<'a>),
     Instance: wasm::structures::Instance<Export, LocalImport, Memory, MemoryView>,
 {
     let record_type = instance

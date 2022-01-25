@@ -16,8 +16,8 @@
 
 use crate::traits::AllocatableError;
 use crate::traits::RecordResolvableError;
-use thiserror::Error as ThisError;
 use it_traits::MemoryAccessError;
+use thiserror::Error as ThisError;
 
 #[derive(Debug, ThisError)]
 pub enum LoError {

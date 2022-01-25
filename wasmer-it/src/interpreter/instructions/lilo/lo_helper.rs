@@ -12,7 +12,7 @@ where
     Export: wasm::structures::Export + 'i,
     LocalImport: wasm::structures::LocalImport + 'i,
     Memory: wasm::structures::Memory<MemoryView> + 'i,
-    MemoryView: wasm::structures::MemoryView,
+    MemoryView: (for<'a> wasm::structures::MemoryView<'a>),
     Instance: wasm::structures::Instance<Export, LocalImport, Memory, MemoryView>,
 {
     pub(crate) instance: &'i Instance,
@@ -28,7 +28,7 @@ where
     Export: wasm::structures::Export + 'i,
     LocalImport: wasm::structures::LocalImport + 'i,
     Memory: wasm::structures::Memory<MemoryView> + 'i,
-    MemoryView: wasm::structures::MemoryView,
+    MemoryView: (for<'a> wasm::structures::MemoryView<'a>),
     Instance: wasm::structures::Instance<Export, LocalImport, Memory, MemoryView>,
 {
     pub(crate) fn new(instance: &'i Instance) -> Self {
@@ -48,7 +48,7 @@ where
     Export: wasm::structures::Export + 'i,
     LocalImport: wasm::structures::LocalImport + 'i,
     Memory: wasm::structures::Memory<MemoryView> + 'i,
-    MemoryView: wasm::structures::MemoryView,
+    MemoryView: (for<'a> wasm::structures::MemoryView<'a>),
     Instance: wasm::structures::Instance<Export, LocalImport, Memory, MemoryView>,
 {
     fn allocate(&self, size: u32, type_tag: u32) -> Result<usize, AllocatableError> {

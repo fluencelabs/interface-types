@@ -23,7 +23,7 @@ use crate::NEVec;
 
 use it_traits::MemoryView;
 
-pub fn record_lower_memory<A: Allocatable, MV: MemoryView>(
+pub fn record_lower_memory<A: Allocatable, MV: for<'a> MemoryView<'a>>(
     lowerer: &ILowerer<'_, A, MV>,
     values: NEVec<IValue>,
 ) -> LoResult<i32> {

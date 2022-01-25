@@ -21,7 +21,7 @@ use crate::utils::ser_value_size;
 use crate::utils::type_tag_form_ivalue;
 use crate::IValue;
 
-use it_traits::MemoryView;
+use it_traits::{MemoryView, SequentialWriter};
 
 pub struct LoweredArray {
     pub offset: usize,
@@ -38,7 +38,7 @@ impl LoweredArray {
     }
 }
 
-pub fn array_lower_memory<A: Allocatable, MV: MemoryView>(
+pub fn array_lower_memory<A: Allocatable, MV: for<'a> MemoryView<'a>>(
     lowerer: &ILowerer<'_, A, MV>,
     array_values: Vec<IValue>,
 ) -> LoResult<LoweredArray> {

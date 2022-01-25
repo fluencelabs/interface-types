@@ -18,7 +18,7 @@ where
     Export: crate::interpreter::wasm::structures::Export,
     LocalImport: crate::interpreter::wasm::structures::LocalImport,
     Memory: crate::interpreter::wasm::structures::Memory<MemoryView>,
-    MemoryView: crate::interpreter::wasm::structures::MemoryView,
+    MemoryView: for<'a> crate::interpreter::wasm::structures::MemoryView<'a>,
     Instance:
         crate::interpreter::wasm::structures::Instance<Export, LocalImport, Memory, MemoryView>,
 {
@@ -85,7 +85,7 @@ where
     Export: crate::interpreter::wasm::structures::Export,
     LocalImport: crate::interpreter::wasm::structures::LocalImport,
     Memory: crate::interpreter::wasm::structures::Memory<MemoryView>,
-    MemoryView: crate::interpreter::wasm::structures::MemoryView,
+    MemoryView: for<'a> crate::interpreter::wasm::structures::MemoryView<'a>,
     Instance:
         crate::interpreter::wasm::structures::Instance<Export, LocalImport, Memory, MemoryView>,
 {
