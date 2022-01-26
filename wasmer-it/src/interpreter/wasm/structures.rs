@@ -135,48 +135,12 @@ pub(crate) struct EmptySequentialReader;
 pub(crate) struct EmptySequentialWriter;
 
 impl SequentialReader for EmptySequentialReader {
-    fn read_bool(&self) -> bool {
-        false
-    }
-
-    fn read_u8(&self) -> u8 {
+    fn read_byte(&self) -> u8 {
         0u8
     }
 
-    fn read_i8(&self) -> i8 {
-        0i8
-    }
-
-    fn read_u16(&self) -> u16 {
-        0u16
-    }
-
-    fn read_i16(&self) -> i16 {
-        0i16
-    }
-
-    fn read_u32(&self) -> u32 {
-        0u32
-    }
-
-    fn read_i32(&self) -> i32 {
-        0i32
-    }
-
-    fn read_f32(&self) -> f32 {
-        0.0f32
-    }
-
-    fn read_u64(&self) -> u64 {
-        0u64
-    }
-
-    fn read_i64(&self) -> i64 {
-        0i64
-    }
-
-    fn read_f64(&self) -> f64 {
-        0.0f64
+    fn read_bytes<const COUNT: usize>(&self) -> [u8; COUNT] {
+        [0u8; COUNT]
     }
 }
 

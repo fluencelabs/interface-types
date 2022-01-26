@@ -83,7 +83,7 @@ fn read_string<MV: for<'a> MemoryView<'a>>(
 
 fn read_byte_array<MV: for<'a> MemoryView<'a>>(
     reader: &MemoryReader<MV>,
-    seq_reader: &dyn SequentialReader,
+    seq_reader: &<MV as MemoryView<'_>>::SR,
 ) -> LiResult<IValue> {
     let offset = seq_reader.read_u32();
     let size = seq_reader.read_u32();
@@ -106,7 +106,7 @@ fn read_array<R: RecordResolvable, MV: for<'a> MemoryView<'a>>(
 
 fn read_record<R: RecordResolvable, MV: for<'a> MemoryView<'a>>(
     lifter: &ILifter<'_, R, MV>,
-    seq_reader: &dyn SequentialReader,
+    seq_reader: &<MV as MemoryView<'_>>::SR,
     record_type_id: u64,
 ) -> LiResult<IValue> {
     let offset = seq_reader.read_u32();
