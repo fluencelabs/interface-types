@@ -27,7 +27,7 @@ pub use memory_reader::MemoryReader;
 
 use super::traits::RecordResolvable;
 
-pub use it_traits::MemoryView;
+pub use it_memory_traits::MemoryView;
 
 pub type LiResult<T> = std::result::Result<T, error::LiError>;
 

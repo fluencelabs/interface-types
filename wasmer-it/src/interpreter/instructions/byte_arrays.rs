@@ -7,7 +7,7 @@ use crate::{
     interpreter::Instruction,
 };
 
-use it_traits::{SequentialReader, SequentialWriter};
+use it_memory_traits::{SequentialReader, SequentialWriter};
 
 use std::convert::TryInto;
 

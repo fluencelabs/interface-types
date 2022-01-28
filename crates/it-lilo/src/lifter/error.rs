@@ -16,7 +16,7 @@
 
 use crate::traits::RecordResolvableError;
 
-use it_traits::MemoryAccessError;
+use it_memory_traits::MemoryAccessError;
 
 use thiserror::Error as ThisError;
 

@@ -21,7 +21,7 @@ use crate::utils::ser_value_size;
 use crate::utils::type_tag_form_ivalue;
 use crate::IValue;
 
-use it_traits::{MemoryView, SequentialWriter};
+use it_memory_traits::{MemoryView, SequentialWriter};
 
 pub struct LoweredArray {
     pub offset: usize,

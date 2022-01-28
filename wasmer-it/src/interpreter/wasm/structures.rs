@@ -6,8 +6,7 @@ use crate::IType;
 use crate::IValue;
 use std::rc::Rc;
 
-use it_traits::MemoryAccessError;
-pub use it_traits::{Memory, MemoryView, SequentialReader, SequentialWriter};
+pub use it_memory_traits::{Memory, MemoryView, SequentialReader, SequentialWriter, MemoryAccessError};
 
 pub trait TypedIndex: Copy + Clone {
     fn new(index: usize) -> Self;

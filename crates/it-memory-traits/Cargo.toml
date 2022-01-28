@@ -1,13 +1,13 @@
 [package]
-name = "it-traits"
+name = "it-memory-traits"
 version = "0.1.0"
 authors = ["Fluence Labs"]
-description = "TODO"
+description = "Traits that interface-types use for accessing memory"
 edition = "2018"
 license = "Apache-2.0"
 
 [lib]
-name = "it_traits"
+name = "it_memory_traits"
 path = "src/lib.rs"
 
 [dependencies]

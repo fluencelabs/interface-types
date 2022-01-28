@@ -12,7 +12,7 @@ path = "src/lib.rs"
 
 [dependencies]
 fluence-it-types = { path = "../it-types/", version = "0.3.0" }
-it-traits = { path = "../it-traits", version = "0.1.0" }
+it-memory-traits = { path = "../it-memory-traits", version = "0.1.0" }
 
 paste = "1.0.5"
 thiserror = "1.0.24"

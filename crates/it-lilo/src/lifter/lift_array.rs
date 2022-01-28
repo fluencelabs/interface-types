@@ -22,7 +22,7 @@ use crate::utils::ser_type_size;
 use crate::IType;
 use crate::IValue;
 
-use it_traits::{MemoryView, SequentialReader};
+use it_memory_traits::{MemoryView, SequentialReader};
 
 pub fn array_lift_memory<R: RecordResolvable, MV: for<'a> MemoryView<'a>>(
     lifter: &ILifter<'_, R, MV>,

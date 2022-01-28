@@ -17,7 +17,7 @@ use it_lilo::lowerer::LoError;
 use thiserror::Error as ThisError;
 
 pub use fluence_it_types::WasmValueNativeCastError;
-use it_traits::MemoryAccessError;
+use it_memory_traits::MemoryAccessError;
 
 /// A type alias for instruction's results.
 pub type InstructionResult<T> = Result<T, InstructionError>;

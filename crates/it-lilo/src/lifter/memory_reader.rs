@@ -18,7 +18,7 @@ use super::LiResult;
 use crate::read_array_ty;
 use crate::IValue;
 
-use it_traits::{MemoryView, SequentialReader};
+use it_memory_traits::{MemoryView, SequentialReader};
 
 pub struct MemoryReader<MV> {
     pub(self) view: MV,
