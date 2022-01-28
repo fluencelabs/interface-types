@@ -1,6 +1,14 @@
-mod macros;
+mod errors;
 
-use thiserror::Error as ThisError;
+pub use errors::MemoryAccessError;
+
+macro_rules! read_ty {
+    ($func_name:ident, $ty:ty, $size:literal) => {
+        fn $func_name(&self) -> $ty {
+            <$ty>::from_le_bytes(self.read_bytes::<$size>())
+        }
+    };
+}
 
 pub trait SequentialReader {
     fn read_byte(&self) -> u8;
@@ -57,14 +65,4 @@ where
     View: for<'a> MemoryView<'a>,
 {
     fn view(&self) -> View;
-}
-
-#[derive(Debug, ThisError)]
-pub enum MemoryAccessError {
-    #[error("Out-of-bound Wasm memory access: offset {offset}, size {size}, while memory_size {memory_size}")]
-    OutOfBounds {
-        offset: usize,
-        size: usize,
-        memory_size: usize,
-    },
 }
