@@ -54,9 +54,9 @@ executable_instruction!(
                 .sequential_reader(pointer, length)
                 .map_err(|e| InstructionError::from_memory_access(instruction.clone(), e))?;
 
-            let mut data = Vec::<u8>::default();
-            for _ in 0..length {
-                data.push(reader.read_u8());
+            let mut data = Vec::<u8>::with_capacity(length);
+            for index  in 0..length {
+                data[index] = reader.read_u8();
             }
 
             log::debug!("byte_array.lift_memory: pushing {:?} on the stack", data);
