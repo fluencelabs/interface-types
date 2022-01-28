@@ -8,6 +8,7 @@ use crate::{
 };
 
 use it_memory_traits::{SequentialReader, SequentialWriter};
+use it_lilo::traits::DEFAULT_MEMORY_INDEX;
 
 use std::convert::TryInto;
 
@@ -21,7 +22,7 @@ executable_instruction!(
                 )
             })?;
 
-            let memory_index = 0;
+            let memory_index = DEFAULT_MEMORY_INDEX;
             let memory = runtime
                 .wasm_instance
                 .memory(memory_index)
@@ -92,7 +93,7 @@ executable_instruction!(
             })?;
 
             let instance = &mut runtime.wasm_instance;
-            let memory_index = 0;
+            let memory_index = DEFAULT_MEMORY_INDEX;
             let memory_view = instance
                 .memory(memory_index)
                 .ok_or_else(|| {

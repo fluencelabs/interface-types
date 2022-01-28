@@ -7,6 +7,7 @@ use crate::{errors::InstructionError, errors::InstructionErrorKind, interpreter:
 
 use it_lilo::lifter::ILifter;
 use it_lilo::lowerer::ILowerer;
+use it_lilo::traits::DEFAULT_MEMORY_INDEX;
 
 use std::convert::TryInto;
 
@@ -53,7 +54,7 @@ where
                 record_type_id
             );
 
-            let memory_index = 0;
+            let memory_index = DEFAULT_MEMORY_INDEX;
             let memory_view = instance
                 .memory(memory_index)
                 .ok_or_else(|| {
@@ -106,7 +107,7 @@ where
 
                     log::debug!("record.lower_memory: obtained {:?} values on the stack for record type = {}", record_fields, record_type_id);
 
-                    let memory_index = 0;
+                    let memory_index = DEFAULT_MEMORY_INDEX;
                     let memory_view = instance
                         .memory(memory_index)
                         .ok_or_else(|| {

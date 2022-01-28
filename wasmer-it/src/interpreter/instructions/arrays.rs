@@ -10,6 +10,7 @@ use crate::{
 use it_lilo::lifter::ILifter;
 use it_lilo::lowerer::ILowerer;
 use it_lilo::lowerer::LoweredArray;
+use it_lilo::traits::DEFAULT_MEMORY_INDEX;
 
 use std::convert::TryInto;
 
@@ -55,7 +56,7 @@ where
 
             let instance = &mut runtime.wasm_instance;
 
-            let memory_index = 0;
+            let memory_index = DEFAULT_MEMORY_INDEX;
             let memory_view = instance
                 .memory(memory_index)
                 .ok_or_else(|| {
@@ -114,7 +115,7 @@ where
                                 InstructionError::from_error_kind(instruction.clone(), e)
                             })?;
                     }
-                    let memory_index = 0;
+                    let memory_index = DEFAULT_MEMORY_INDEX;
                     let memory_view = instance
                         .memory(memory_index)
                         .ok_or_else(|| {
@@ -145,7 +146,7 @@ where
                 }
                 IValue::ByteArray(bytearray) => {
                     let lo_helper = lilo::LoHelper::new(&**instance);
-                    let memory_index = 0;
+                    let memory_index = DEFAULT_MEMORY_INDEX;
                     let memory_view = instance
                         .memory(memory_index)
                         .ok_or_else(|| {
