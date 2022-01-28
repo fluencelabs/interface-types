@@ -6,29 +6,29 @@ use it_lilo::traits::RecordResolvableError;
 
 use std::marker::PhantomData;
 
-pub struct LiHelper<'i, Instance, Export, LocalImport, Memory, MemoryView>
+pub struct LiHelper<'i, Instance, Export, LocalImport, Memory, SequentialMemoryView>
 where
     Export: wasm::structures::Export + 'i,
     LocalImport: wasm::structures::LocalImport + 'i,
-    Memory: wasm::structures::Memory<MemoryView> + 'i,
-    MemoryView: (for<'a> wasm::structures::MemoryView<'a>) + 'i,
-    Instance: wasm::structures::Instance<Export, LocalImport, Memory, MemoryView>,
+    Memory: wasm::structures::Memory<SequentialMemoryView> + 'i,
+    SequentialMemoryView: (for<'a> wasm::structures::SequentialMemoryView<'a>) + 'i,
+    Instance: wasm::structures::Instance<Export, LocalImport, Memory, SequentialMemoryView>,
 {
     pub(crate) instance: &'i Instance,
     _export: PhantomData<Export>,
     _local_import: PhantomData<LocalImport>,
     _memory: PhantomData<Memory>,
-    _memory_view: PhantomData<MemoryView>,
+    _memory_view: PhantomData<SequentialMemoryView>,
 }
 
-impl<'i, Instance, Export, LocalImport, Memory, MemoryView>
-    LiHelper<'i, Instance, Export, LocalImport, Memory, MemoryView>
+impl<'i, Instance, Export, LocalImport, Memory, SequentialMemoryView>
+    LiHelper<'i, Instance, Export, LocalImport, Memory, SequentialMemoryView>
 where
     Export: wasm::structures::Export + 'i,
     LocalImport: wasm::structures::LocalImport + 'i,
-    Memory: wasm::structures::Memory<MemoryView> + 'i,
-    MemoryView: (for<'a> wasm::structures::MemoryView<'a>),
-    Instance: wasm::structures::Instance<Export, LocalImport, Memory, MemoryView>,
+    Memory: wasm::structures::Memory<SequentialMemoryView> + 'i,
+    SequentialMemoryView: (for<'a> wasm::structures::SequentialMemoryView<'a>),
+    Instance: wasm::structures::Instance<Export, LocalImport, Memory, SequentialMemoryView>,
 {
     pub(crate) fn new(instance: &'i Instance) -> Self {
         Self {
@@ -41,14 +41,14 @@ where
     }
 }
 
-impl<'i, Instance, Export, LocalImport, Memory, MemoryView> RecordResolvable
-    for LiHelper<'i, Instance, Export, LocalImport, Memory, MemoryView>
+impl<'i, Instance, Export, LocalImport, Memory, SequentialMemoryView> RecordResolvable
+    for LiHelper<'i, Instance, Export, LocalImport, Memory, SequentialMemoryView>
 where
     Export: wasm::structures::Export + 'i,
     LocalImport: wasm::structures::LocalImport + 'i,
-    Memory: wasm::structures::Memory<MemoryView> + 'i,
-    MemoryView: (for<'a> wasm::structures::MemoryView<'a>),
-    Instance: wasm::structures::Instance<Export, LocalImport, Memory, MemoryView>,
+    Memory: wasm::structures::Memory<SequentialMemoryView> + 'i,
+    SequentialMemoryView: (for<'a> wasm::structures::SequentialMemoryView<'a>),
+    Instance: wasm::structures::Instance<Export, LocalImport, Memory, SequentialMemoryView>,
 {
     fn resolve_record(&self, record_type_id: u64) -> Result<&IRecordType, RecordResolvableError> {
         let record = self

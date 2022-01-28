@@ -43,7 +43,7 @@ pub trait SequentialWriter {
     fn write_bytes(&self, bytes: &[u8]);
 }
 
-pub trait MemoryView<'a> {
+pub trait SequentialMemoryView<'a> {
     type SR: SequentialReader + 'a;
     type SW: SequentialWriter + 'a;
 
@@ -62,7 +62,7 @@ pub trait MemoryView<'a> {
 
 pub trait Memory<View>
 where
-    View: for<'a> MemoryView<'a>,
+    View: for<'a> SequentialMemoryView<'a>,
 {
     fn view(&self) -> View;
 }

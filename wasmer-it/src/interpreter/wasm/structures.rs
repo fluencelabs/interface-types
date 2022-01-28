@@ -6,7 +6,7 @@ use crate::IType;
 use crate::IValue;
 use std::rc::Rc;
 
-pub use it_memory_traits::{Memory, MemoryView, SequentialReader, SequentialWriter, MemoryAccessError};
+pub use it_memory_traits::{Memory, SequentialMemoryView, SequentialReader, SequentialWriter, MemoryAccessError};
 
 pub trait TypedIndex: Copy + Clone {
     fn new(index: usize) -> Self;
@@ -67,7 +67,7 @@ where
     E: Export,
     LI: LocalImport,
     M: Memory<MV>,
-    MV: for<'a> MemoryView<'a>,
+    MV: for<'a> SequentialMemoryView<'a>,
 {
     fn export(&self, export_name: &str) -> Option<&E>;
     fn local_or_import<I: TypedIndex + LocalImportIndex>(&self, index: I) -> Option<&LI>;
@@ -155,7 +155,7 @@ impl SequentialWriter for EmptySequentialWriter {
     fn write_bytes(&self, _bytes: &[u8]) {}
 }
 
-impl<'a> MemoryView<'a> for EmptyMemoryView {
+impl<'a> SequentialMemoryView<'a> for EmptyMemoryView {
     type SR = EmptySequentialReader;
     type SW = EmptySequentialWriter;
 
@@ -187,7 +187,7 @@ where
     E: Export,
     LI: LocalImport,
     M: Memory<MV>,
-    MV: for<'a> MemoryView<'a>,
+    MV: for<'a> SequentialMemoryView<'a>,
 {
     fn export(&self, _export_name: &str) -> Option<&E> {
         None

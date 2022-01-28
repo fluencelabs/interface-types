@@ -22,9 +22,9 @@ use crate::utils::ser_type_size;
 use crate::IType;
 use crate::IValue;
 
-use it_memory_traits::{MemoryView, SequentialReader};
+use it_memory_traits::{SequentialMemoryView, SequentialReader};
 
-pub fn array_lift_memory<R: RecordResolvable, MV: for<'a> MemoryView<'a>>(
+pub fn array_lift_memory<R: RecordResolvable, MV: for<'a> SequentialMemoryView<'a>>(
     lifter: &ILifter<'_, R, MV>,
     value_type: &IType,
     offset: usize,
@@ -61,7 +61,7 @@ pub fn array_lift_memory<R: RecordResolvable, MV: for<'a> MemoryView<'a>>(
     Ok(IValue::Array(ivalues))
 }
 
-fn read_string_array<R: RecordResolvable, MV: for<'a> MemoryView<'a>>(
+fn read_string_array<R: RecordResolvable, MV: for<'a> SequentialMemoryView<'a>>(
     lifter: &ILifter<'_, R, MV>,
     offset: usize,
     elements_count: usize,
@@ -83,7 +83,7 @@ fn read_string_array<R: RecordResolvable, MV: for<'a> MemoryView<'a>>(
     Ok(result)
 }
 
-fn read_array_array<R: RecordResolvable, MV: for<'a> MemoryView<'a>>(
+fn read_array_array<R: RecordResolvable, MV: for<'a> SequentialMemoryView<'a>>(
     lifter: &ILifter<'_, R, MV>,
     ty: &IType,
     offset: usize,
@@ -105,7 +105,7 @@ fn read_array_array<R: RecordResolvable, MV: for<'a> MemoryView<'a>>(
     Ok(result)
 }
 
-fn read_record_array<R: RecordResolvable, MV: for<'a> MemoryView<'a>>(
+fn read_record_array<R: RecordResolvable, MV: for<'a> SequentialMemoryView<'a>>(
     lifter: &ILifter<'_, R, MV>,
     record_type_id: u64,
     offset: usize,

@@ -27,7 +27,7 @@ pub use lower_array::array_lower_memory;
 pub use lower_array::LoweredArray;
 pub use lower_record::record_lower_memory;
 
-pub use it_memory_traits::MemoryView;
+pub use it_memory_traits::SequentialMemoryView;
 
 pub type LoResult<T> = std::result::Result<T, error::LoError>;
 
@@ -35,7 +35,7 @@ pub struct ILowerer<'m, A: Allocatable, MV> {
     pub writer: MemoryWriter<'m, A, MV>,
 }
 
-impl<'m, A: Allocatable, MV: for<'a> MemoryView<'a>> ILowerer<'m, A, MV> {
+impl<'m, A: Allocatable, MV: for<'a> SequentialMemoryView<'a>> ILowerer<'m, A, MV> {
     pub fn new(view: MV, allocatable: &'m A) -> LoResult<Self> {
         let writer = MemoryWriter::new(view, allocatable)?;
         let lowerer = Self { writer };
