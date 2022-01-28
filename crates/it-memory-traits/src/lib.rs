@@ -43,18 +43,20 @@ pub trait SequentialWriter {
     fn write_bytes(&self, bytes: &[u8]);
 }
 
-pub trait SequentialMemoryView<'a> {
-    type SR: SequentialReader + 'a;
-    type SW: SequentialWriter + 'a;
+// the lifetime is needed because some implementations
+// need to bind SR and SW lifetimes to lifetime of &self in methods
+pub trait SequentialMemoryView<'s> {
+    type SR: SequentialReader + 's;
+    type SW: SequentialWriter + 's;
 
     fn sequential_writer(
-        &'a self,
+        &'s self,
         offset: usize,
         size: usize,
     ) -> Result<Self::SW, MemoryAccessError>;
 
     fn sequential_reader(
-        &'a self,
+        &'s self,
         offset: usize,
         size: usize,
     ) -> Result<Self::SR, MemoryAccessError>;
