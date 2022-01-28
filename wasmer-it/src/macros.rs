@@ -67,15 +67,15 @@ macro_rules! consume {
 /// Check the existing executable instruction to get more examples.
 macro_rules! executable_instruction {
     ($name:ident ( $($argument_name:ident: $argument_type:ty),* ) -> _ $implementation:block ) => {
-        pub(crate) fn $name<Instance, Export, LocalImport, Memory, MemoryView>(
+        pub(crate) fn $name<Instance, Export, LocalImport, Memory, SequentialMemoryView>(
             $($argument_name: $argument_type),*
-        ) -> crate::interpreter::ExecutableInstruction<Instance, Export, LocalImport, Memory, MemoryView>
+        ) -> crate::interpreter::ExecutableInstruction<Instance, Export, LocalImport, Memory, SequentialMemoryView>
         where
             Export: crate::interpreter::wasm::structures::Export,
             LocalImport: crate::interpreter::wasm::structures::LocalImport,
-            Memory: crate::interpreter::wasm::structures::Memory<MemoryView>,
-            MemoryView: crate::interpreter::wasm::structures::MemoryView,
-            Instance: crate::interpreter::wasm::structures::Instance<Export, LocalImport, Memory, MemoryView>,
+            Memory: crate::interpreter::wasm::structures::Memory<SequentialMemoryView>,
+            SequentialMemoryView: for<'a> crate::interpreter::wasm::structures::SequentialMemoryView<'a>,
+            Instance: crate::interpreter::wasm::structures::Instance<Export, LocalImport, Memory, SequentialMemoryView>,
         {
             #[allow(unused_imports)]
             use crate::interpreter::{stack::Stackable};
@@ -100,7 +100,7 @@ macro_rules! test_executable_instruction {
         fn $test_name() {
             use crate::{
                 interpreter::{
-                    instructions::tests::{Export, Instance, LocalImport, Memory, MemoryView},
+                    instructions::tests::{Export, Instance, LocalImport, Memory, SequentialMemoryView},
                     stack::Stackable,
                     Instruction, Interpreter,
                 },
@@ -109,7 +109,7 @@ macro_rules! test_executable_instruction {
             };
             use std::{cell::Cell, collections::HashMap, convert::TryInto};
 
-            let interpreter: Interpreter<Instance, Export, LocalImport, Memory, MemoryView> =
+            let interpreter: Interpreter<Instance, Export, LocalImport, Memory, SequentialMemoryView> =
                 (&vec![$($instructions),*]).try_into().unwrap();
 
             let invocation_inputs = vec![$($invocation_inputs),*];
@@ -142,7 +142,7 @@ macro_rules! test_executable_instruction {
         fn $test_name() {
             use crate::{
                 interpreter::{
-                    instructions::tests::{Export, Instance, LocalImport, Memory, MemoryView},
+                    instructions::tests::{Export, Instance, LocalImport, Memory, SequentialMemoryView},
                     stack::Stackable,
                     Instruction, Interpreter,
                 },
@@ -151,7 +151,7 @@ macro_rules! test_executable_instruction {
             };
             use std::{cell::Cell, collections::HashMap, convert::TryInto};
 
-            let interpreter: Interpreter<Instance, Export, LocalImport, Memory, MemoryView> =
+            let interpreter: Interpreter<Instance, Export, LocalImport, Memory, SequentialMemoryView> =
                 (&vec![$($instructions),*]).try_into().unwrap();
 
             let invocation_inputs = vec![$($invocation_inputs),*];

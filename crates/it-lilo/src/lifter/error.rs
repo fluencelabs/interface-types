@@ -15,18 +15,15 @@
  */
 
 use crate::traits::RecordResolvableError;
+
+use it_memory_traits::MemoryAccessError;
+
 use thiserror::Error as ThisError;
 
 #[derive(Debug, ThisError)]
 pub enum LiError {
-    #[error(
-        "Out-of-bound Wasm memory access: offset {offset}, size {size}, while memory_size {memory_size}"
-    )]
-    InvalidAccess {
-        offset: usize,
-        size: usize,
-        memory_size: usize,
-    },
+    #[error("{0}")]
+    MemoryAccessError(#[from] MemoryAccessError),
 
     #[error("{0}")]
     RecordResolvableError(#[from] RecordResolvableError),

@@ -14,29 +14,19 @@
  * limitations under the License.
  */
 
-use super::LiError;
 use super::LiResult;
 use crate::read_array_ty;
-use crate::read_ty;
 use crate::IValue;
 
-use std::cell::Cell;
+use it_memory_traits::{SequentialMemoryView, SequentialReader};
 
-pub struct MemoryReader<'m> {
-    pub(self) memory: &'m [Cell<u8>],
+pub struct MemoryReader<MV> {
+    pub(self) view: MV,
 }
 
-/// Reads values of basic types sequentially from the provided reader.
-/// It doesn't check memory limits for the optimization purposes,
-/// so it could be created only by the MemoryReader::sequential_reader method.
-pub struct SequentialReader<'r, 'm> {
-    reader: &'r MemoryReader<'m>,
-    offset: Cell<usize>,
-}
-
-impl<'m> MemoryReader<'m> {
-    pub fn new(memory: &'m [Cell<u8>]) -> Self {
-        Self { memory }
+impl<MV: for<'a> SequentialMemoryView<'a>> MemoryReader<MV> {
+    pub fn new(view: MV) -> Self {
+        Self { view }
     }
 
     /// Returns reader that allows read sequentially. It's important that memory limit is checked
@@ -46,10 +36,9 @@ impl<'m> MemoryReader<'m> {
         &self,
         offset: usize,
         size: usize,
-    ) -> LiResult<SequentialReader<'_, '_>> {
-        self.check_access(offset, size)?;
-
-        Ok(SequentialReader::new(&self, offset))
+    ) -> LiResult<<MV as SequentialMemoryView<'_>>::SR> {
+        let seq_reader = self.view.sequential_reader(offset, size)?;
+        Ok(seq_reader)
     }
 
     pub fn read_raw_u8_array(&self, offset: usize, elements_count: usize) -> LiResult<Vec<u8>> {
@@ -76,21 +65,6 @@ impl<'m> MemoryReader<'m> {
         Ok(result)
     }
 
-    pub fn check_access(&self, offset: usize, size: usize) -> LiResult<()> {
-        let right = offset + size;
-
-        // the first condition is a check for overflow
-        if right < offset || right >= self.memory.len() {
-            return Err(LiError::InvalidAccess {
-                offset,
-                size,
-                memory_size: self.memory.len(),
-            });
-        }
-
-        Ok(())
-    }
-
     read_array_ty!(read_u8_array, u8, U8);
     read_array_ty!(read_s8_array, i8, S8);
     read_array_ty!(read_u16_array, u16, U16);
@@ -103,30 +77,4 @@ impl<'m> MemoryReader<'m> {
     read_array_ty!(read_s64_array, i64, S64);
     read_array_ty!(read_i64_array, i64, I64);
     read_array_ty!(read_f64_array, f64, F64);
-}
-
-impl<'r, 'm> SequentialReader<'r, 'm> {
-    pub(self) fn new(reader: &'r MemoryReader<'m>, offset: usize) -> Self {
-        let offset = Cell::new(offset);
-        Self { reader, offset }
-    }
-
-    pub fn read_bool(&self) -> bool {
-        let offset = self.offset.get();
-        let result = self.reader.memory[offset].get() != 0;
-
-        self.offset.set(offset + 1);
-        result
-    }
-
-    read_ty!(read_u8, u8, 1);
-    read_ty!(read_i8, i8, 1);
-    read_ty!(read_u16, u16, 2);
-    read_ty!(read_i16, i16, 2);
-    read_ty!(read_u32, u32, 4);
-    read_ty!(read_i32, i32, 4);
-    read_ty!(read_f32, f32, 4);
-    read_ty!(read_u64, u64, 8);
-    read_ty!(read_i64, i64, 8);
-    read_ty!(read_f64, f64, 8);
 }

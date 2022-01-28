@@ -16,113 +16,36 @@
 
 use super::LoResult;
 use crate::traits::Allocatable;
-use crate::traits::MemSlice;
-use crate::traits::DEFAULT_MEMORY_INDEX;
 use crate::utils::type_tag_form_itype;
 
-use std::cell::Cell;
+use it_memory_traits::{SequentialMemoryView, SequentialWriter};
 
-pub struct MemoryWriter<'i, R: Allocatable> {
+pub struct MemoryWriter<'i, R: Allocatable, MV> {
     heap_manager: &'i R,
-    pub(self) memory: Cell<MemSlice<'i>>,
+    view: MV,
 }
 
-pub struct SequentialWriter {
-    start_offset: usize,
-    offset: Cell<usize>,
-}
-
-impl<'i, A: Allocatable> MemoryWriter<'i, A> {
-    pub fn new(heap_manager: &'i A) -> LoResult<Self> {
-        let mem_slice = heap_manager.memory_slice(DEFAULT_MEMORY_INDEX)?;
-        let memory = Cell::new(mem_slice);
-
-        let writer = Self {
-            heap_manager,
-            memory,
-        };
+impl<'i, A: Allocatable, MV: for<'a> SequentialMemoryView<'a>> MemoryWriter<'i, A, MV> {
+    pub fn new(view: MV, heap_manager: &'i A) -> LoResult<Self> {
+        let writer = Self { heap_manager, view };
         Ok(writer)
     }
 
     pub fn write_bytes(&self, bytes: &[u8]) -> LoResult<usize> {
         let byte_type_tag = type_tag_form_itype(&crate::IType::U8);
         let seq_writer = self.sequential_writer(bytes.len() as _, byte_type_tag)?;
-        seq_writer.write_bytes(self, bytes);
+        seq_writer.write_bytes(bytes);
 
         Ok(seq_writer.start_offset())
     }
 
-    pub fn sequential_writer(&self, size: u32, type_tag: u32) -> LoResult<SequentialWriter> {
-        let offset = self.heap_manager.allocate(size, type_tag)?;
-
-        let new_mem_slice = self.heap_manager.memory_slice(DEFAULT_MEMORY_INDEX)?;
-        self.memory.set(new_mem_slice);
-
-        Ok(SequentialWriter::new(offset))
-    }
-}
-
-impl SequentialWriter {
-    pub(self) fn new(offset: usize) -> Self {
-        Self {
-            offset: Cell::new(offset),
-            start_offset: offset,
-        }
-    }
-
-    pub fn start_offset(&self) -> usize {
-        self.start_offset
-    }
-
-    pub fn write_array<A: Allocatable, const N: usize>(
+    pub fn sequential_writer(
         &self,
-        writer: &MemoryWriter<'_, A>,
-        values: [u8; N],
-    ) {
-        let offset = self.offset.get();
-
-        writer.memory.get()[offset..offset + N]
-            .iter()
-            .zip(values.iter())
-            .for_each(|(cell, &byte)| cell.set(byte));
-
-        self.offset.set(offset + N);
-    }
-
-    // specialization of write_array for u8
-    pub fn write_u8<A: Allocatable>(&self, writer: &MemoryWriter<'_, A>, value: u8) {
-        let offset = self.offset.get();
-
-        writer.memory.get()[offset].set(value);
-
-        self.offset.set(offset + 1);
-    }
-
-    // specialization of write_array for u32
-    pub fn write_u32<A: Allocatable>(&self, writer: &MemoryWriter<'_, A>, value: u32) {
-        let offset = self.offset.get();
-
-        let value = value.to_le_bytes();
-        let memory = writer.memory.get();
-
-        memory[offset].set(value[0]);
-        memory[offset + 1].set(value[1]);
-        memory[offset + 2].set(value[2]);
-        memory[offset + 3].set(value[3]);
-
-        self.offset.set(offset + 4);
-    }
-
-    #[allow(dead_code)]
-    pub fn write_bytes<A: Allocatable>(&self, writer: &MemoryWriter<'_, A>, bytes: &[u8]) {
-        let offset = self.offset.get();
-
-        let memory = writer.memory.get();
-        memory[offset..offset + bytes.len()]
-            .iter()
-            .zip(bytes)
-            .for_each(|(cell, &byte)| cell.set(byte));
-
-        self.offset.set(offset + bytes.len());
+        size: u32,
+        type_tag: u32,
+    ) -> LoResult<<MV as SequentialMemoryView<'_>>::SW> {
+        let offset = self.heap_manager.allocate(size, type_tag)?;
+        let seq_writer = self.view.sequential_writer(offset, size as usize)?;
+        Ok(seq_writer)
     }
 }

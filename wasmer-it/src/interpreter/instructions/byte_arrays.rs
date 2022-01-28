@@ -7,7 +7,10 @@ use crate::{
     interpreter::Instruction,
 };
 
-use std::{cell::Cell, convert::TryInto};
+use it_memory_traits::{SequentialReader, SequentialWriter};
+use it_lilo::traits::DEFAULT_MEMORY_INDEX;
+
+use std::convert::TryInto;
 
 executable_instruction!(
     byte_array_lift_memory(instruction: Instruction) -> _ {
@@ -19,7 +22,7 @@ executable_instruction!(
                 )
             })?;
 
-            let memory_index = 0;
+            let memory_index = DEFAULT_MEMORY_INDEX;
             let memory = runtime
                 .wasm_instance
                 .memory(memory_index)
@@ -47,20 +50,14 @@ executable_instruction!(
                 return Ok(())
             }
 
-            if memory_view.len() < pointer + length {
-                return instr_error!(
-                    instruction.clone(),
-                    InstructionErrorKind::MemoryOutOfBoundsAccess {
-                        index: pointer + length,
-                        length: memory_view.len(),
-                    }
-                );
-            }
+            let reader = memory_view
+                .sequential_reader(pointer, length)
+                .map_err(|e| InstructionError::from_memory_access(instruction.clone(), e))?;
 
-            let data: Vec<u8> = (&memory_view[pointer..pointer + length])
-                .iter()
-                .map(Cell::get)
-                .collect();
+            let mut data = Vec::<u8>::with_capacity(length);
+            for index  in 0..length {
+                data[index] = reader.read_u8();
+            }
 
             log::debug!("byte_array.lift_memory: pushing {:?} on the stack", data);
             runtime.stack.push(IValue::ByteArray(data));
@@ -93,7 +90,7 @@ executable_instruction!(
             })?;
 
             let instance = &mut runtime.wasm_instance;
-            let memory_index = 0;
+            let memory_index = DEFAULT_MEMORY_INDEX;
             let memory_view = instance
                 .memory(memory_index)
                 .ok_or_else(|| {
@@ -104,9 +101,11 @@ executable_instruction!(
                 })?
                 .view();
 
-            for (nth, byte) in array.iter().enumerate() {
-                memory_view[array_pointer as usize + nth].set(*byte);
-            }
+            let writer = memory_view
+                .sequential_writer(array_pointer, array.len())
+                .map_err(|e| InstructionError::from_memory_access(instruction.clone(), e))?;
+
+            writer.write_bytes(&array);
 
             log::debug!("string.lower_memory: pushing {}, {} on the stack", array_pointer, length);
             runtime.stack.push(IValue::I32(array_pointer as i32));

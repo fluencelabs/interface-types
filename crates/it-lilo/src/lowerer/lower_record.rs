@@ -21,8 +21,10 @@ use crate::traits::Allocatable;
 use crate::IValue;
 use crate::NEVec;
 
-pub fn record_lower_memory<A: Allocatable>(
-    lowerer: &ILowerer<'_, A>,
+use it_memory_traits::SequentialMemoryView;
+
+pub fn record_lower_memory<A: Allocatable, MV: for<'a> SequentialMemoryView<'a>>(
+    lowerer: &ILowerer<'_, A, MV>,
     values: NEVec<IValue>,
 ) -> LoResult<i32> {
     let average_field_size = 4;

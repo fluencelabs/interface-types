@@ -26,4 +26,7 @@ pub enum RecordResolvableError {
     /// Record for such type is wasn't found.
     #[error("Record with type id '{0}' not found")]
     RecordNotFound(u64),
+
+    #[error("Memory with index '{memory_index}' not found")]
+    MemoryIsMissing { memory_index: usize },
 }

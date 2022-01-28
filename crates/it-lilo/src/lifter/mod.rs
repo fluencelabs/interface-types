@@ -24,22 +24,21 @@ pub use error::LiError;
 pub use lift_array::array_lift_memory;
 pub use lift_record::record_lift_memory;
 pub use memory_reader::MemoryReader;
-pub use memory_reader::SequentialReader;
 
 use super::traits::RecordResolvable;
 
-use std::cell::Cell;
+pub use it_memory_traits::SequentialMemoryView;
 
 pub type LiResult<T> = std::result::Result<T, error::LiError>;
 
-pub struct ILifter<'m, 'r, R: RecordResolvable> {
-    pub reader: MemoryReader<'m>,
+pub struct ILifter<'r, R: RecordResolvable, MV> {
+    pub reader: MemoryReader<MV>,
     pub resolver: &'r R,
 }
 
-impl<'m, 'r, R: RecordResolvable> ILifter<'m, 'r, R> {
-    pub fn new(memory: &'m [Cell<u8>], resolver: &'r R) -> Self {
-        let reader = MemoryReader::new(memory);
+impl<'r, R: RecordResolvable, MV: for<'a> SequentialMemoryView<'a>> ILifter<'r, R, MV> {
+    pub fn new(view: MV, resolver: &'r R) -> Self {
+        let reader = MemoryReader::new(view);
         Self { reader, resolver }
     }
 }

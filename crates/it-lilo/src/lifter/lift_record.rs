@@ -18,7 +18,6 @@ use super::ILifter;
 use super::LiError;
 use super::LiResult;
 use super::MemoryReader;
-use super::SequentialReader;
 use crate::traits::RecordResolvable;
 use crate::utils::record_size;
 use crate::IRecordType;
@@ -26,8 +25,10 @@ use crate::IType;
 use crate::IValue;
 use crate::NEVec;
 
-pub fn record_lift_memory<R: RecordResolvable>(
-    lifter: &ILifter<'_, '_, R>,
+use it_memory_traits::{SequentialMemoryView, SequentialReader};
+
+pub fn record_lift_memory<R: RecordResolvable, MV: for<'a> SequentialMemoryView<'a>>(
+    lifter: &ILifter<'_, R, MV>,
     record_type: &IRecordType,
     offset: usize,
 ) -> LiResult<IValue> {
@@ -67,9 +68,9 @@ pub fn record_lift_memory<R: RecordResolvable>(
     Ok(IValue::Record(record))
 }
 
-fn read_string(
-    reader: &MemoryReader<'_>,
-    seq_reader: &SequentialReader<'_, '_>,
+fn read_string<MV: for<'a> SequentialMemoryView<'a>>(
+    reader: &MemoryReader<MV>,
+    seq_reader: &<MV as SequentialMemoryView<'_>>::SR,
 ) -> LiResult<String> {
     let offset = seq_reader.read_u32();
     let size = seq_reader.read_u32();
@@ -80,9 +81,9 @@ fn read_string(
     Ok(string)
 }
 
-fn read_byte_array(
-    reader: &MemoryReader<'_>,
-    seq_reader: &SequentialReader<'_, '_>,
+fn read_byte_array<MV: for<'a> SequentialMemoryView<'a>>(
+    reader: &MemoryReader<MV>,
+    seq_reader: &<MV as SequentialMemoryView<'_>>::SR,
 ) -> LiResult<IValue> {
     let offset = seq_reader.read_u32();
     let size = seq_reader.read_u32();
@@ -92,9 +93,9 @@ fn read_byte_array(
     Ok(IValue::ByteArray(array))
 }
 
-fn read_array<R: RecordResolvable>(
-    lifter: &ILifter<'_, '_, R>,
-    seq_reader: &SequentialReader<'_, '_>,
+fn read_array<R: RecordResolvable, MV: for<'a> SequentialMemoryView<'a>>(
+    lifter: &ILifter<'_, R, MV>,
+    seq_reader: &<MV as SequentialMemoryView<'_>>::SR,
     value_type: &IType,
 ) -> LiResult<IValue> {
     let offset = seq_reader.read_u32();
@@ -103,9 +104,9 @@ fn read_array<R: RecordResolvable>(
     super::array_lift_memory(lifter, value_type, offset as _, size as _)
 }
 
-fn read_record<R: RecordResolvable>(
-    lifter: &ILifter<'_, '_, R>,
-    seq_reader: &SequentialReader<'_, '_>,
+fn read_record<R: RecordResolvable, MV: for<'a> SequentialMemoryView<'a>>(
+    lifter: &ILifter<'_, R, MV>,
+    seq_reader: &<MV as SequentialMemoryView<'_>>::SR,
     record_type_id: u64,
 ) -> LiResult<IValue> {
     let offset = seq_reader.read_u32();

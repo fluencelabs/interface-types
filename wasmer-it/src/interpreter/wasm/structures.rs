@@ -5,7 +5,8 @@ use crate::IRecordType;
 use crate::IType;
 use crate::IValue;
 use std::rc::Rc;
-use std::{cell::Cell, ops::Deref};
+
+pub use it_memory_traits::{Memory, SequentialMemoryView, SequentialReader, SequentialWriter, MemoryAccessError};
 
 pub trait TypedIndex: Copy + Clone {
     fn new(index: usize) -> Self;
@@ -61,26 +62,17 @@ pub trait LocalImport {
     fn call(&self, arguments: &[IValue]) -> Result<Vec<IValue>, ()>;
 }
 
-pub trait MemoryView: Deref<Target = [Cell<u8>]> {}
-
-pub trait Memory<View>
-where
-    View: MemoryView,
-{
-    fn view(&self) -> View;
-}
-
 pub trait Instance<E, LI, M, MV>
 where
     E: Export,
     LI: LocalImport,
     M: Memory<MV>,
-    MV: MemoryView,
+    MV: for<'a> SequentialMemoryView<'a>,
 {
     fn export(&self, export_name: &str) -> Option<&E>;
     fn local_or_import<I: TypedIndex + LocalImportIndex>(&self, index: I) -> Option<&LI>;
     fn memory(&self, index: usize) -> Option<&M>;
-    fn memory_slice(&self, index: usize) -> Option<&[Cell<u8>]>;
+    fn memory_view(&self, index: usize) -> Option<MV>;
     fn wit_record_by_id(&self, index: u64) -> Option<&Rc<IRecordType>>;
 }
 
@@ -138,13 +130,49 @@ impl LocalImport for () {
 
 pub(crate) struct EmptyMemoryView;
 
-impl MemoryView for EmptyMemoryView {}
+pub(crate) struct EmptySequentialReader;
+pub(crate) struct EmptySequentialWriter;
 
-impl Deref for EmptyMemoryView {
-    type Target = [Cell<u8>];
+impl SequentialReader for EmptySequentialReader {
+    fn read_byte(&self) -> u8 {
+        0u8
+    }
 
-    fn deref(&self) -> &Self::Target {
-        &[]
+    fn read_bytes<const COUNT: usize>(&self) -> [u8; COUNT] {
+        [0u8; COUNT]
+    }
+}
+
+impl SequentialWriter for EmptySequentialWriter {
+    fn start_offset(&self) -> usize {
+        0
+    }
+
+    fn write_u8(&self, _value: u8) {}
+
+    fn write_u32(&self, _value: u32) {}
+
+    fn write_bytes(&self, _bytes: &[u8]) {}
+}
+
+impl<'a> SequentialMemoryView<'a> for EmptyMemoryView {
+    type SR = EmptySequentialReader;
+    type SW = EmptySequentialWriter;
+
+    fn sequential_writer(&self, offset: usize, size: usize) -> Result<Self::SW, MemoryAccessError> {
+        Err(MemoryAccessError::OutOfBounds {
+            offset,
+            size,
+            memory_size: 0,
+        })
+    }
+
+    fn sequential_reader(&self, offset: usize, size: usize) -> Result<Self::SR, MemoryAccessError> {
+        Err(MemoryAccessError::OutOfBounds {
+            offset,
+            size,
+            memory_size: 0,
+        })
     }
 }
 
@@ -159,7 +187,7 @@ where
     E: Export,
     LI: LocalImport,
     M: Memory<MV>,
-    MV: MemoryView,
+    MV: for<'a> SequentialMemoryView<'a>,
 {
     fn export(&self, _export_name: &str) -> Option<&E> {
         None
@@ -169,7 +197,7 @@ where
         None
     }
 
-    fn memory_slice(&self, _: usize) -> Option<&[Cell<u8>]> {
+    fn memory_view(&self, _index: usize) -> Option<MV> {
         None
     }
 

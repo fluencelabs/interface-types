@@ -4,33 +4,32 @@ use crate::IValue;
 
 use it_lilo::traits::Allocatable;
 use it_lilo::traits::AllocatableError;
-use it_lilo::traits::MemSlice;
 
 use std::marker::PhantomData;
 
-pub struct LoHelper<'i, Instance, Export, LocalImport, Memory, MemoryView>
+pub struct LoHelper<'i, Instance, Export, LocalImport, Memory, SequentialMemoryView>
 where
     Export: wasm::structures::Export + 'i,
     LocalImport: wasm::structures::LocalImport + 'i,
-    Memory: wasm::structures::Memory<MemoryView> + 'i,
-    MemoryView: wasm::structures::MemoryView,
-    Instance: wasm::structures::Instance<Export, LocalImport, Memory, MemoryView>,
+    Memory: wasm::structures::Memory<SequentialMemoryView> + 'i,
+    SequentialMemoryView: (for<'a> wasm::structures::SequentialMemoryView<'a>),
+    Instance: wasm::structures::Instance<Export, LocalImport, Memory, SequentialMemoryView>,
 {
     pub(crate) instance: &'i Instance,
     _export: PhantomData<Export>,
     _local_import: PhantomData<LocalImport>,
     _memory: PhantomData<Memory>,
-    _memory_view: PhantomData<MemoryView>,
+    _memory_view: PhantomData<SequentialMemoryView>,
 }
 
-impl<'i, Instance, Export, LocalImport, Memory, MemoryView>
-    LoHelper<'i, Instance, Export, LocalImport, Memory, MemoryView>
+impl<'i, Instance, Export, LocalImport, Memory, SequentialMemoryView>
+    LoHelper<'i, Instance, Export, LocalImport, Memory, SequentialMemoryView>
 where
     Export: wasm::structures::Export + 'i,
     LocalImport: wasm::structures::LocalImport + 'i,
-    Memory: wasm::structures::Memory<MemoryView> + 'i,
-    MemoryView: wasm::structures::MemoryView,
-    Instance: wasm::structures::Instance<Export, LocalImport, Memory, MemoryView>,
+    Memory: wasm::structures::Memory<SequentialMemoryView> + 'i,
+    SequentialMemoryView: (for<'a> wasm::structures::SequentialMemoryView<'a>),
+    Instance: wasm::structures::Instance<Export, LocalImport, Memory, SequentialMemoryView>,
 {
     pub(crate) fn new(instance: &'i Instance) -> Self {
         Self {
@@ -43,14 +42,14 @@ where
     }
 }
 
-impl<'i, Instance, Export, LocalImport, Memory, MemoryView> Allocatable
-    for LoHelper<'i, Instance, Export, LocalImport, Memory, MemoryView>
+impl<'i, Instance, Export, LocalImport, Memory, SequentialMemoryView> Allocatable
+    for LoHelper<'i, Instance, Export, LocalImport, Memory, SequentialMemoryView>
 where
     Export: wasm::structures::Export + 'i,
     LocalImport: wasm::structures::LocalImport + 'i,
-    Memory: wasm::structures::Memory<MemoryView> + 'i,
-    MemoryView: wasm::structures::MemoryView,
-    Instance: wasm::structures::Instance<Export, LocalImport, Memory, MemoryView>,
+    Memory: wasm::structures::Memory<SequentialMemoryView> + 'i,
+    SequentialMemoryView: (for<'a> wasm::structures::SequentialMemoryView<'a>),
+    Instance: wasm::structures::Instance<Export, LocalImport, Memory, SequentialMemoryView>,
 {
     fn allocate(&self, size: u32, type_tag: u32) -> Result<usize, AllocatableError> {
         use AllocatableError::*;
@@ -87,11 +86,5 @@ where
             IValue::I32(offset) => Ok(offset as _),
             _ => Err(AllocateFuncIncompatibleOutput),
         }
-    }
-
-    fn memory_slice(&self, memory_index: usize) -> Result<MemSlice<'_>, AllocatableError> {
-        self.instance
-            .memory_slice(memory_index)
-            .ok_or(AllocatableError::MemoryIsMissing { memory_index })
     }
 }

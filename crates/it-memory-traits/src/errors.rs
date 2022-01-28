@@ -1,5 +1,5 @@
 /*
- * Copyright 2021 Fluence Labs Limited
+ * Copyright 2022 Fluence Labs Limited
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,19 +14,14 @@
  * limitations under the License.
  */
 
-use crate::traits::AllocatableError;
-use crate::traits::RecordResolvableError;
-use it_memory_traits::MemoryAccessError;
 use thiserror::Error as ThisError;
 
 #[derive(Debug, ThisError)]
-pub enum LoError {
-    #[error("{0}")]
-    AllocatableError(#[from] AllocatableError),
-
-    #[error("{0}")]
-    RecordResolvableError(#[from] RecordResolvableError),
-
-    #[error("{0}")]
-    MemoryAccessError(#[from] MemoryAccessError),
+pub enum MemoryAccessError {
+    #[error("Out-of-bound Wasm memory access: offset {offset}, size {size}, while memory_size {memory_size}")]
+    OutOfBounds {
+        offset: usize,
+        size: usize,
+        memory_size: usize,
+    },
 }
