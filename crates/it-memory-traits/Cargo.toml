@@ -2,7 +2,7 @@
 name = "it-memory-traits"
 version = "0.1.0"
 authors = ["Fluence Labs"]
-description = "Degines traits that IT uses for accessing memory"
+description = "Defines traits that IT uses for accessing memory"
 edition = "2018"
 license = "Apache-2.0"
 
