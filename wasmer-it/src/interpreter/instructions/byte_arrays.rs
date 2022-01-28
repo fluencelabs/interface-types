@@ -48,17 +48,6 @@ executable_instruction!(
 
                 return Ok(())
             }
-            /*
-
-            if memory_view.len() < pointer + length {
-                return instr_error!(
-                    instruction.clone(),
-                    InstructionErrorKind::MemoryOutOfBoundsAccess {
-                        index: pointer + length,
-                        length: memory_view.len(),
-                    }
-                );
-            }*/
 
             let reader = memory_view
                 .sequential_reader(pointer, length)

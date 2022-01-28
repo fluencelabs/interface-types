@@ -18,8 +18,6 @@ use thiserror::Error as ThisError;
 
 pub const DEFAULT_MEMORY_INDEX: usize = 0;
 
-//pub type MemSlice<'m> = &'m [Cell<u8>];
-
 pub trait Allocatable {
     fn allocate(&self, size: u32, type_tag: u32) -> Result<usize, AllocatableError>;
 }
