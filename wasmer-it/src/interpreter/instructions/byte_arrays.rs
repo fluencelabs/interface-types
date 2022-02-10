@@ -56,7 +56,7 @@ executable_instruction!(
 
             let mut data = Vec::<u8>::with_capacity(length);
             for index  in 0..length {
-                data[index] = reader.read_u8();
+                data.push(reader.read_u8());
             }
 
             log::debug!("byte_array.lift_memory: pushing {:?} on the stack", data);
