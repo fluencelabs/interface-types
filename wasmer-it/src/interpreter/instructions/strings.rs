@@ -53,11 +53,7 @@ executable_instruction!(
                 .sequential_reader(pointer, length)
                 .map_err(|e| InstructionError::from_memory_access(instruction.clone(), e))?;
 
-            let mut data = Vec::<u8>::with_capacity(length);
-            for index  in 0..length {
-                data.push(reader.read_u8());
-}
-
+            let data = (0..length).map(|_| reader.read_u8()).collect::<Vec<_>>();
             let string = String::from_utf8(data)
                 .map_err(|error| InstructionError::from_error_kind(instruction.clone(), InstructionErrorKind::String(error)))?;
 
