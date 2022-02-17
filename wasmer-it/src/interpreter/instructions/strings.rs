@@ -7,8 +7,8 @@ use crate::{
     interpreter::Instruction,
 };
 
-use it_memory_traits::{SequentialReader, SequentialWriter};
 use it_lilo::traits::DEFAULT_MEMORY_INDEX;
+use it_memory_traits::{SequentialReader, SequentialWriter};
 
 use std::convert::TryInto;
 

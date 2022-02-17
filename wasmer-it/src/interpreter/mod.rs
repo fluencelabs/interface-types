@@ -13,13 +13,21 @@ use std::{convert::TryFrom, marker::PhantomData};
 
 /// Represents the `Runtime`, which is used by an adapter to execute
 /// its instructions.
-pub(crate) struct Runtime<'invocation, 'instance, Instance, Export, LocalImport, Memory, SequentialMemoryView>
-where
+pub(crate) struct Runtime<
+    'invocation,
+    'instance,
+    Instance,
+    Export,
+    LocalImport,
+    Memory,
+    SequentialMemoryView,
+> where
     Export: wasm::structures::Export + 'instance,
     LocalImport: wasm::structures::LocalImport + 'instance,
     Memory: wasm::structures::Memory<SequentialMemoryView> + 'instance,
     SequentialMemoryView: (for<'a> wasm::structures::SequentialMemoryView<'a>),
-    Instance: wasm::structures::Instance<Export, LocalImport, Memory, SequentialMemoryView> + 'instance,
+    Instance:
+        wasm::structures::Instance<Export, LocalImport, Memory, SequentialMemoryView> + 'instance,
 {
     /// The invocation inputs are all the arguments received by an
     /// adapter.
@@ -38,10 +46,13 @@ where
 
 /// Type alias for an executable instruction. It's an implementation
 /// details, but an instruction is a boxed closure instance.
-pub(crate) type ExecutableInstruction<Instance, Export, LocalImport, Memory, SequentialMemoryView> = Box<
-    dyn Fn(&mut Runtime<Instance, Export, LocalImport, Memory, SequentialMemoryView>) -> InstructionResult<()>
-        + Send,
->;
+pub(crate) type ExecutableInstruction<Instance, Export, LocalImport, Memory, SequentialMemoryView> =
+    Box<
+        dyn Fn(
+                &mut Runtime<Instance, Export, LocalImport, Memory, SequentialMemoryView>,
+            ) -> InstructionResult<()>
+            + Send,
+    >;
 
 /// An interpreter is the central piece of this crate. It is a set of
 /// executable instructions. Each instruction takes the runtime as
