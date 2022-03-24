@@ -34,16 +34,16 @@ impl<MV: for<'a> SequentialMemoryView<'a>> MemoryReader<MV> {
     /// checks assuming that reader is well-formed.
     pub fn sequential_reader(
         &self,
-        offset: usize,
-        size: usize,
+        offset: u32,
+        size: u32,
     ) -> LiResult<<MV as SequentialMemoryView<'_>>::SR> {
         let seq_reader = self.view.sequential_reader(offset, size)?;
         Ok(seq_reader)
     }
 
-    pub fn read_raw_u8_array(&self, offset: usize, elements_count: usize) -> LiResult<Vec<u8>> {
+    pub fn read_raw_u8_array(&self, offset: u32, elements_count: u32) -> LiResult<Vec<u8>> {
         let reader = self.sequential_reader(offset, elements_count)?;
-        let mut result = Vec::with_capacity(elements_count);
+        let mut result = Vec::with_capacity(elements_count as usize);
 
         for _ in 0..elements_count {
             let value = reader.read_u8();
@@ -53,9 +53,9 @@ impl<MV: for<'a> SequentialMemoryView<'a>> MemoryReader<MV> {
         Ok(result)
     }
 
-    pub fn read_bool_array(&self, offset: usize, elements_count: usize) -> LiResult<Vec<IValue>> {
+    pub fn read_bool_array(&self, offset: u32, elements_count: u32) -> LiResult<Vec<IValue>> {
         let reader = self.sequential_reader(offset, elements_count)?;
-        let mut result = Vec::with_capacity(elements_count);
+        let mut result = Vec::with_capacity(elements_count as usize);
 
         for _ in 0..elements_count {
             let value = reader.read_u8();

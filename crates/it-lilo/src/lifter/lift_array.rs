@@ -27,8 +27,8 @@ use it_memory_traits::{SequentialMemoryView, SequentialReader};
 pub fn array_lift_memory<R: RecordResolvable, MV: for<'a> SequentialMemoryView<'a>>(
     lifter: &ILifter<'_, R, MV>,
     value_type: &IType,
-    offset: usize,
-    elements_count: usize,
+    offset: u32,
+    elements_count: u32,
 ) -> LiResult<IValue> {
     if elements_count == 0 {
         return Ok(IValue::Array(vec![]));
@@ -63,10 +63,10 @@ pub fn array_lift_memory<R: RecordResolvable, MV: for<'a> SequentialMemoryView<'
 
 fn read_string_array<R: RecordResolvable, MV: for<'a> SequentialMemoryView<'a>>(
     lifter: &ILifter<'_, R, MV>,
-    offset: usize,
-    elements_count: usize,
+    offset: u32,
+    elements_count: u32,
 ) -> LiResult<Vec<IValue>> {
-    let mut result = Vec::with_capacity(elements_count);
+    let mut result = Vec::with_capacity(elements_count as usize);
     let seq_reader = lifter
         .reader
         .sequential_reader(offset, ser_type_size(&IType::String) * elements_count)?;
@@ -75,7 +75,7 @@ fn read_string_array<R: RecordResolvable, MV: for<'a> SequentialMemoryView<'a>>(
         let offset = seq_reader.read_u32();
         let size = seq_reader.read_u32();
 
-        let raw_str = lifter.reader.read_raw_u8_array(offset as _, size as _)?;
+        let raw_str = lifter.reader.read_raw_u8_array(offset, size)?;
         let str = String::from_utf8(raw_str)?;
         result.push(IValue::String(str));
     }
@@ -86,10 +86,10 @@ fn read_string_array<R: RecordResolvable, MV: for<'a> SequentialMemoryView<'a>>(
 fn read_array_array<R: RecordResolvable, MV: for<'a> SequentialMemoryView<'a>>(
     lifter: &ILifter<'_, R, MV>,
     ty: &IType,
-    offset: usize,
-    elements_count: usize,
+    offset: u32,
+    elements_count: u32,
 ) -> LiResult<Vec<IValue>> {
-    let mut result = Vec::with_capacity(elements_count);
+    let mut result = Vec::with_capacity(elements_count as usize);
     let seq_reader = lifter
         .reader
         .sequential_reader(offset, ser_type_size(ty) * elements_count)?;
@@ -98,7 +98,7 @@ fn read_array_array<R: RecordResolvable, MV: for<'a> SequentialMemoryView<'a>>(
         let offset = seq_reader.read_u32();
         let size = seq_reader.read_u32();
 
-        let array = array_lift_memory(lifter, ty, offset as _, size as _)?;
+        let array = array_lift_memory(lifter, ty, offset, size)?;
         result.push(array);
     }
 
@@ -108,10 +108,10 @@ fn read_array_array<R: RecordResolvable, MV: for<'a> SequentialMemoryView<'a>>(
 fn read_record_array<R: RecordResolvable, MV: for<'a> SequentialMemoryView<'a>>(
     lifter: &ILifter<'_, R, MV>,
     record_type_id: u64,
-    offset: usize,
-    elements_count: usize,
+    offset: u32,
+    elements_count: u32,
 ) -> LiResult<Vec<IValue>> {
-    let mut result = Vec::with_capacity(elements_count);
+    let mut result = Vec::with_capacity(elements_count as usize);
     let seq_reader = lifter
         .reader
         .sequential_reader(offset, ser_type_size(&IType::Record(0)) * elements_count)?;
@@ -120,7 +120,7 @@ fn read_record_array<R: RecordResolvable, MV: for<'a> SequentialMemoryView<'a>>(
         let offset = seq_reader.read_u32();
         let record_ty = lifter.resolver.resolve_record(record_type_id)?;
 
-        let record = record_lift_memory(lifter, &record_ty, offset as _)?;
+        let record = record_lift_memory(lifter, &record_ty, offset)?;
         result.push(record);
     }
 

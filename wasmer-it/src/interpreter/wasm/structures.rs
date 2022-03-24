@@ -146,7 +146,7 @@ impl SequentialReader for EmptySequentialReader {
 }
 
 impl SequentialWriter for EmptySequentialWriter {
-    fn start_offset(&self) -> usize {
+    fn start_offset(&self) -> u32 {
         0
     }
 
@@ -161,7 +161,7 @@ impl<'a> SequentialMemoryView<'a> for EmptyMemoryView {
     type SR = EmptySequentialReader;
     type SW = EmptySequentialWriter;
 
-    fn sequential_writer(&self, offset: usize, size: usize) -> Result<Self::SW, MemoryAccessError> {
+    fn sequential_writer(&self, offset: u32, size: u32) -> Result<Self::SW, MemoryAccessError> {
         Err(MemoryAccessError::OutOfBounds {
             offset,
             size,
@@ -169,7 +169,7 @@ impl<'a> SequentialMemoryView<'a> for EmptyMemoryView {
         })
     }
 
-    fn sequential_reader(&self, offset: usize, size: usize) -> Result<Self::SR, MemoryAccessError> {
+    fn sequential_reader(&self, offset: u32, size: u32) -> Result<Self::SR, MemoryAccessError> {
         Err(MemoryAccessError::OutOfBounds {
             offset,
             size,

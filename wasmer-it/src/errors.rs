@@ -189,10 +189,10 @@ pub enum InstructionErrorKind {
     #[error("read out of the memory bounds (index {index} > memory length {length})")]
     MemoryOutOfBoundsAccess {
         /// The access index.
-        index: usize,
+        index: u32,
 
         /// The memory length.
-        length: usize,
+        length: u32,
     },
 
     /// The string contains invalid UTF-8 encoding.

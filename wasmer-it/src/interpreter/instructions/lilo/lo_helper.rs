@@ -51,7 +51,7 @@ where
     SequentialMemoryView: (for<'a> wasm::structures::SequentialMemoryView<'a>),
     Instance: wasm::structures::Instance<Export, LocalImport, Memory, SequentialMemoryView>,
 {
-    fn allocate(&self, size: u32, type_tag: u32) -> Result<usize, AllocatableError> {
+    fn allocate(&self, size: u32, type_tag: u32) -> Result<u32, AllocatableError> {
         use AllocatableError::*;
 
         use crate::interpreter::instructions::ALLOCATE_FUNC_INDEX;

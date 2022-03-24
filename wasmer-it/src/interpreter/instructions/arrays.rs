@@ -47,12 +47,12 @@ where
                 )
             })?;
 
-            let offset: usize = to_native::<i32>(inputs.remove(0), instruction.clone())?
+            let offset: u32 = to_native::<i32>(inputs.remove(0), instruction.clone())?
                 .try_into()
                 .map_err(|e| (e, "offset").into())
                 .map_err(|k| InstructionError::from_error_kind(instruction.clone(), k))?;
 
-            let size: usize = to_native::<i32>(inputs.remove(0), instruction.clone())?
+            let size: u32 = to_native::<i32>(inputs.remove(0), instruction.clone())?
                 .try_into()
                 .map_err(|e| (e, "size").into())
                 .map_err(|k| InstructionError::from_error_kind(instruction.clone(), k))?;
@@ -79,9 +79,8 @@ where
 
             let li_helper = lilo::LiHelper::new(&**instance);
             let lifter = ILifter::new(memory_view, &li_helper);
-            let array =
-                it_lilo::lifter::array_lift_memory(&lifter, &value_type, offset as _, size as _)
-                    .map_err(|e| InstructionError::from_li(instruction.clone(), e))?;
+            let array = it_lilo::lifter::array_lift_memory(&lifter, &value_type, offset, size)
+                .map_err(|e| InstructionError::from_li(instruction.clone(), e))?;
 
             log::trace!("array.lift_memory: pushing {:?} on the stack", array);
             runtime.stack.push(array);

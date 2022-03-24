@@ -122,12 +122,12 @@ macro_rules! read_array_ty {
     ($func_name:ident, $ty:ident, $ity:ident) => {
         pub fn $func_name(
             &self,
-            offset: usize,
-            elements_count: usize,
+            offset: u32,
+            elements_count: u32,
         ) -> super::LiResult<Vec<crate::IValue>> {
-            let reader =
-                self.sequential_reader(offset, std::mem::size_of::<$ty>() * elements_count)?;
-            let mut result = Vec::with_capacity(elements_count);
+            let reader = self
+                .sequential_reader(offset, (std::mem::size_of::<$ty>() as u32) * elements_count)?;
+            let mut result = Vec::with_capacity(elements_count as usize);
 
             for _ in 0..elements_count {
                 let value = paste::paste! { reader.[<read_ $ty>]()};

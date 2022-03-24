@@ -44,7 +44,7 @@ where
                 )
             })?;
 
-            let offset: usize = to_native::<i32>(inputs.remove(0), instruction.clone())?
+            let offset: u32 = to_native::<i32>(inputs.remove(0), instruction.clone())?
                 .try_into()
                 .map_err(|e| (e, "offset").into())
                 .map_err(|k| InstructionError::from_error_kind(instruction.clone(), k))?;
@@ -146,7 +146,7 @@ where
                             .map_err(|e| InstructionError::from_lo(instruction.clone(), e))?;
 
                     log::debug!("record.lower_memory: pushing {} on the stack", offset);
-                    runtime.stack.push(IValue::I32(offset));
+                    runtime.stack.push(IValue::I32(offset as i32));
 
                     Ok(())
                 }

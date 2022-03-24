@@ -26,7 +26,7 @@ use it_memory_traits::SequentialMemoryView;
 pub fn record_lower_memory<A: Allocatable, MV: for<'a> SequentialMemoryView<'a>>(
     lowerer: &ILowerer<'_, A, MV>,
     values: NEVec<IValue>,
-) -> LoResult<i32> {
+) -> LoResult<u32> {
     let average_field_size = 4;
     // TODO: avoid this additional allocation after fixing github.com/fluencelabs/fce/issues/77
     let mut result: Vec<u8> = Vec::with_capacity(average_field_size * values.len());
@@ -47,13 +47,13 @@ pub fn record_lower_memory<A: Allocatable, MV: for<'a> SequentialMemoryView<'a>>
             IValue::F32(value) => result.extend_from_slice(&value.to_le_bytes()),
             IValue::F64(value) => result.extend_from_slice(&value.to_le_bytes()),
             IValue::String(value) => {
-                let offset = lowerer.writer.write_bytes(value.as_bytes())? as u32;
+                let offset = lowerer.writer.write_bytes(value.as_bytes())?;
 
                 result.extend_from_slice(&offset.to_le_bytes());
                 result.extend_from_slice(&(value.len() as u32).to_le_bytes());
             }
             IValue::ByteArray(value) => {
-                let offset = lowerer.writer.write_bytes(&value)? as u32;
+                let offset = lowerer.writer.write_bytes(&value)?;
 
                 result.extend_from_slice(&offset.to_le_bytes());
                 result.extend_from_slice(&(value.len() as u32).to_le_bytes());
@@ -62,12 +62,12 @@ pub fn record_lower_memory<A: Allocatable, MV: for<'a> SequentialMemoryView<'a>>
             IValue::Array(values) => {
                 let LoweredArray { offset, size } = super::array_lower_memory(lowerer, values)?;
 
-                result.extend_from_slice(&(offset as u32).to_le_bytes());
-                result.extend_from_slice(&(size as u32).to_le_bytes());
+                result.extend_from_slice(&(offset).to_le_bytes());
+                result.extend_from_slice(&(size).to_le_bytes());
             }
 
             IValue::Record(values) => {
-                let offset = record_lower_memory(lowerer, values)? as u32;
+                let offset = record_lower_memory(lowerer, values)?;
 
                 result.extend_from_slice(&offset.to_le_bytes());
             }
@@ -76,5 +76,5 @@ pub fn record_lower_memory<A: Allocatable, MV: for<'a> SequentialMemoryView<'a>>
 
     let result_pointer = lowerer.writer.write_bytes(&result)?;
 
-    Ok(result_pointer as _)
+    Ok(result_pointer)
 }

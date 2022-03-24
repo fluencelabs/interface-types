@@ -33,11 +33,11 @@ executable_instruction!(
                     )
                 })?;
 
-            let pointer: usize = to_native::<i32>(inputs.remove(0), instruction.clone())?
+            let pointer: u32 = to_native::<i32>(inputs.remove(0), instruction.clone())?
                 .try_into()
                 .map_err(|e| (e, "pointer").into())
                 .map_err(|k| InstructionError::from_error_kind(instruction.clone(), k))?;
-            let length: usize = to_native::<i32>(inputs.remove(0), instruction.clone())?
+            let length: u32 = to_native::<i32>(inputs.remove(0), instruction.clone())?
                 .try_into()
                 .map_err(|e| (e, "length").into())
                 .map_err(|k| InstructionError::from_error_kind(instruction.clone(), k))?;
@@ -75,13 +75,13 @@ executable_instruction!(
                 )
             })?;
 
-            let string_pointer: usize = to_native::<i32>(inputs.remove(0), instruction.clone())?
+            let string_pointer: u32 = to_native::<i32>(inputs.remove(0), instruction.clone())?
                 .try_into()
                 .map_err(|e| (e, "pointer").into())
                 .map_err(|k| InstructionError::from_error_kind(instruction.clone(), k))?;
             let string: String = to_native(inputs.remove(0), instruction.clone())?;
             let string_bytes = string.as_bytes();
-            let string_length: i32 = string_bytes.len().try_into().map_err(|_| {
+            let string_length: u32 = string_bytes.len().try_into().map_err(|_| {
                 InstructionError::from_error_kind(
                     instruction.clone(),
                     InstructionErrorKind::NegativeValue { subject: "string_length" },
@@ -101,14 +101,14 @@ executable_instruction!(
                 .view();
 
             let seq_writer = memory_view
-                .sequential_writer(string_pointer, string_length as usize)
+                .sequential_writer(string_pointer, string_length)
                 .map_err(|e| InstructionError::from_memory_access(instruction.clone(), e))?;
 
             seq_writer.write_bytes(&string_bytes);
 
             log::debug!("string.lower_memory: pushing {}, {} on the stack", string_pointer, string_length);
             runtime.stack.push(IValue::I32(string_pointer as i32));
-            runtime.stack.push(IValue::I32(string_length));
+            runtime.stack.push(IValue::I32(string_length as i32));
 
             Ok(())
         }
