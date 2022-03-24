@@ -1,6 +1,6 @@
 [package]
 name = "it-memory-traits"
-version = "0.1.0"
+version = "0.2.0"
 authors = ["Fluence Labs"]
 description = "Defines traits that IT uses for accessing memory"
 edition = "2018"

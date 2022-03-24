@@ -24,12 +24,12 @@ use crate::IValue;
 use it_memory_traits::{SequentialMemoryView, SequentialWriter};
 
 pub struct LoweredArray {
-    pub offset: usize,
-    pub size: usize,
+    pub offset: u32,
+    pub size: u32,
 }
 
 impl LoweredArray {
-    pub fn new(offset: usize, size: usize) -> Self {
+    pub fn new(offset: u32, size: u32) -> Self {
         Self { offset, size }
     }
 
@@ -93,6 +93,6 @@ pub fn array_lower_memory<A: Allocatable, MV: for<'a> SequentialMemoryView<'a>>(
     }
 
     let offset = seq_writer.start_offset();
-    let lowered_array = LoweredArray::new(offset as _, elements_count as _);
+    let lowered_array = LoweredArray::new(offset, elements_count);
     Ok(lowered_array)
 }

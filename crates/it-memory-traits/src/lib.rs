@@ -48,7 +48,7 @@ pub trait SequentialReader {
 }
 
 pub trait SequentialWriter {
-    fn start_offset(&self) -> usize;
+    fn start_offset(&self) -> u32;
 
     // specialization of write_array for u8
     fn write_u8(&self, value: u8);
@@ -65,17 +65,9 @@ pub trait SequentialMemoryView<'s> {
     type SR: SequentialReader + 's;
     type SW: SequentialWriter + 's;
 
-    fn sequential_writer(
-        &'s self,
-        offset: usize,
-        size: usize,
-    ) -> Result<Self::SW, MemoryAccessError>;
+    fn sequential_writer(&'s self, offset: u32, size: u32) -> Result<Self::SW, MemoryAccessError>;
 
-    fn sequential_reader(
-        &'s self,
-        offset: usize,
-        size: usize,
-    ) -> Result<Self::SR, MemoryAccessError>;
+    fn sequential_reader(&'s self, offset: u32, size: u32) -> Result<Self::SR, MemoryAccessError>;
 }
 
 pub trait Memory<View>

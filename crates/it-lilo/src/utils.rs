@@ -19,8 +19,8 @@ use crate::IType;
 use crate::IValue;
 
 /// Size of a value in a serialized view.
-pub fn ser_type_size(ty: &IType) -> usize {
-    const WASM_POINTER_SIZE: usize = 4;
+pub fn ser_type_size(ty: &IType) -> u32 {
+    const WASM_POINTER_SIZE: u32 = 4;
 
     match ty {
         IType::Boolean | IType::S8 | IType::U8 => 1,
@@ -46,7 +46,7 @@ pub fn ser_value_size(value: &IValue) -> u32 {
 }
 
 /// Returns the record size in bytes.
-pub fn record_size(record_type: &IRecordType) -> usize {
+pub fn record_size(record_type: &IRecordType) -> u32 {
     record_type
         .fields
         .iter()

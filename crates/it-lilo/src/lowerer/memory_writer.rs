@@ -31,9 +31,9 @@ impl<'i, A: Allocatable, MV: for<'a> SequentialMemoryView<'a>> MemoryWriter<'i, 
         Ok(writer)
     }
 
-    pub fn write_bytes(&self, bytes: &[u8]) -> LoResult<usize> {
+    pub fn write_bytes(&self, bytes: &[u8]) -> LoResult<u32> {
         let byte_type_tag = type_tag_form_itype(&crate::IType::U8);
-        let seq_writer = self.sequential_writer(bytes.len() as _, byte_type_tag)?;
+        let seq_writer = self.sequential_writer(bytes.len() as u32, byte_type_tag)?;
         seq_writer.write_bytes(bytes);
 
         Ok(seq_writer.start_offset())
@@ -45,7 +45,7 @@ impl<'i, A: Allocatable, MV: for<'a> SequentialMemoryView<'a>> MemoryWriter<'i, 
         type_tag: u32,
     ) -> LoResult<<MV as SequentialMemoryView<'_>>::SW> {
         let offset = self.heap_manager.allocate(size, type_tag)?;
-        let seq_writer = self.view.sequential_writer(offset, size as usize)?;
+        let seq_writer = self.view.sequential_writer(offset, size)?;
         Ok(seq_writer)
     }
 }
