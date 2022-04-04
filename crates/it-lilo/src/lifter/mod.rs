@@ -27,7 +27,7 @@ pub use memory_reader::MemoryReader;
 
 use super::traits::RecordResolvable;
 
-pub use it_memory_traits::SequentialMemoryView;
+pub use it_memory_traits::MemoryView;
 
 pub type LiResult<T> = std::result::Result<T, error::LiError>;
 
@@ -36,7 +36,7 @@ pub struct ILifter<'r, R: RecordResolvable, MV> {
     pub resolver: &'r R,
 }
 
-impl<'r, R: RecordResolvable, MV: for<'a> SequentialMemoryView<'a>> ILifter<'r, R, MV> {
+impl<'r, R: RecordResolvable, MV: MemoryView> ILifter<'r, R, MV> {
     pub fn new(view: MV, resolver: &'r R) -> Self {
         let reader = MemoryReader::new(view);
         Self { reader, resolver }

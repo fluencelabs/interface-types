@@ -21,9 +21,9 @@ use crate::traits::Allocatable;
 use crate::IValue;
 use crate::NEVec;
 
-use it_memory_traits::SequentialMemoryView;
+use it_memory_traits::MemoryView;
 
-pub fn record_lower_memory<A: Allocatable, MV: for<'a> SequentialMemoryView<'a>>(
+pub fn record_lower_memory<A: Allocatable<MV>, MV: MemoryView>(
     lowerer: &ILowerer<'_, A, MV>,
     values: NEVec<IValue>,
 ) -> LoResult<u32> {

@@ -16,15 +16,17 @@
 
 use super::LiResult;
 use crate::read_array_ty;
+use crate::read_ty;
 use crate::IValue;
+use std::cell::Cell;
 
-use it_memory_traits::{SequentialMemoryView, SequentialReader};
+use it_memory_traits::MemoryView;
 
 pub struct MemoryReader<MV> {
     pub(self) view: MV,
 }
 
-impl<MV: for<'a> SequentialMemoryView<'a>> MemoryReader<MV> {
+impl<MV: MemoryView> MemoryReader<MV> {
     pub fn new(view: MV) -> Self {
         Self { view }
     }
@@ -32,12 +34,9 @@ impl<MV: for<'a> SequentialMemoryView<'a>> MemoryReader<MV> {
     /// Returns reader that allows read sequentially. It's important that memory limit is checked
     /// only inside this function. All others functions of the returned reader don't have any
     /// checks assuming that reader is well-formed.
-    pub fn sequential_reader(
-        &self,
-        offset: u32,
-        size: u32,
-    ) -> LiResult<<MV as SequentialMemoryView<'_>>::SR> {
-        let seq_reader = self.view.sequential_reader(offset, size)?;
+    pub fn sequential_reader(&self, offset: u32, size: u32) -> LiResult<SequentialReader<'_, MV>> {
+        self.view.check_bounds(offset, size);
+        let seq_reader = SequentialReader::new(&self, offset);
         Ok(seq_reader)
     }
 
@@ -77,4 +76,32 @@ impl<MV: for<'a> SequentialMemoryView<'a>> MemoryReader<MV> {
     read_array_ty!(read_s64_array, i64, S64);
     read_array_ty!(read_i64_array, i64, I64);
     read_array_ty!(read_f64_array, f64, F64);
+}
+
+pub struct SequentialReader<'r, MV: MemoryView> {
+    reader: &'r MemoryReader<MV>,
+    offset: Cell<u32>,
+}
+
+impl<'r, MV: MemoryView> SequentialReader<'r, MV> {
+    fn new(reader: &'r MemoryReader<MV>, offset: u32) -> Self {
+        Self {
+            reader,
+            offset: Cell::new(offset),
+        }
+    }
+
+    pub fn read_bool(&self) -> bool {
+        self.read_u8() != 0
+    }
+    read_ty!(read_u8, u8, 1);
+    read_ty!(read_i8, i8, 1);
+    read_ty!(read_u16, u16, 2);
+    read_ty!(read_i16, i16, 2);
+    read_ty!(read_u32, u32, 4);
+    read_ty!(read_i32, i32, 4);
+    read_ty!(read_f32, f32, 4);
+    read_ty!(read_u64, u64, 8);
+    read_ty!(read_i64, i64, 8);
+    read_ty!(read_f64, f64, 8);
 }
