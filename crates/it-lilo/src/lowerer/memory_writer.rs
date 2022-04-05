@@ -19,6 +19,7 @@ use crate::traits::Allocatable;
 use crate::utils::type_tag_form_itype;
 
 use it_memory_traits::MemoryView;
+
 use std::cell::{Cell, RefCell};
 
 pub struct MemoryWriter<'i, R: Allocatable<MV>, MV: MemoryView> {
@@ -80,7 +81,6 @@ impl SequentialWriter {
         self.offset.set(offset + N as u32);
     }
 
-    // specialization of write_array for u8
     pub fn write_u8<MV: MemoryView, A: Allocatable<MV>>(
         &self,
         writer: &MemoryWriter<'_, A, MV>,
@@ -93,7 +93,6 @@ impl SequentialWriter {
         self.offset.set(offset + 1);
     }
 
-    // specialization of write_array for u32
     pub fn write_u32<MV: MemoryView, A: Allocatable<MV>>(
         &self,
         writer: &MemoryWriter<'_, A, MV>,
@@ -107,7 +106,6 @@ impl SequentialWriter {
         self.offset.set(offset + 4);
     }
 
-    #[allow(dead_code)]
     pub fn write_bytes<MV: MemoryView, A: Allocatable<MV>>(
         &self,
         writer: &MemoryWriter<'_, A, MV>,

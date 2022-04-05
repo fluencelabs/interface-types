@@ -27,10 +27,8 @@ pub trait MemoryReadable {
 }
 
 pub trait MemoryWritable {
-    // specialization of write_array for u8
     fn write_byte(&self, offset: u32, value: u8);
 
-    // specialization of write_array for u32
     fn write_bytes<const COUNT: usize>(&self, offset: u32, value: [u8; COUNT]);
 
     fn write_slice(&self, offset: u32, bytes: &[u8]);

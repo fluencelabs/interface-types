@@ -18,9 +18,10 @@ use super::LiResult;
 use crate::read_array_ty;
 use crate::read_ty;
 use crate::IValue;
-use std::cell::Cell;
 
 use it_memory_traits::MemoryView;
+
+use std::cell::Cell;
 
 pub struct MemoryReader<MV> {
     pub(self) view: MV,
@@ -35,7 +36,7 @@ impl<MV: MemoryView> MemoryReader<MV> {
     /// only inside this function. All others functions of the returned reader don't have any
     /// checks assuming that reader is well-formed.
     pub fn sequential_reader(&self, offset: u32, size: u32) -> LiResult<SequentialReader<'_, MV>> {
-        self.view.check_bounds(offset, size);
+        self.view.check_bounds(offset, size)?;
         let seq_reader = SequentialReader::new(&self, offset);
         Ok(seq_reader)
     }
@@ -94,6 +95,7 @@ impl<'r, MV: MemoryView> SequentialReader<'r, MV> {
     pub fn read_bool(&self) -> bool {
         self.read_u8() != 0
     }
+
     read_ty!(read_u8, u8, 1);
     read_ty!(read_i8, i8, 1);
     read_ty!(read_u16, u16, 2);

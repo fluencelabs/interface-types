@@ -3,7 +3,8 @@ use crate::interpreter::wasm::structures::FunctionIndex;
 use crate::IValue;
 
 use it_lilo::traits::AllocatableError;
-use it_lilo::traits::{Allocatable, DEFAULT_MEMORY_INDEX};
+use it_lilo::traits::Allocatable;
+use it_lilo::traits::DEFAULT_MEMORY_INDEX;
 
 use std::marker::PhantomData;
 

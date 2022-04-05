@@ -21,23 +21,23 @@ macro_rules! value_der {
     };
 
     ($self:expr, $offset:expr, 1) => {
-        crate::value_der!($self, $offset, @seq_start 0 @seq_end);
+        crate::value_der!($self, $offset, @seq_start 0 @seq_end)
     };
 
     ($self:expr, $offset:expr, 2) => {
-        crate::value_der!($self, $offset, @seq_start 0, 1 @seq_end);
+        crate::value_der!($self, $offset, @seq_start 0, 1 @seq_end)
     };
 
     ($self:expr, $offset:expr, 4) => {
-        crate::value_der!($self, $offset, @seq_start 0, 1, 2, 3 @seq_end);
+        crate::value_der!($self, $offset, @seq_start 0, 1, 2, 3 @seq_end)
     };
 
     ($self:expr, $offset:expr, 8) => {
-        crate::value_der!($self, $offset, @seq_start 0, 1, 2, 3, 4, 5, 6, 7 @seq_end);
+        crate::value_der!($self, $offset, @seq_start 0, 1, 2, 3, 4, 5, 6, 7 @seq_end)
     };
 
     ($self:expr, $offset:expr, 16) => {
-        crate::value_der!($self, $offset, @seq_start 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 @seq_end);
+        crate::value_der!($self, $offset, @seq_start 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 @seq_end)
     };
 }
 
