@@ -232,7 +232,7 @@ pub(crate) fn check_function_signature<
     Export,
     LocalImport,
     Memory,
-    SequentialMemoryView,
+    MemoryView,
 >(
     instance: &'instance Instance,
     local_import: &LocalImport,
@@ -241,9 +241,9 @@ pub(crate) fn check_function_signature<
 where
     Export: wasm::structures::Export + 'instance,
     LocalImport: wasm::structures::LocalImport + 'instance,
-    Memory: wasm::structures::Memory<SequentialMemoryView> + 'instance,
-    SequentialMemoryView: (for<'a> wasm::structures::SequentialMemoryView<'a>),
-    Instance: wasm::structures::Instance<Export, LocalImport, Memory, SequentialMemoryView>,
+    Memory: wasm::structures::Memory<MemoryView> + 'instance,
+    MemoryView: wasm::structures::MemoryView,
+    Instance: wasm::structures::Instance<Export, LocalImport, Memory, MemoryView>,
 {
     let func_inputs = local_import.arguments();
 
@@ -261,7 +261,7 @@ pub(crate) fn is_value_compatible_to_type<
     Export,
     LocalImport,
     Memory,
-    SequentialMemoryView,
+    MemoryView,
 >(
     instance: &'instance Instance,
     interface_type: &IType,
@@ -270,9 +270,9 @@ pub(crate) fn is_value_compatible_to_type<
 where
     Export: wasm::structures::Export + 'instance,
     LocalImport: wasm::structures::LocalImport + 'instance,
-    Memory: wasm::structures::Memory<SequentialMemoryView> + 'instance,
-    SequentialMemoryView: (for<'a> wasm::structures::SequentialMemoryView<'a>),
-    Instance: wasm::structures::Instance<Export, LocalImport, Memory, SequentialMemoryView>,
+    Memory: wasm::structures::Memory<MemoryView> + 'instance,
+    MemoryView: wasm::structures::MemoryView,
+    Instance: wasm::structures::Instance<Export, LocalImport, Memory, MemoryView>,
 {
     match (&interface_type, interface_value) {
         (IType::Boolean, IValue::Boolean(_)) => Ok(()),
@@ -332,7 +332,7 @@ pub(crate) fn is_record_fields_compatible_to_type<
     Export,
     LocalImport,
     Memory,
-    SequentialMemoryView,
+    MemoryView,
 >(
     instance: &'instance Instance,
     record_type_id: u64,
@@ -341,9 +341,9 @@ pub(crate) fn is_record_fields_compatible_to_type<
 where
     Export: wasm::structures::Export + 'instance,
     LocalImport: wasm::structures::LocalImport + 'instance,
-    Memory: wasm::structures::Memory<SequentialMemoryView> + 'instance,
-    SequentialMemoryView: (for<'a> wasm::structures::SequentialMemoryView<'a>),
-    Instance: wasm::structures::Instance<Export, LocalImport, Memory, SequentialMemoryView>,
+    Memory: wasm::structures::Memory<MemoryView> + 'instance,
+    MemoryView: wasm::structures::MemoryView,
+    Instance: wasm::structures::Instance<Export, LocalImport, Memory, MemoryView>,
 {
     let record_type = instance
         .wit_record_by_id(record_type_id)
@@ -428,11 +428,11 @@ pub(crate) mod tests {
     }
 
     #[derive(Default, Clone)]
-    pub(crate) struct SequentialMemoryView(Rc<Vec<Cell<u8>>>);
+    pub(crate) struct MemoryView(Rc<Vec<Cell<u8>>>);
 
-    impl wasm::structures::SequentialMemoryView for SequentialMemoryView {}
+    impl wasm::structures::MemoryView for MemoryView {}
 
-    impl Deref for SequentialMemoryView {
+    impl Deref for MemoryView {
         type Target = [Cell<u8>];
 
         fn deref(&self) -> &Self::Target {
@@ -442,19 +442,19 @@ pub(crate) mod tests {
 
     #[derive(Default)]
     pub(crate) struct Memory {
-        pub(crate) view: SequentialMemoryView,
+        pub(crate) view: MemoryView,
     }
 
     impl Memory {
         pub(crate) fn new(data: Vec<Cell<u8>>) -> Self {
             Self {
-                view: SequentialMemoryView(Rc::new(data)),
+                view: MemoryView(Rc::new(data)),
             }
         }
     }
 
-    impl wasm::structures::Memory<SequentialMemoryView> for Memory {
-        fn view(&self) -> SequentialMemoryView {
+    impl wasm::structures::Memory<MemoryView> for Memory {
+        fn view(&self) -> MemoryView {
             self.view.clone()
         }
     }
@@ -554,7 +554,7 @@ pub(crate) mod tests {
         }
     }
 
-    impl wasm::structures::Instance<Export, LocalImport, Memory, SequentialMemoryView> for Instance {
+    impl wasm::structures::Instance<Export, LocalImport, Memory, MemoryView> for Instance {
         fn export(&self, export_name: &str) -> Option<&Export> {
             self.exports.get(export_name)
         }

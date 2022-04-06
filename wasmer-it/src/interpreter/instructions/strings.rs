@@ -8,7 +8,6 @@ use crate::{
 };
 
 use it_lilo::traits::DEFAULT_MEMORY_INDEX;
-use it_memory_traits::{SequentialReader, SequentialWriter};
 
 use std::convert::TryInto;
 
@@ -49,11 +48,11 @@ executable_instruction!(
                 return Ok(())
             }
 
-            let reader = memory_view
-                .sequential_reader(pointer, length)
+            memory_view
+                .check_bounds(pointer, length)
                 .map_err(|e| InstructionError::from_memory_access(instruction.clone(), e))?;
 
-            let data = (0..length).map(|_| reader.read_u8()).collect::<Vec<_>>();
+            let data = memory_view.read_vec(pointer, length);
             let string = String::from_utf8(data)
                 .map_err(|error| InstructionError::from_error_kind(instruction.clone(), InstructionErrorKind::String(error)))?;
 
@@ -91,20 +90,19 @@ executable_instruction!(
             let instance = &mut runtime.wasm_instance;
             let memory_index = DEFAULT_MEMORY_INDEX;
             let memory_view = instance
-                .memory(memory_index)
+                .memory_view(memory_index)
                 .ok_or_else(|| {
                     InstructionError::from_error_kind(
                         instruction.clone(),
                         InstructionErrorKind::MemoryIsMissing { memory_index },
                     )
-                })?
-                .view();
+                })?;
 
-            let seq_writer = memory_view
-                .sequential_writer(string_pointer, string_length)
+            memory_view
+                .check_bounds(string_pointer, string_length)
                 .map_err(|e| InstructionError::from_memory_access(instruction.clone(), e))?;
 
-            seq_writer.write_bytes(&string_bytes);
+            memory_view.write_bytes(string_pointer, string_bytes);
 
             log::debug!("string.lower_memory: pushing {}, {} on the stack", string_pointer, string_length);
             runtime.stack.push(IValue::I32(string_pointer as i32));

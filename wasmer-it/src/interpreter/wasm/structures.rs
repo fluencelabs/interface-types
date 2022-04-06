@@ -6,9 +6,8 @@ use crate::IType;
 use crate::IValue;
 use std::rc::Rc;
 
-pub use it_memory_traits::{
-    Memory, MemoryAccessError, SequentialMemoryView, SequentialReader, SequentialWriter,
-};
+pub use it_memory_traits::{Memory, MemoryAccessError, MemoryView};
+use it_memory_traits::{MemoryReadable, MemoryWritable};
 
 pub trait TypedIndex: Copy + Clone {
     fn new(index: usize) -> Self;
@@ -69,7 +68,7 @@ where
     E: Export,
     LI: LocalImport,
     M: Memory<MV>,
-    MV: for<'a> SequentialMemoryView<'a>,
+    MV: MemoryView,
 {
     fn export(&self, export_name: &str) -> Option<&E>;
     fn local_or_import<I: TypedIndex + LocalImportIndex>(&self, index: I) -> Option<&LI>;
@@ -132,47 +131,31 @@ impl LocalImport for () {
 
 pub(crate) struct EmptyMemoryView;
 
-pub(crate) struct EmptySequentialReader;
-pub(crate) struct EmptySequentialWriter;
+impl MemoryWritable for EmptyMemoryView {
+    fn write_byte(&self, _offset: u32, _value: u8) {}
 
-impl SequentialReader for EmptySequentialReader {
-    fn read_byte(&self) -> u8 {
-        0u8
-    }
-
-    fn read_bytes<const COUNT: usize>(&self) -> [u8; COUNT] {
-        [0u8; COUNT]
-    }
+    fn write_bytes(&self, _offset: u32, _bytes: &[u8]) {}
 }
 
-impl SequentialWriter for EmptySequentialWriter {
-    fn start_offset(&self) -> u32 {
+impl MemoryReadable for EmptyMemoryView {
+    fn read_byte(&self, _offset: u32) -> u8 {
         0
     }
 
-    fn write_u8(&self, _value: u8) {}
-
-    fn write_u32(&self, _value: u32) {}
-
-    fn write_bytes(&self, _bytes: &[u8]) {}
-}
-
-impl<'a> SequentialMemoryView<'a> for EmptyMemoryView {
-    type SR = EmptySequentialReader;
-    type SW = EmptySequentialWriter;
-
-    fn sequential_writer(&self, offset: u32, size: u32) -> Result<Self::SW, MemoryAccessError> {
-        Err(MemoryAccessError::OutOfBounds {
-            offset,
-            size,
-            memory_size: 0,
-        })
+    fn read_array<const COUNT: usize>(&self, _offset: u32) -> [u8; COUNT] {
+        [0; COUNT]
     }
 
-    fn sequential_reader(&self, offset: u32, size: u32) -> Result<Self::SR, MemoryAccessError> {
+    fn read_vec(&self, _offset: u32, _size: u32) -> Vec<u8> {
+        Vec::default()
+    }
+}
+
+impl MemoryView for EmptyMemoryView {
+    fn check_bounds(&self, offset: u32, size: u32) -> Result<(), MemoryAccessError> {
         Err(MemoryAccessError::OutOfBounds {
-            offset,
             size,
+            offset,
             memory_size: 0,
         })
     }
@@ -189,7 +172,7 @@ where
     E: Export,
     LI: LocalImport,
     M: Memory<MV>,
-    MV: for<'a> SequentialMemoryView<'a>,
+    MV: MemoryView,
 {
     fn export(&self, _export_name: &str) -> Option<&E> {
         None

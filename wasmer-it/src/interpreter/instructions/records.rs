@@ -11,27 +11,17 @@ use it_lilo::traits::DEFAULT_MEMORY_INDEX;
 
 use std::convert::TryInto;
 
-pub(crate) fn record_lift_memory<Instance, Export, LocalImport, Memory, SequentialMemoryView>(
+pub(crate) fn record_lift_memory<Instance, Export, LocalImport, Memory, MemoryView>(
     record_type_id: u64,
     instruction: Instruction,
-) -> crate::interpreter::ExecutableInstruction<
-    Instance,
-    Export,
-    LocalImport,
-    Memory,
-    SequentialMemoryView,
->
+) -> crate::interpreter::ExecutableInstruction<Instance, Export, LocalImport, Memory, MemoryView>
 where
     Export: crate::interpreter::wasm::structures::Export,
     LocalImport: crate::interpreter::wasm::structures::LocalImport,
-    Memory: crate::interpreter::wasm::structures::Memory<SequentialMemoryView>,
-    SequentialMemoryView: for<'a> crate::interpreter::wasm::structures::SequentialMemoryView<'a>,
-    Instance: crate::interpreter::wasm::structures::Instance<
-        Export,
-        LocalImport,
-        Memory,
-        SequentialMemoryView,
-    >,
+    Memory: crate::interpreter::wasm::structures::Memory<MemoryView>,
+    MemoryView: crate::interpreter::wasm::structures::MemoryView,
+    Instance:
+        crate::interpreter::wasm::structures::Instance<Export, LocalImport, Memory, MemoryView>,
 {
     #[allow(unused_imports)]
     use crate::interpreter::stack::Stackable;
@@ -88,27 +78,17 @@ where
     })
 }
 
-pub(crate) fn record_lower_memory<Instance, Export, LocalImport, Memory, SequentialMemoryView>(
+pub(crate) fn record_lower_memory<Instance, Export, LocalImport, Memory, MemoryView>(
     record_type_id: u64,
     instruction: Instruction,
-) -> crate::interpreter::ExecutableInstruction<
-    Instance,
-    Export,
-    LocalImport,
-    Memory,
-    SequentialMemoryView,
->
+) -> crate::interpreter::ExecutableInstruction<Instance, Export, LocalImport, Memory, MemoryView>
 where
     Export: crate::interpreter::wasm::structures::Export,
     LocalImport: crate::interpreter::wasm::structures::LocalImport,
-    Memory: crate::interpreter::wasm::structures::Memory<SequentialMemoryView>,
-    SequentialMemoryView: for<'a> crate::interpreter::wasm::structures::SequentialMemoryView<'a>,
-    Instance: crate::interpreter::wasm::structures::Instance<
-        Export,
-        LocalImport,
-        Memory,
-        SequentialMemoryView,
-    >,
+    Memory: crate::interpreter::wasm::structures::Memory<MemoryView>,
+    MemoryView: crate::interpreter::wasm::structures::MemoryView,
+    Instance:
+        crate::interpreter::wasm::structures::Instance<Export, LocalImport, Memory, MemoryView>,
 {
     #[allow(unused_imports)]
     use crate::interpreter::stack::Stackable;

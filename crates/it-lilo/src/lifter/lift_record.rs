@@ -18,6 +18,7 @@ use super::ILifter;
 use super::LiError;
 use super::LiResult;
 use super::MemoryReader;
+use crate::lifter::memory_reader::SequentialReader;
 use crate::traits::RecordResolvable;
 use crate::utils::record_size;
 use crate::IRecordType;
@@ -25,9 +26,9 @@ use crate::IType;
 use crate::IValue;
 use crate::NEVec;
 
-use it_memory_traits::{SequentialMemoryView, SequentialReader};
+use it_memory_traits::MemoryView;
 
-pub fn record_lift_memory<R: RecordResolvable, MV: for<'a> SequentialMemoryView<'a>>(
+pub fn record_lift_memory<R: RecordResolvable, MV: MemoryView>(
     lifter: &ILifter<'_, R, MV>,
     record_type: &IRecordType,
     offset: u32,
@@ -68,9 +69,9 @@ pub fn record_lift_memory<R: RecordResolvable, MV: for<'a> SequentialMemoryView<
     Ok(IValue::Record(record))
 }
 
-fn read_string<MV: for<'a> SequentialMemoryView<'a>>(
+fn read_string<MV: MemoryView>(
     reader: &MemoryReader<MV>,
-    seq_reader: &<MV as SequentialMemoryView<'_>>::SR,
+    seq_reader: &SequentialReader<'_, MV>,
 ) -> LiResult<String> {
     let offset = seq_reader.read_u32();
     let size = seq_reader.read_u32();
@@ -81,9 +82,9 @@ fn read_string<MV: for<'a> SequentialMemoryView<'a>>(
     Ok(string)
 }
 
-fn read_byte_array<MV: for<'a> SequentialMemoryView<'a>>(
+fn read_byte_array<MV: MemoryView>(
     reader: &MemoryReader<MV>,
-    seq_reader: &<MV as SequentialMemoryView<'_>>::SR,
+    seq_reader: &SequentialReader<'_, MV>,
 ) -> LiResult<IValue> {
     let offset = seq_reader.read_u32();
     let size = seq_reader.read_u32();
@@ -93,9 +94,9 @@ fn read_byte_array<MV: for<'a> SequentialMemoryView<'a>>(
     Ok(IValue::ByteArray(array))
 }
 
-fn read_array<R: RecordResolvable, MV: for<'a> SequentialMemoryView<'a>>(
+fn read_array<R: RecordResolvable, MV: MemoryView>(
     lifter: &ILifter<'_, R, MV>,
-    seq_reader: &<MV as SequentialMemoryView<'_>>::SR,
+    seq_reader: &SequentialReader<'_, MV>,
     value_type: &IType,
 ) -> LiResult<IValue> {
     let offset = seq_reader.read_u32();
@@ -104,9 +105,9 @@ fn read_array<R: RecordResolvable, MV: for<'a> SequentialMemoryView<'a>>(
     super::array_lift_memory(lifter, value_type, offset, size)
 }
 
-fn read_record<R: RecordResolvable, MV: for<'a> SequentialMemoryView<'a>>(
+fn read_record<R: RecordResolvable, MV: MemoryView>(
     lifter: &ILifter<'_, R, MV>,
-    seq_reader: &<MV as SequentialMemoryView<'_>>::SR,
+    seq_reader: &SequentialReader<'_, MV>,
     record_type_id: u64,
 ) -> LiResult<IValue> {
     let offset = seq_reader.read_u32();

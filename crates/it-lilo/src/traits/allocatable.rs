@@ -14,12 +14,13 @@
  * limitations under the License.
  */
 
+use it_memory_traits::MemoryView;
 use thiserror::Error as ThisError;
 
 pub const DEFAULT_MEMORY_INDEX: usize = 0;
 
-pub trait Allocatable {
-    fn allocate(&self, size: u32, type_tag: u32) -> Result<u32, AllocatableError>;
+pub trait Allocatable<MV: MemoryView> {
+    fn allocate(&self, size: u32, type_tag: u32) -> Result<(u32, MV), AllocatableError>;
 }
 
 #[derive(Debug, ThisError)]

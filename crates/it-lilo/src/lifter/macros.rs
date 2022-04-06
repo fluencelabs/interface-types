@@ -17,34 +17,34 @@
 #[macro_export]
 macro_rules! value_der {
     ($self:expr, $offset:expr, @seq_start $($ids:tt),* @seq_end) => {
-        [$($self.memory.get($offset + $ids)),+]
+        [$($self.reader.view.read_byte($offset + $ids)),+]
     };
 
     ($self:expr, $offset:expr, 1) => {
-        crate::value_der!($self, $offset, @seq_start 0 @seq_end);
+        crate::value_der!($self, $offset, @seq_start 0 @seq_end)
     };
 
     ($self:expr, $offset:expr, 2) => {
-        crate::value_der!($self, $offset, @seq_start 0, 1 @seq_end);
+        crate::value_der!($self, $offset, @seq_start 0, 1 @seq_end)
     };
 
     ($self:expr, $offset:expr, 4) => {
-        crate::value_der!($self, $offset, @seq_start 0, 1, 2, 3 @seq_end);
+        crate::value_der!($self, $offset, @seq_start 0, 1, 2, 3 @seq_end)
     };
 
     ($self:expr, $offset:expr, 8) => {
-        crate::value_der!($self, $offset, @seq_start 0, 1, 2, 3, 4, 5, 6, 7 @seq_end);
+        crate::value_der!($self, $offset, @seq_start 0, 1, 2, 3, 4, 5, 6, 7 @seq_end)
     };
 
     ($self:expr, $offset:expr, 16) => {
-        crate::value_der!($self, $offset, @seq_start 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 @seq_end);
+        crate::value_der!($self, $offset, @seq_start 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 @seq_end)
     };
 }
 
 #[macro_export]
 macro_rules! read_ty {
     ($func_name:ident, $ty:ty, 1) => {
-        fn $func_name(&self) -> $ty {
+        pub fn $func_name(&self) -> $ty {
             let offset = self.offset.get();
             let result = <$ty>::from_le_bytes(crate::value_der!(self, offset, 1));
 
@@ -54,7 +54,7 @@ macro_rules! read_ty {
     };
 
     ($func_name:ident, $ty:ty, 2) => {
-        fn $func_name(&self) -> $ty {
+        pub fn $func_name(&self) -> $ty {
             let offset = self.offset.get();
             let result = <$ty>::from_le_bytes(crate::value_der!(self, offset, 2));
 
@@ -64,7 +64,7 @@ macro_rules! read_ty {
     };
 
     ($func_name:ident, $ty:ty, 4) => {
-        fn $func_name(&self) -> $ty {
+        pub fn $func_name(&self) -> $ty {
             let offset = self.offset.get();
             let result = <$ty>::from_le_bytes(crate::value_der!(self, offset, 4));
 
@@ -74,7 +74,7 @@ macro_rules! read_ty {
     };
 
     ($func_name:ident, $ty:ty, 8) => {
-        fn $func_name(&self) -> $ty {
+        pub fn $func_name(&self) -> $ty {
             let offset = self.offset.get();
             let result = <$ty>::from_le_bytes(crate::value_der!(self, offset, 8));
 
@@ -84,7 +84,7 @@ macro_rules! read_ty {
     };
 
     ($func_name:ident, $ty:ty, 16) => {
-        fn $func_name(&self) -> $ty {
+        pub fn $func_name(&self) -> $ty {
             let offset = self.offset.get();
             let result = <$ty>::from_le_bytes(crate::value_der!(self, offset, 16));
 

@@ -8,7 +8,6 @@ use crate::{
 };
 
 use it_lilo::traits::DEFAULT_MEMORY_INDEX;
-use it_memory_traits::{SequentialReader, SequentialWriter};
 
 use std::convert::TryInto;
 
@@ -50,11 +49,11 @@ executable_instruction!(
                 return Ok(())
             }
 
-            let reader = memory_view
-                .sequential_reader(pointer, length)
+            memory_view
+                .check_bounds(pointer, length)
                 .map_err(|e| InstructionError::from_memory_access(instruction.clone(), e))?;
 
-            let data = (0..length).map(|_| reader.read_u8()).collect::<Vec<_>>();
+            let data = memory_view.read_vec(pointer, length);
 
             log::debug!("byte_array.lift_memory: pushing {:?} on the stack", data);
             runtime.stack.push(IValue::ByteArray(data));
@@ -98,11 +97,11 @@ executable_instruction!(
                 })?
                 .view();
 
-            let writer = memory_view
-                .sequential_writer(array_pointer, array.len() as u32)
+            memory_view
+                .check_bounds(array_pointer, array.len() as u32)
                 .map_err(|e| InstructionError::from_memory_access(instruction.clone(), e))?;
 
-            writer.write_bytes(&array);
+            memory_view.write_bytes(array_pointer, &array);
 
             log::debug!("string.lower_memory: pushing {}, {} on the stack", array_pointer, length);
             runtime.stack.push(IValue::I32(array_pointer as i32));

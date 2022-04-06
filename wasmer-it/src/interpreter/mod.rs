@@ -13,21 +13,13 @@ use std::{convert::TryFrom, marker::PhantomData};
 
 /// Represents the `Runtime`, which is used by an adapter to execute
 /// its instructions.
-pub(crate) struct Runtime<
-    'invocation,
-    'instance,
-    Instance,
-    Export,
-    LocalImport,
-    Memory,
-    SequentialMemoryView,
-> where
+pub(crate) struct Runtime<'invocation, 'instance, Instance, Export, LocalImport, Memory, MemoryView>
+where
     Export: wasm::structures::Export + 'instance,
     LocalImport: wasm::structures::LocalImport + 'instance,
-    Memory: wasm::structures::Memory<SequentialMemoryView> + 'instance,
-    SequentialMemoryView: (for<'a> wasm::structures::SequentialMemoryView<'a>),
-    Instance:
-        wasm::structures::Instance<Export, LocalImport, Memory, SequentialMemoryView> + 'instance,
+    Memory: wasm::structures::Memory<MemoryView> + 'instance,
+    MemoryView: wasm::structures::MemoryView,
+    Instance: wasm::structures::Instance<Export, LocalImport, Memory, MemoryView> + 'instance,
 {
     /// The invocation inputs are all the arguments received by an
     /// adapter.
@@ -41,18 +33,15 @@ pub(crate) struct Runtime<
     wasm_instance: &'instance mut Instance,
 
     /// Phantom data.
-    _phantom: PhantomData<(Export, LocalImport, Memory, SequentialMemoryView)>,
+    _phantom: PhantomData<(Export, LocalImport, Memory, MemoryView)>,
 }
 
 /// Type alias for an executable instruction. It's an implementation
 /// details, but an instruction is a boxed closure instance.
-pub(crate) type ExecutableInstruction<Instance, Export, LocalImport, Memory, SequentialMemoryView> =
-    Box<
-        dyn Fn(
-                &mut Runtime<Instance, Export, LocalImport, Memory, SequentialMemoryView>,
-            ) -> InstructionResult<()>
-            + Send,
-    >;
+pub(crate) type ExecutableInstruction<Instance, Export, LocalImport, Memory, MemoryView> = Box<
+    dyn Fn(&mut Runtime<Instance, Export, LocalImport, Memory, MemoryView>) -> InstructionResult<()>
+        + Send,
+>;
 
 /// An interpreter is the central piece of this crate. It is a set of
 /// executable instructions. Each instruction takes the runtime as
@@ -72,7 +61,7 @@ pub(crate) type ExecutableInstruction<Instance, Export, LocalImport, Memory, Seq
 /// use std::{cell::Cell, collections::HashMap, convert::TryInto};
 /// use wasmer_interface_types::{
 ///     interpreter::{
-///         instructions::tests::{Export, Instance, LocalImport, Memory, SequentialMemoryView},
+///         instructions::tests::{Export, Instance, LocalImport, Memory, MemoryView},
 /// //      ^^^^^^^^^^^^ This is private and for testing purposes only.
 /// //                   It is basically a fake WebAssembly runtime.
 ///         stack::Stackable,
@@ -84,7 +73,7 @@ pub(crate) type ExecutableInstruction<Instance, Export, LocalImport, Memory, Seq
 ///
 /// // 1. Creates an interpreter from a set of instructions. They will
 /// //    be transformed into executable instructions.
-/// let interpreter: Interpreter<Instance, Export, LocalImport, Memory, SequentialMemoryView> = (&vec![
+/// let interpreter: Interpreter<Instance, Export, LocalImport, Memory, MemoryView> = (&vec![
 ///     Instruction::ArgumentGet { index: 1 },
 ///     Instruction::ArgumentGet { index: 0 },
 ///     Instruction::CallCore { function_index: 42 },
@@ -132,31 +121,31 @@ pub(crate) type ExecutableInstruction<Instance, Export, LocalImport, Memory, Seq
 /// // 5. Read the stack to get the result.
 /// assert_eq!(stack.as_slice(), &[IValue::I32(7)]);
 /// ```
-pub struct Interpreter<Instance, Export, LocalImport, Memory, SequentialMemoryView>
+pub struct Interpreter<Instance, Export, LocalImport, Memory, MemoryView>
 where
     Export: wasm::structures::Export,
     LocalImport: wasm::structures::LocalImport,
-    Memory: wasm::structures::Memory<SequentialMemoryView>,
-    SequentialMemoryView: (for<'a> wasm::structures::SequentialMemoryView<'a>),
-    Instance: wasm::structures::Instance<Export, LocalImport, Memory, SequentialMemoryView>,
+    Memory: wasm::structures::Memory<MemoryView>,
+    MemoryView: wasm::structures::MemoryView,
+    Instance: wasm::structures::Instance<Export, LocalImport, Memory, MemoryView>,
 {
     executable_instructions:
-        Vec<ExecutableInstruction<Instance, Export, LocalImport, Memory, SequentialMemoryView>>,
+        Vec<ExecutableInstruction<Instance, Export, LocalImport, Memory, MemoryView>>,
 }
 
-impl<Instance, Export, LocalImport, Memory, SequentialMemoryView>
-    Interpreter<Instance, Export, LocalImport, Memory, SequentialMemoryView>
+impl<Instance, Export, LocalImport, Memory, MemoryView>
+    Interpreter<Instance, Export, LocalImport, Memory, MemoryView>
 where
     Export: wasm::structures::Export,
     LocalImport: wasm::structures::LocalImport,
-    Memory: wasm::structures::Memory<SequentialMemoryView>,
-    SequentialMemoryView: (for<'a> wasm::structures::SequentialMemoryView<'a>),
-    Instance: wasm::structures::Instance<Export, LocalImport, Memory, SequentialMemoryView>,
+    Memory: wasm::structures::Memory<MemoryView>,
+    MemoryView: wasm::structures::MemoryView,
+    Instance: wasm::structures::Instance<Export, LocalImport, Memory, MemoryView>,
 {
     fn iter(
         &self,
     ) -> impl Iterator<
-        Item = &ExecutableInstruction<Instance, Export, LocalImport, Memory, SequentialMemoryView>,
+        Item = &ExecutableInstruction<Instance, Export, LocalImport, Memory, MemoryView>,
     > + '_ {
         self.executable_instructions.iter()
     }
@@ -187,14 +176,14 @@ where
 }
 
 /// Transforms a `Vec<Instruction>` into an `Interpreter`.
-impl<Instance, Export, LocalImport, Memory, SequentialMemoryView> TryFrom<Vec<Instruction>>
-    for Interpreter<Instance, Export, LocalImport, Memory, SequentialMemoryView>
+impl<Instance, Export, LocalImport, Memory, MemoryView> TryFrom<Vec<Instruction>>
+    for Interpreter<Instance, Export, LocalImport, Memory, MemoryView>
 where
     Export: wasm::structures::Export,
     LocalImport: wasm::structures::LocalImport,
-    Memory: wasm::structures::Memory<SequentialMemoryView>,
-    SequentialMemoryView: (for<'a> wasm::structures::SequentialMemoryView<'a>),
-    Instance: wasm::structures::Instance<Export, LocalImport, Memory, SequentialMemoryView>,
+    Memory: wasm::structures::Memory<MemoryView>,
+    MemoryView: wasm::structures::MemoryView,
+    Instance: wasm::structures::Instance<Export, LocalImport, Memory, MemoryView>,
 {
     type Error = ();
 
