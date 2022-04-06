@@ -102,7 +102,7 @@ executable_instruction!(
                 .check_bounds(string_pointer, string_length)
                 .map_err(|e| InstructionError::from_memory_access(instruction.clone(), e))?;
 
-            memory_view.write_slice(string_pointer, string_bytes);
+            memory_view.write_bytes(string_pointer, string_bytes);
 
             log::debug!("string.lower_memory: pushing {}, {} on the stack", string_pointer, string_length);
             runtime.stack.push(IValue::I32(string_pointer as i32));

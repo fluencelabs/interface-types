@@ -134,9 +134,7 @@ pub(crate) struct EmptyMemoryView;
 impl MemoryWritable for EmptyMemoryView {
     fn write_byte(&self, _offset: u32, _value: u8) {}
 
-    fn write_bytes<const COUNT: usize>(&self, _offset: u32, _value: [u8; COUNT]) {}
-
-    fn write_slice(&self, _offset: u32, _bytes: &[u8]) {}
+    fn write_bytes(&self, _offset: u32, _bytes: &[u8]) {}
 }
 
 impl MemoryReadable for EmptyMemoryView {
@@ -144,7 +142,7 @@ impl MemoryReadable for EmptyMemoryView {
         0
     }
 
-    fn read_bytes<const COUNT: usize>(&self, _offset: u32) -> [u8; COUNT] {
+    fn read_array<const COUNT: usize>(&self, _offset: u32) -> [u8; COUNT] {
         [0; COUNT]
     }
 

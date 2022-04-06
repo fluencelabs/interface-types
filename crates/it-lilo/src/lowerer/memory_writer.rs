@@ -76,7 +76,7 @@ impl SequentialWriter {
     ) {
         let offset = self.offset.get();
 
-        writer.view.borrow().write_bytes(offset, values);
+        writer.view.borrow().write_bytes(offset, &values);
 
         self.offset.set(offset + N as u32);
     }
@@ -101,7 +101,7 @@ impl SequentialWriter {
         let offset = self.offset.get();
 
         let value = value.to_le_bytes();
-        writer.view.borrow().write_bytes(offset, value);
+        writer.view.borrow().write_bytes(offset, &value);
 
         self.offset.set(offset + 4);
     }
@@ -113,7 +113,7 @@ impl SequentialWriter {
     ) {
         let offset = self.offset.get();
 
-        writer.view.borrow().write_slice(offset, bytes);
+        writer.view.borrow().write_bytes(offset, bytes);
 
         self.offset.set(offset + bytes.len() as u32);
     }

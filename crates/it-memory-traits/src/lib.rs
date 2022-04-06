@@ -19,24 +19,37 @@ mod errors;
 pub use errors::MemoryAccessError;
 
 pub trait MemoryReadable {
+    /// This function will panic if the `offset` is out of bounds.
+    /// It is caller's responsibility to check if the offset is in bounds
+    /// using `MemoryView::check_bounds` function
     fn read_byte(&self, offset: u32) -> u8;
 
-    fn read_bytes<const COUNT: usize>(&self, offset: u32) -> [u8; COUNT];
+    /// This function will panic if `[offset..offset + COUNT]` is out of bounds.
+    /// It is caller's responsibility to check if the offset is in bounds
+    /// using `MemoryView::check_bounds` function.
+    fn read_array<const COUNT: usize>(&self, offset: u32) -> [u8; COUNT];
 
+    /// This function will panic if `[offset..offset + size]` is out of bounds.
+    /// It is caller's responsibility to check if the offset is in bounds
+    /// using `MemoryView::check_bounds` function.
     fn read_vec(&self, offset: u32, size: u32) -> Vec<u8>;
 }
 
 pub trait MemoryWritable {
+    /// This function will panic if `offset` is out of bounds.
+    /// It is caller's responsibility to check if the offset is in bounds
+    /// using `MemoryView::check_bounds` function.
     fn write_byte(&self, offset: u32, value: u8);
 
-    fn write_bytes<const COUNT: usize>(&self, offset: u32, value: [u8; COUNT]);
-
-    fn write_slice(&self, offset: u32, bytes: &[u8]);
+    /// This function will panic if `[offset..offset + bytes.len()]`.is out of bounds.
+    /// It is caller's responsibility to check if the offset is in bounds
+    /// using `MemoryView::check_bounds` function.
+    fn write_bytes(&self, offset: u32, bytes: &[u8]);
 }
 
 pub trait MemoryView: MemoryWritable + MemoryReadable {
-    // For optimization purposes, user must check bounds first, then try read-write to memory
-    // MemoryWritable and MemoryReadable will panic in case of out of bounds access
+    /// For optimization purposes, user must check bounds first, then try read-write to memory
+    /// `MemoryWritable` and `MemoryReadable` functions will panic in case of out of bounds access`
     fn check_bounds(&self, offset: u32, size: u32) -> Result<(), MemoryAccessError>;
 }
 
