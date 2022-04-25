@@ -9,8 +9,6 @@ use crate::{
 
 use it_lilo::traits::DEFAULT_MEMORY_INDEX;
 
-use std::convert::TryInto;
-
 executable_instruction!(
     string_lift_memory(instruction: Instruction) -> _ {
         move |runtime| -> _ {
@@ -32,14 +30,8 @@ executable_instruction!(
                     )
                 })?;
 
-            let pointer: u32 = to_native::<i32>(inputs.remove(0), instruction.clone())?
-                .try_into()
-                .map_err(|e| (e, "pointer").into())
-                .map_err(|k| InstructionError::from_error_kind(instruction.clone(), k))?;
-            let length: u32 = to_native::<i32>(inputs.remove(0), instruction.clone())?
-                .try_into()
-                .map_err(|e| (e, "length").into())
-                .map_err(|k| InstructionError::from_error_kind(instruction.clone(), k))?;
+            let pointer = to_native::<i32>(inputs.remove(0), instruction.clone())? as u32;
+            let length = to_native::<i32>(inputs.remove(0), instruction.clone())? as u32;
             let memory_view = memory.view();
 
             if length == 0 {
@@ -74,18 +66,10 @@ executable_instruction!(
                 )
             })?;
 
-            let string_pointer: u32 = to_native::<i32>(inputs.remove(0), instruction.clone())?
-                .try_into()
-                .map_err(|e| (e, "pointer").into())
-                .map_err(|k| InstructionError::from_error_kind(instruction.clone(), k))?;
+            let string_pointer = to_native::<i32>(inputs.remove(0), instruction.clone())? as u32;
             let string: String = to_native(inputs.remove(0), instruction.clone())?;
             let string_bytes = string.as_bytes();
-            let string_length: u32 = string_bytes.len().try_into().map_err(|_| {
-                InstructionError::from_error_kind(
-                    instruction.clone(),
-                    InstructionErrorKind::NegativeValue { subject: "string_length" },
-                )
-            })?;
+            let string_length: u32 = string_bytes.len() as u32;
 
             let instance = &mut runtime.wasm_instance;
             let memory_index = DEFAULT_MEMORY_INDEX;
