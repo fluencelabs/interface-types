@@ -12,8 +12,6 @@ use it_lilo::lowerer::ILowerer;
 use it_lilo::lowerer::LoweredArray;
 use it_lilo::traits::DEFAULT_MEMORY_INDEX;
 
-use std::convert::TryInto;
-
 pub(crate) fn array_lift_memory<Instance, Export, LocalImport, Memory, MemoryView>(
     instruction: Instruction,
     value_type: IType,
@@ -37,15 +35,9 @@ where
                 )
             })?;
 
-            let offset: u32 = to_native::<i32>(inputs.remove(0), instruction.clone())?
-                .try_into()
-                .map_err(|e| (e, "offset").into())
-                .map_err(|k| InstructionError::from_error_kind(instruction.clone(), k))?;
+            let offset = to_native::<i32>(inputs.remove(0), instruction.clone())? as u32;
 
-            let size: u32 = to_native::<i32>(inputs.remove(0), instruction.clone())?
-                .try_into()
-                .map_err(|e| (e, "size").into())
-                .map_err(|k| InstructionError::from_error_kind(instruction.clone(), k))?;
+            let size = to_native::<i32>(inputs.remove(0), instruction.clone())? as u32;
 
             log::trace!(
                 "array.lift_memory: lifting memory for value type: {:?}, popped offset {}, size {}",
