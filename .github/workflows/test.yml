@@ -1,15 +1,17 @@
 name: Build
 
-on: [pull_request]
+on:
+  pull_request:
 
 jobs:
   test:
     name: Test
 
     strategy:
-      matrix:
-        os: ubuntu-latest
       fail-fast: true
+      matrix:
+        os:
+          - ubuntu-latest
 
     runs-on: ${{ matrix.os }}
 
