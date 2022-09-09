@@ -24,3 +24,7 @@ jobs:
 
       - name: Compile the library
         run: cargo build --release
+
+      # tests always fail, need refactoring
+      # - name: Run all the tests
+      #   run: cargo test --release
