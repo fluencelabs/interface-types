@@ -1,11 +1,11 @@
-name: Build
+name: "interface-types"
 
 on:
   pull_request:
 
 jobs:
-  test:
-    name: Test
+  build:
+    name: "Build"
 
     strategy:
       fail-fast: true
