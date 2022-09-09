@@ -1,6 +1,6 @@
 [package]
 name = "it-memory-traits"
-version = "0.3.0"
+version = "0.3.1"
 authors = ["Fluence Labs"]
 description = "Defines traits that IT uses for accessing memory"
 edition = "2018"
@@ -11,4 +11,4 @@ name = "it_memory_traits"
 path = "src/lib.rs"
 
 [dependencies]
-thiserror = "1.0.24"
+thiserror = "1.0.34"
