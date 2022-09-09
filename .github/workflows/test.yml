@@ -52,7 +52,7 @@ jobs:
           export PATH="$HOME/.cargo/bin:$PATH"
           cargo build --release
 
-      - name: Run all the tests
-        shell: bash
-        run: |
-          cargo test --release
+      # - name: Run all the tests
+      #   shell: bash
+      #   run: |
+      #     cargo test --release
