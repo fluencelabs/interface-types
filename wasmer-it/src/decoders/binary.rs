@@ -137,7 +137,7 @@ fn ty<'input, E: ParseError<&'input [u8]>>(
 
             IType::Record(record_id)
         }
-        _ => return Err(Err::Error(make_error(input, ErrorKind::ParseTo))),
+        _ => return Err(Err::Error(make_error(input, ErrorKind::Alt))),
     };
 
     Ok((input, ty))
@@ -179,7 +179,7 @@ fn string<'input, E: ParseError<&'input [u8]>>(
     Ok((
         &input[length..],
         str::from_utf8(&input[..length])
-            .map_err(|_| Err::Error(make_error(input, ErrorKind::ParseTo)))?,
+            .map_err(|_| Err::Error(make_error(input, ErrorKind::Char)))?,
     ))
 }
 
@@ -201,7 +201,7 @@ fn owned_string<'input, E: ParseError<&'input [u8]>>(
     Ok((
         &input[length..],
         String::from_utf8(input[..length].to_vec())
-            .map_err(|_| Err::Error(make_error(input, ErrorKind::ParseTo)))?,
+            .map_err(|_| Err::Error(make_error(input, ErrorKind::Char)))?,
     ))
 }
 
@@ -362,7 +362,7 @@ fn instruction<'input, E: ParseError<&'input [u8]>>(
             )
         }
 
-        _ => return Err(Err::Error(make_error(input, ErrorKind::ParseTo))),
+        _ => return Err(Err::Error(make_error(input, ErrorKind::Alt))),
     })
 }
 
@@ -378,7 +378,7 @@ fn types<'input, E: ParseError<&'input [u8]>>(
         consume!((input, type_kind) = byte(input)?);
 
         let type_kind = TypeKind::try_from(type_kind)
-            .map_err(|_| Err::Error(make_error(input, ErrorKind::ParseTo)))?;
+            .map_err(|_| Err::Error(make_error(input, ErrorKind::Alt)))?;
 
         match type_kind {
             TypeKind::Function => {
@@ -505,7 +505,7 @@ fn interfaces<'input, E: ParseError<&'input [u8]>>(
         consume!((input, interface_kind) = byte(input)?);
 
         let interface_kind = InterfaceKind::try_from(interface_kind)
-            .map_err(|_| Err::Error(make_error(input, ErrorKind::ParseTo)))?;
+            .map_err(|_| Err::Error(make_error(input, ErrorKind::Alt)))?;
 
         match interface_kind {
             InterfaceKind::Version => {
