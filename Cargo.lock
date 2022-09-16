@@ -16,7 +16,7 @@ checksum = "e78d4f1cc4ae33bbfc157ed5d5a5ef3bc29227303d595861deb238fcec4e9457"
 
 [[package]]
 name = "fluence-it-types"
-version = "0.3.1"
+version = "0.3.2"
 dependencies = [
  "it-to-bytes",
  "nom",
@@ -27,7 +27,7 @@ dependencies = [
 
 [[package]]
 name = "it-lilo"
-version = "0.4.0"
+version = "0.4.1"
 dependencies = [
  "fluence-it-types",
  "it-memory-traits",
@@ -38,7 +38,7 @@ dependencies = [
 
 [[package]]
 name = "it-memory-traits"
-version = "0.3.0"
+version = "0.3.1"
 dependencies = [
  "thiserror",
 ]
@@ -221,7 +221,7 @@ dependencies = [
 
 [[package]]
 name = "wasmer-interface-types-fl"
-version = "0.24.0"
+version = "0.25.0"
 dependencies = [
  "fluence-it-types",
  "it-lilo",
