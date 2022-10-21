@@ -11,4 +11,4 @@ name = "it_memory_traits"
 path = "src/lib.rs"
 
 [dependencies]
-thiserror = "1.0.34"
+thiserror = "1.0.37"
