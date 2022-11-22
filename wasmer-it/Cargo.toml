@@ -9,7 +9,7 @@ edition = "2018"
 
 [dependencies]
 fluence-it-types = { path = "../crates/it-types", version = "0.3.3", features = ["impls"] }
-it-to-bytes = { path = "../crates/to-bytes", version = "0.1.1" }
+it-to-bytes = { path = "../crates/to-bytes", version = "0.1.0" }
 it-lilo = { path = "../crates/it-lilo", version = "0.4.2" }
 it-memory-traits = { path = "../crates/it-memory-traits", version = "0.3.2" }
 

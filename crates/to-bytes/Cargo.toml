@@ -1,6 +1,6 @@
 [package]
 name = "it-to-bytes"
-version = "0.1.1"
+version = "0.1.0"
 authors = ["Fluence Labs"]
 description = "Defines trait ToBytes used for IT serialization"
 edition = "2018"

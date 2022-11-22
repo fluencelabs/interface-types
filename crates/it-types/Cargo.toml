@@ -11,7 +11,7 @@ name = "fluence_it_types"
 path = "src/lib.rs"
 
 [dependencies]
-it-to-bytes = { path = "../to-bytes/", version = "0.1.1" }
+it-to-bytes = { path = "../to-bytes/", version = "0.1.0" }
 
 serde = { version = "1.0.147", features = ["derive", "rc"]}
 
