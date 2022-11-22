@@ -16,7 +16,7 @@ checksum = "e78d4f1cc4ae33bbfc157ed5d5a5ef3bc29227303d595861deb238fcec4e9457"
 
 [[package]]
 name = "fluence-it-types"
-version = "0.3.2"
+version = "0.3.3"
 dependencies = [
  "it-to-bytes",
  "nom",
@@ -27,7 +27,7 @@ dependencies = [
 
 [[package]]
 name = "it-lilo"
-version = "0.4.1"
+version = "0.4.2"
 dependencies = [
  "fluence-it-types",
  "it-memory-traits",
@@ -38,14 +38,14 @@ dependencies = [
 
 [[package]]
 name = "it-memory-traits"
-version = "0.3.1"
+version = "0.3.2"
 dependencies = [
  "thiserror",
 ]
 
 [[package]]
 name = "it-to-bytes"
-version = "0.1.0"
+version = "0.1.1"
 
 [[package]]
 name = "itertools"

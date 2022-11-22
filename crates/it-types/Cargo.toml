@@ -1,6 +1,6 @@
 [package]
 name = "fluence-it-types"
-version = "0.3.2"
+version = "0.3.3"
 description = "Definitions of IValue and IType"
 authors = ["Fluence Labs"]
 edition = "2018"
@@ -11,7 +11,7 @@ name = "fluence_it_types"
 path = "src/lib.rs"
 
 [dependencies]
-it-to-bytes = { path = "../to-bytes/", version = "0.1.0" }
+it-to-bytes = { path = "../to-bytes/", version = "0.1.1" }
 
 serde = { version = "1.0.147", features = ["derive", "rc"]}
 
