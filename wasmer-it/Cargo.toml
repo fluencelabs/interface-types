@@ -8,10 +8,10 @@ repository = "https://github.com/wasmerio/wasmer"
 edition = "2018"
 
 [dependencies]
-fluence-it-types = { path = "../crates/it-types", version = "0.3.2", features = ["impls"] }
+fluence-it-types = { path = "../crates/it-types", version = "0.3.3", features = ["impls"] }
 it-to-bytes = { path = "../crates/to-bytes", version = "0.1.0" }
-it-lilo = { path = "../crates/it-lilo", version = "0.4.1" }
-it-memory-traits = { path = "../crates/it-memory-traits", version = "0.3.1" }
+it-lilo = { path = "../crates/it-lilo", version = "0.4.2" }
+it-memory-traits = { path = "../crates/it-memory-traits", version = "0.3.2" }
 
 nom = "7.1"
 wast = "8.0"
@@ -23,10 +23,10 @@ serde = { version = "1.0", features = ["derive", "rc"], optional = true }
 serde_json = "1.0"
 safe-transmute = "0.11.2"
 log = "0.4.17"
-itertools = "0.10.3"
+itertools = "0.10.5"
 
-thiserror = "1.0.34"
-semver = "1.0.13"
+thiserror = "1.0.37"
+semver = "1.0.14"
 
 [features]
 default = ["serde"]

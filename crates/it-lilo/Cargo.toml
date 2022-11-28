@@ -1,6 +1,6 @@
 [package]
 name = "it-lilo"
-version = "0.4.1"
+version = "0.4.2"
 authors = ["Fluence Labs"]
 description = "Defines some helper utils for lifting/lowering IT"
 edition = "2018"
@@ -11,9 +11,9 @@ name = "it_lilo"
 path = "src/lib.rs"
 
 [dependencies]
-fluence-it-types = { path = "../it-types/", version = "0.3.0" }
-it-memory-traits = { path = "../it-memory-traits", version = "0.3.0" }
+fluence-it-types = { path = "../it-types/", version = "0.3.3" }
+it-memory-traits = { path = "../it-memory-traits", version = "0.3.2" }
 
 paste = "1.0.9"
-thiserror = "1.0.34"
+thiserror = "1.0.37"
 log = "0.4.17"
