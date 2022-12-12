@@ -24,7 +24,7 @@ use crate::NEVec;
 use it_memory_traits::MemoryView;
 
 pub fn record_lower_memory<A: Allocatable<MV>, MV: MemoryView>(
-    lowerer: &ILowerer<'_, A, MV>,
+    lowerer: &mut ILowerer<'_, A, MV>,
     values: NEVec<IValue>,
 ) -> LoResult<u32> {
     let average_field_size = 4;

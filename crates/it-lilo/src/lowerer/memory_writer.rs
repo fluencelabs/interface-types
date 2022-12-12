@@ -23,12 +23,12 @@ use it_memory_traits::MemoryView;
 use std::cell::{Cell, RefCell};
 
 pub struct MemoryWriter<'i, R: Allocatable<MV>, MV: MemoryView> {
-    heap_manager: &'i R,
+    heap_manager: &'i mut R,
     view: RefCell<MV>,
 }
 
 impl<'i, A: Allocatable<MV>, MV: MemoryView> MemoryWriter<'i, A, MV> {
-    pub fn new(view: MV, heap_manager: &'i A) -> LoResult<Self> {
+    pub fn new(view: MV, heap_manager: &'i mut A) -> LoResult<Self> {
         let writer = Self {
             heap_manager,
             view: RefCell::new(view),
@@ -36,7 +36,7 @@ impl<'i, A: Allocatable<MV>, MV: MemoryView> MemoryWriter<'i, A, MV> {
         Ok(writer)
     }
 
-    pub fn write_bytes(&self, bytes: &[u8]) -> LoResult<u32> {
+    pub fn write_bytes(&mut self, bytes: &[u8]) -> LoResult<u32> {
         let byte_type_tag = type_tag_form_itype(&crate::IType::U8);
         let seq_writer = self.sequential_writer(bytes.len() as u32, byte_type_tag)?;
         seq_writer.write_bytes(&self, bytes);
@@ -44,7 +44,7 @@ impl<'i, A: Allocatable<MV>, MV: MemoryView> MemoryWriter<'i, A, MV> {
         Ok(seq_writer.start_offset())
     }
 
-    pub fn sequential_writer(&self, size: u32, type_tag: u32) -> LoResult<SequentialWriter> {
+    pub fn sequential_writer(&mut self, size: u32, type_tag: u32) -> LoResult<SequentialWriter> {
         let (offset, view) = self.heap_manager.allocate(size, type_tag)?;
         self.view.replace(view);
         let seq_writer = SequentialWriter::new(offset);

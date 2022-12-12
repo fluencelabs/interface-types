@@ -13,13 +13,23 @@ use std::{convert::TryFrom, marker::PhantomData};
 
 /// Represents the `Runtime`, which is used by an adapter to execute
 /// its instructions.
-pub(crate) struct Runtime<'invocation, 'instance, Instance, Export, LocalImport, Memory, MemoryView>
-where
+pub(crate) struct Runtime<
+    'invocation,
+    'instance,
+    Instance,
+    Export,
+    LocalImport,
+    Memory,
+    MemoryView,
+    Store,
+> where
     Export: wasm::structures::Export + 'instance,
-    LocalImport: wasm::structures::LocalImport + 'instance,
+    LocalImport: wasm::structures::LocalImport<Store> + 'instance,
     Memory: wasm::structures::Memory<MemoryView> + 'instance,
     MemoryView: wasm::structures::MemoryView,
-    Instance: wasm::structures::Instance<Export, LocalImport, Memory, MemoryView> + 'instance,
+    Instance:
+        wasm::structures::Instance<Export, LocalImport, Memory, MemoryView, Store> + 'instance,
+    Store: wasm::structures::Store,
 {
     /// The invocation inputs are all the arguments received by an
     /// adapter.
@@ -32,16 +42,23 @@ where
     /// instructions.
     wasm_instance: &'instance mut Instance,
 
+    /// The WebAssembly store. It stores instance state and used by most of its methods.
+    #[allow(unused)]
+    wasm_store: &'instance mut Store,
+
     /// Phantom data.
     _phantom: PhantomData<(Export, LocalImport, Memory, MemoryView)>,
 }
 
 /// Type alias for an executable instruction. It's an implementation
 /// details, but an instruction is a boxed closure instance.
-pub(crate) type ExecutableInstruction<Instance, Export, LocalImport, Memory, MemoryView> = Box<
-    dyn Fn(&mut Runtime<Instance, Export, LocalImport, Memory, MemoryView>) -> InstructionResult<()>
-        + Send,
->;
+pub(crate) type ExecutableInstruction<Instance, Export, LocalImport, Memory, MemoryView, Store> =
+    Box<
+        dyn Fn(
+                &mut Runtime<Instance, Export, LocalImport, Memory, MemoryView, Store>,
+            ) -> InstructionResult<()>
+            + Send,
+    >;
 
 /// An interpreter is the central piece of this crate. It is a set of
 /// executable instructions. Each instruction takes the runtime as
@@ -121,31 +138,33 @@ pub(crate) type ExecutableInstruction<Instance, Export, LocalImport, Memory, Mem
 /// // 5. Read the stack to get the result.
 /// assert_eq!(stack.as_slice(), &[IValue::I32(7)]);
 /// ```
-pub struct Interpreter<Instance, Export, LocalImport, Memory, MemoryView>
+pub struct Interpreter<Instance, Export, LocalImport, Memory, MemoryView, Store>
 where
     Export: wasm::structures::Export,
-    LocalImport: wasm::structures::LocalImport,
+    LocalImport: wasm::structures::LocalImport<Store>,
     Memory: wasm::structures::Memory<MemoryView>,
     MemoryView: wasm::structures::MemoryView,
-    Instance: wasm::structures::Instance<Export, LocalImport, Memory, MemoryView>,
+    Instance: wasm::structures::Instance<Export, LocalImport, Memory, MemoryView, Store>,
+    Store: wasm::structures::Store,
 {
     executable_instructions:
-        Vec<ExecutableInstruction<Instance, Export, LocalImport, Memory, MemoryView>>,
+        Vec<ExecutableInstruction<Instance, Export, LocalImport, Memory, MemoryView, Store>>,
 }
 
-impl<Instance, Export, LocalImport, Memory, MemoryView>
-    Interpreter<Instance, Export, LocalImport, Memory, MemoryView>
+impl<Instance, Export, LocalImport, Memory, MemoryView, Store>
+    Interpreter<Instance, Export, LocalImport, Memory, MemoryView, Store>
 where
     Export: wasm::structures::Export,
-    LocalImport: wasm::structures::LocalImport,
+    LocalImport: wasm::structures::LocalImport<Store>,
     Memory: wasm::structures::Memory<MemoryView>,
     MemoryView: wasm::structures::MemoryView,
-    Instance: wasm::structures::Instance<Export, LocalImport, Memory, MemoryView>,
+    Instance: wasm::structures::Instance<Export, LocalImport, Memory, MemoryView, Store>,
+    Store: wasm::structures::Store,
 {
     fn iter(
         &self,
     ) -> impl Iterator<
-        Item = &ExecutableInstruction<Instance, Export, LocalImport, Memory, MemoryView>,
+        Item = &ExecutableInstruction<Instance, Export, LocalImport, Memory, MemoryView, Store>,
     > + '_ {
         self.executable_instructions.iter()
     }
@@ -159,11 +178,13 @@ where
         &self,
         invocation_inputs: &[IValue],
         wasm_instance: &mut Instance,
+        wasm_store: &mut Store,
     ) -> InterpreterResult<Stack<IValue>> {
         let mut runtime = Runtime {
             invocation_inputs,
             stack: Stack::new(),
             wasm_instance,
+            wasm_store,
             _phantom: PhantomData,
         };
 
@@ -176,14 +197,15 @@ where
 }
 
 /// Transforms a `Vec<Instruction>` into an `Interpreter`.
-impl<Instance, Export, LocalImport, Memory, MemoryView> TryFrom<Vec<Instruction>>
-    for Interpreter<Instance, Export, LocalImport, Memory, MemoryView>
+impl<Instance, Export, LocalImport, Memory, MemoryView, Store> TryFrom<Vec<Instruction>>
+    for Interpreter<Instance, Export, LocalImport, Memory, MemoryView, Store>
 where
     Export: wasm::structures::Export,
-    LocalImport: wasm::structures::LocalImport,
+    LocalImport: wasm::structures::LocalImport<Store>,
     Memory: wasm::structures::Memory<MemoryView>,
     MemoryView: wasm::structures::MemoryView,
-    Instance: wasm::structures::Instance<Export, LocalImport, Memory, MemoryView>,
+    Instance: wasm::structures::Instance<Export, LocalImport, Memory, MemoryView, Store>,
+    Store: wasm::structures::Store,
 {
     type Error = ();
 

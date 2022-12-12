@@ -20,7 +20,7 @@ use thiserror::Error as ThisError;
 pub const DEFAULT_MEMORY_INDEX: usize = 0;
 
 pub trait Allocatable<MV: MemoryView> {
-    fn allocate(&self, size: u32, type_tag: u32) -> Result<(u32, MV), AllocatableError>;
+    fn allocate(&mut self, size: u32, type_tag: u32) -> Result<(u32, MV), AllocatableError>;
 }
 
 #[derive(Debug, ThisError)]

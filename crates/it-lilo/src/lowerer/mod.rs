@@ -36,7 +36,7 @@ pub struct ILowerer<'m, A: Allocatable<MV>, MV: MemoryView> {
 }
 
 impl<'m, A: Allocatable<MV>, MV: MemoryView> ILowerer<'m, A, MV> {
-    pub fn new(view: MV, allocatable: &'m A) -> LoResult<Self> {
+    pub fn new(view: MV, allocatable: &'m mut A) -> LoResult<Self> {
         let writer = MemoryWriter::new(view, allocatable)?;
         let lowerer = Self { writer };
 

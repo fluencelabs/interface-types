@@ -12,17 +12,30 @@ use it_lilo::lowerer::ILowerer;
 use it_lilo::lowerer::LoweredArray;
 use it_lilo::traits::DEFAULT_MEMORY_INDEX;
 
-pub(crate) fn array_lift_memory<Instance, Export, LocalImport, Memory, MemoryView>(
+pub(crate) fn array_lift_memory<Instance, Export, LocalImport, Memory, MemoryView, Store>(
     instruction: Instruction,
     value_type: IType,
-) -> crate::interpreter::ExecutableInstruction<Instance, Export, LocalImport, Memory, MemoryView>
+) -> crate::interpreter::ExecutableInstruction<
+    Instance,
+    Export,
+    LocalImport,
+    Memory,
+    MemoryView,
+    Store,
+>
 where
     Export: crate::interpreter::wasm::structures::Export,
-    LocalImport: crate::interpreter::wasm::structures::LocalImport,
+    LocalImport: crate::interpreter::wasm::structures::LocalImport<Store>,
     Memory: crate::interpreter::wasm::structures::Memory<MemoryView>,
     MemoryView: crate::interpreter::wasm::structures::MemoryView,
-    Instance:
-        crate::interpreter::wasm::structures::Instance<Export, LocalImport, Memory, MemoryView>,
+    Instance: crate::interpreter::wasm::structures::Instance<
+        Export,
+        LocalImport,
+        Memory,
+        MemoryView,
+        Store,
+    >,
+    Store: crate::interpreter::wasm::structures::Store,
 {
     #[allow(unused_imports)]
     use crate::interpreter::stack::Stackable;
@@ -72,17 +85,30 @@ where
     })
 }
 
-pub(crate) fn array_lower_memory<Instance, Export, LocalImport, Memory, MemoryView>(
+pub(crate) fn array_lower_memory<Instance, Export, LocalImport, Memory, MemoryView, Store>(
     instruction: Instruction,
     value_type: IType,
-) -> crate::interpreter::ExecutableInstruction<Instance, Export, LocalImport, Memory, MemoryView>
+) -> crate::interpreter::ExecutableInstruction<
+    Instance,
+    Export,
+    LocalImport,
+    Memory,
+    MemoryView,
+    Store,
+>
 where
     Export: crate::interpreter::wasm::structures::Export,
-    LocalImport: crate::interpreter::wasm::structures::LocalImport,
+    LocalImport: crate::interpreter::wasm::structures::LocalImport<Store>,
     Memory: crate::interpreter::wasm::structures::Memory<MemoryView>,
     MemoryView: crate::interpreter::wasm::structures::MemoryView,
-    Instance:
-        crate::interpreter::wasm::structures::Instance<Export, LocalImport, Memory, MemoryView>,
+    Instance: crate::interpreter::wasm::structures::Instance<
+        Export,
+        LocalImport,
+        Memory,
+        MemoryView,
+        Store,
+    >,
+    Store: crate::interpreter::wasm::structures::Store,
 {
     #[allow(unused_imports)]
     use crate::interpreter::stack::Stackable;
@@ -117,12 +143,12 @@ where
                         })?
                         .view();
 
-                    let lo_helper = lilo::LoHelper::new(&**instance);
-                    let lowerer = ILowerer::new(memory_view, &lo_helper)
+                    let mut lo_helper = lilo::LoHelper::new(&**instance, runtime.wasm_store);
+                    let mut lowerer = ILowerer::new(memory_view, &mut lo_helper)
                         .map_err(|e| InstructionError::from_lo(instruction.clone(), e))?;
 
                     let LoweredArray { offset, size } =
-                        it_lilo::lowerer::array_lower_memory(&lowerer, values)
+                        it_lilo::lowerer::array_lower_memory(&mut lowerer, values)
                             .map_err(|e| InstructionError::from_lo(instruction.clone(), e))?;
 
                     log::trace!(
@@ -136,7 +162,7 @@ where
                     Ok(())
                 }
                 IValue::ByteArray(bytearray) => {
-                    let lo_helper = lilo::LoHelper::new(&**instance);
+                    let mut lo_helper = lilo::LoHelper::new(&**instance, runtime.wasm_store);
                     let memory_index = DEFAULT_MEMORY_INDEX;
                     let memory_view = instance
                         .memory(memory_index)
@@ -148,7 +174,7 @@ where
                         })?
                         .view();
 
-                    let lowerer = ILowerer::new(memory_view, &lo_helper)
+                    let mut lowerer = ILowerer::new(memory_view, &mut lo_helper)
                         .map_err(|e| InstructionError::from_lo(instruction.clone(), e))?;
 
                     let offset = lowerer

@@ -54,21 +54,24 @@ pub trait Export {
     fn call(&self, arguments: &[IValue]) -> Result<Vec<IValue>, ()>;
 }
 
-pub trait LocalImport {
+pub trait LocalImport<Store: self::Store> {
     fn name(&self) -> &str;
     fn inputs_cardinality(&self) -> usize;
     fn outputs_cardinality(&self) -> usize;
     fn arguments(&self) -> &[FunctionArg];
     fn outputs(&self) -> &[IType];
-    fn call(&self, arguments: &[IValue]) -> Result<Vec<IValue>, ()>;
+    fn call(&self, store: &mut Store, arguments: &[IValue]) -> Result<Vec<IValue>, ()>;
 }
 
-pub trait Instance<E, LI, M, MV>
+pub trait Store {}
+
+pub trait Instance<E, LI, M, MV, S>
 where
     E: Export,
-    LI: LocalImport,
+    LI: LocalImport<S>,
     M: Memory<MV>,
     MV: MemoryView,
+    S: Store,
 {
     fn export(&self, export_name: &str) -> Option<&E>;
     fn local_or_import<I: TypedIndex + LocalImportIndex>(&self, index: I) -> Option<&LI>;
@@ -103,7 +106,7 @@ impl Export for () {
     }
 }
 
-impl LocalImport for () {
+impl<Store: self::Store> LocalImport<Store> for () {
     fn name(&self) -> &str {
         ""
     }
@@ -124,7 +127,7 @@ impl LocalImport for () {
         &[]
     }
 
-    fn call(&self, _arguments: &[IValue]) -> Result<Vec<IValue>, ()> {
+    fn call(&self, _store: &mut Store, _arguments: &[IValue]) -> Result<Vec<IValue>, ()> {
         Err(())
     }
 }
@@ -167,12 +170,13 @@ impl Memory<EmptyMemoryView> for () {
     }
 }
 
-impl<E, LI, M, MV> Instance<E, LI, M, MV> for ()
+impl<E, LI, M, MV, S> Instance<E, LI, M, MV, S> for ()
 where
     E: Export,
-    LI: LocalImport,
+    LI: LocalImport<S>,
     M: Memory<MV>,
     MV: MemoryView,
+    S: Store,
 {
     fn export(&self, _export_name: &str) -> Option<&E> {
         None

@@ -39,7 +39,7 @@ impl LoweredArray {
 }
 
 pub fn array_lower_memory<A: Allocatable<MV>, MV: MemoryView>(
-    lowerer: &ILowerer<'_, A, MV>,
+    lowerer: &mut ILowerer<'_, A, MV>,
     array_values: Vec<IValue>,
 ) -> LoResult<LoweredArray> {
     if array_values.is_empty() {
