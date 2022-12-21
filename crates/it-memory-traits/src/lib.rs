@@ -18,6 +18,10 @@ mod errors;
 
 pub use errors::MemoryAccessError;
 
+pub trait Store {
+    type ActualStore<'c>;
+}
+
 pub trait MemoryReadable {
     /// This function will panic if the `offset` is out of bounds.
     /// It is caller's responsibility to check if the offset is in bounds

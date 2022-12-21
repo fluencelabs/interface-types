@@ -21,6 +21,7 @@ mod memory_writer;
 
 use crate::lowerer::memory_writer::MemoryWriter;
 use crate::traits::Allocatable;
+use std::marker::PhantomData;
 
 pub use error::LoError;
 pub use lower_array::array_lower_memory;
@@ -31,14 +32,20 @@ pub use it_memory_traits::MemoryView;
 
 pub type LoResult<T> = std::result::Result<T, error::LoError>;
 
-pub struct ILowerer<'m, A: Allocatable<MV>, MV: MemoryView> {
-    pub writer: MemoryWriter<'m, A, MV>,
+pub struct ILowerer<'m, A: Allocatable<MV, Store>, MV: MemoryView, Store: it_memory_traits::Store> {
+    pub writer: MemoryWriter<'m, A, MV, Store>,
+    _store: PhantomData<Store>,
 }
 
-impl<'m, A: Allocatable<MV>, MV: MemoryView> ILowerer<'m, A, MV> {
+impl<'m, A: Allocatable<MV, Store>, MV: MemoryView, Store: it_memory_traits::Store>
+    ILowerer<'m, A, MV, Store>
+{
     pub fn new(view: MV, allocatable: &'m mut A) -> LoResult<Self> {
         let writer = MemoryWriter::new(view, allocatable)?;
-        let lowerer = Self { writer };
+        let lowerer = Self {
+            writer,
+            _store: PhantomData,
+        };
 
         Ok(lowerer)
     }

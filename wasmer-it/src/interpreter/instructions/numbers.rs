@@ -12,7 +12,7 @@ macro_rules! lowering_lifting {
     ($instruction_function_name:ident, $instruction_name:expr, $to_variant:ident, $from_variant:ident) => {
         executable_instruction!(
             $instruction_function_name(instruction: Instruction) -> _ {
-                move |runtime| -> _ {
+                move |runtime, _| -> _ {
                     match runtime.stack.pop1() {
                         Some(IValue::$from_variant(value)) => {
                             runtime
@@ -96,7 +96,7 @@ lowering_lifting!(i64_from_u64, "i64.from_u64", I64, U64);
 
 executable_instruction!(
     bool_from_i32(instruction: Instruction) -> _ {
-        move |runtime| -> _ {
+        move |runtime, _| -> _ {
             match runtime.stack.pop1() {
                 Some(IValue::I32(value)) => {
                     runtime

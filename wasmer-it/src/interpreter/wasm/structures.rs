@@ -60,10 +60,14 @@ pub trait LocalImport<Store: self::Store> {
     fn outputs_cardinality(&self) -> usize;
     fn arguments(&self) -> &[FunctionArg];
     fn outputs(&self) -> &[IType];
-    fn call(&self, store: &mut Store, arguments: &[IValue]) -> Result<Vec<IValue>, ()>;
+    fn call(
+        &self,
+        store: &mut <Store as self::Store>::ActualStore<'_>,
+        arguments: &[IValue],
+    ) -> Result<Vec<IValue>, ()>;
 }
 
-pub trait Store {}
+pub use it_memory_traits::Store;
 
 pub trait Instance<E, LI, M, MV, S>
 where
@@ -127,7 +131,11 @@ impl<Store: self::Store> LocalImport<Store> for () {
         &[]
     }
 
-    fn call(&self, _store: &mut Store, _arguments: &[IValue]) -> Result<Vec<IValue>, ()> {
+    fn call(
+        &self,
+        _store: &mut <Store as self::Store>::ActualStore<'_>,
+        _arguments: &[IValue],
+    ) -> Result<Vec<IValue>, ()> {
         Err(())
     }
 }

@@ -40,7 +40,7 @@ where
     #[allow(unused_imports)]
     use crate::interpreter::stack::Stackable;
     Box::new({
-        move |runtime| -> _ {
+        move |runtime, _| -> _ {
             let mut inputs = runtime.stack.pop(2).ok_or_else(|| {
                 InstructionError::from_error_kind(
                     instruction.clone(),
@@ -113,7 +113,7 @@ where
     #[allow(unused_imports)]
     use crate::interpreter::stack::Stackable;
     Box::new({
-        move |runtime| -> _ {
+        move |runtime, store| -> _ {
             let instance = &mut runtime.wasm_instance;
             let stack_value = runtime.stack.pop1().ok_or_else(|| {
                 InstructionError::from_error_kind(
@@ -143,12 +143,12 @@ where
                         })?
                         .view();
 
-                    let mut lo_helper = lilo::LoHelper::new(&**instance, runtime.wasm_store);
+                    let mut lo_helper = lilo::LoHelper::new(&**instance);
                     let mut lowerer = ILowerer::new(memory_view, &mut lo_helper)
                         .map_err(|e| InstructionError::from_lo(instruction.clone(), e))?;
 
                     let LoweredArray { offset, size } =
-                        it_lilo::lowerer::array_lower_memory(&mut lowerer, values)
+                        it_lilo::lowerer::array_lower_memory(store, &mut lowerer, values)
                             .map_err(|e| InstructionError::from_lo(instruction.clone(), e))?;
 
                     log::trace!(
@@ -162,7 +162,7 @@ where
                     Ok(())
                 }
                 IValue::ByteArray(bytearray) => {
-                    let mut lo_helper = lilo::LoHelper::new(&**instance, runtime.wasm_store);
+                    let mut lo_helper = lilo::LoHelper::new(&**instance);
                     let memory_index = DEFAULT_MEMORY_INDEX;
                     let memory_view = instance
                         .memory(memory_index)
@@ -179,7 +179,7 @@ where
 
                     let offset = lowerer
                         .writer
-                        .write_bytes(&bytearray)
+                        .write_bytes(store, &bytearray)
                         .map_err(|e| InstructionError::from_lo(instruction.clone(), e))?;
                     let size = bytearray.len();
 

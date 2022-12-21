@@ -18,11 +18,11 @@ where
     Store: wasm::structures::Store,
 {
     pub(crate) instance: &'i Instance,
-    pub(crate) store: &'i mut Store,
     _export: PhantomData<Export>,
     _local_import: PhantomData<LocalImport>,
     _memory: PhantomData<Memory>,
     _memory_view: PhantomData<MemoryView>,
+    _store: PhantomData<Store>,
 }
 
 impl<'i, Instance, Export, LocalImport, Memory, MemoryView, Store>
@@ -35,19 +35,19 @@ where
     Instance: wasm::structures::Instance<Export, LocalImport, Memory, MemoryView, Store>,
     Store: wasm::structures::Store,
 {
-    pub(crate) fn new(instance: &'i Instance, store: &'i mut Store) -> Self {
+    pub(crate) fn new(instance: &'i Instance) -> Self {
         Self {
             instance,
-            store,
             _export: PhantomData,
             _local_import: PhantomData,
             _memory: PhantomData,
             _memory_view: PhantomData,
+            _store: PhantomData,
         }
     }
 }
 
-impl<'i, Instance, Export, LocalImport, Memory, MemoryView, Store> Allocatable<MemoryView>
+impl<'i, Instance, Export, LocalImport, Memory, MemoryView, Store> Allocatable<MemoryView, Store>
     for LoHelper<'i, Instance, Export, LocalImport, Memory, MemoryView, Store>
 where
     Export: wasm::structures::Export + 'i,
@@ -59,6 +59,7 @@ where
 {
     fn allocate(
         &mut self,
+        store: &mut <Store as wasm::structures::Store>::ActualStore<'_>,
         size: u32,
         type_tag: u32,
     ) -> Result<(u32, MemoryView), AllocatableError> {
@@ -85,7 +86,7 @@ where
         .map_err(|_| AllocateFuncIncompatibleSignature)?;
 
         let outcome = local_or_import
-            .call(self.store, &inputs)
+            .call(store, &inputs)
             .map_err(|_| AllocateCallFailed)?;
 
         if outcome.len() != 1 {

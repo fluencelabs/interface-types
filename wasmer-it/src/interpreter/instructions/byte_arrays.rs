@@ -11,7 +11,7 @@ use it_lilo::traits::DEFAULT_MEMORY_INDEX;
 
 executable_instruction!(
     byte_array_lift_memory(instruction: Instruction) -> _ {
-        move |runtime| -> _ {
+        move |runtime, _| -> _ {
             let mut inputs = runtime.stack.pop(2).ok_or_else(|| {
                 InstructionError::from_error_kind(
                     instruction.clone(),
@@ -57,7 +57,7 @@ executable_instruction!(
 
 executable_instruction!(
     byte_array_lower_memory(instruction: Instruction) -> _ {
-        move |runtime| -> _ {
+        move |runtime, _| -> _ {
             let mut inputs = runtime.stack.pop(2).ok_or_else(|| {
                 InstructionError::from_error_kind(
                     instruction.clone(),
@@ -98,7 +98,7 @@ executable_instruction!(
 
 executable_instruction!(
     byte_array_size(instruction: Instruction) -> _ {
-        move |runtime| -> _ {
+        move |runtime, _| -> _ {
             match runtime.stack.pop1() {
                 Some(IValue::ByteArray(array)) => {
                     let length = array.len() as i32;

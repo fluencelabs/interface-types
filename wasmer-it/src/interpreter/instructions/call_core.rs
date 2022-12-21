@@ -6,7 +6,7 @@ use crate::{
 
 executable_instruction!(
     call_core(function_index: u32, instruction: Instruction) -> _ {
-        move |runtime| -> _ {
+        move |runtime, store| -> _ {
             let instance = &runtime.wasm_instance;
             let index = FunctionIndex::new(function_index as usize);
 
@@ -34,7 +34,7 @@ executable_instruction!(
 
             log::debug!("call-core: calling {} with arguments: {:?}", local_or_import.name(), inputs);
 
-            let outputs = local_or_import.call(runtime.wasm_store, &inputs).map_err(|_| {
+            let outputs = local_or_import.call(store, &inputs).map_err(|_| {
                 InstructionError::from_error_kind(
                     instruction.clone(),
                     InstructionErrorKind::LocalOrImportCall {

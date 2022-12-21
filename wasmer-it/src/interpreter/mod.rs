@@ -42,12 +42,8 @@ pub(crate) struct Runtime<
     /// instructions.
     wasm_instance: &'instance mut Instance,
 
-    /// The WebAssembly store. It stores instance state and used by most of its methods.
-    #[allow(unused)]
-    wasm_store: &'instance mut Store,
-
     /// Phantom data.
-    _phantom: PhantomData<(Export, LocalImport, Memory, MemoryView)>,
+    _phantom: PhantomData<(Export, LocalImport, Memory, MemoryView, Store)>,
 }
 
 /// Type alias for an executable instruction. It's an implementation
@@ -56,6 +52,7 @@ pub(crate) type ExecutableInstruction<Instance, Export, LocalImport, Memory, Mem
     Box<
         dyn Fn(
                 &mut Runtime<Instance, Export, LocalImport, Memory, MemoryView, Store>,
+                &mut <Store as it_memory_traits::Store>::ActualStore<'_>,
             ) -> InstructionResult<()>
             + Send,
     >;
@@ -178,18 +175,17 @@ where
         &self,
         invocation_inputs: &[IValue],
         wasm_instance: &mut Instance,
-        wasm_store: &mut Store,
+        wasm_store: &mut <Store as wasm::structures::Store>::ActualStore<'_>,
     ) -> InterpreterResult<Stack<IValue>> {
         let mut runtime = Runtime {
             invocation_inputs,
             stack: Stack::new(),
             wasm_instance,
-            wasm_store,
             _phantom: PhantomData,
         };
 
         for executable_instruction in self.iter() {
-            executable_instruction(&mut runtime)?;
+            executable_instruction(&mut runtime, wasm_store)?;
         }
 
         Ok(runtime.stack)

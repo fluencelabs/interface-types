@@ -37,7 +37,7 @@ where
     #[allow(unused_imports)]
     use crate::interpreter::stack::Stackable;
     Box::new({
-        move |runtime| -> _ {
+        move |runtime, _| -> _ {
             let mut inputs = runtime.stack.pop(1).ok_or_else(|| {
                 InstructionError::from_error_kind(
                     instruction.clone(),
@@ -114,7 +114,7 @@ where
     #[allow(unused_imports)]
     use crate::interpreter::stack::Stackable;
     Box::new({
-        move |runtime| -> _ {
+        move |runtime, store| -> _ {
             let instance = &mut runtime.wasm_instance;
 
             match runtime.stack.pop1() {
@@ -139,12 +139,15 @@ where
                         })?
                         .view();
 
-                    let mut lo_helper = lilo::LoHelper::new(&**instance, runtime.wasm_store);
+                    let mut lo_helper = lilo::LoHelper::new(&**instance);
                     let mut memory_writer = ILowerer::new(memory_view, &mut lo_helper)
                         .map_err(|e| InstructionError::from_lo(instruction.clone(), e))?;
-                    let offset =
-                        it_lilo::lowerer::record_lower_memory(&mut memory_writer, record_fields)
-                            .map_err(|e| InstructionError::from_lo(instruction.clone(), e))?;
+                    let offset = it_lilo::lowerer::record_lower_memory(
+                        store,
+                        &mut memory_writer,
+                        record_fields,
+                    )
+                    .map_err(|e| InstructionError::from_lo(instruction.clone(), e))?;
 
                     log::debug!("record.lower_memory: pushing {} on the stack", offset);
                     runtime.stack.push(IValue::I32(offset as i32));
