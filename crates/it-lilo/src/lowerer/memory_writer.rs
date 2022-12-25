@@ -26,7 +26,7 @@ use std::marker::PhantomData;
 pub struct MemoryWriter<
     'i,
     R: Allocatable<MV, Store>,
-    MV: MemoryView,
+    MV: MemoryView<Store>,
     Store: it_memory_traits::Store,
 > {
     heap_manager: &'i mut R,
@@ -34,7 +34,7 @@ pub struct MemoryWriter<
     _store: PhantomData<Store>,
 }
 
-impl<'i, A: Allocatable<MV, Store>, MV: MemoryView, Store: it_memory_traits::Store>
+impl<'i, A: Allocatable<MV, Store>, MV: MemoryView<Store>, Store: it_memory_traits::Store>
     MemoryWriter<'i, A, MV, Store>
 {
     pub fn new(view: MV, heap_manager: &'i mut A) -> LoResult<Self> {
@@ -53,7 +53,7 @@ impl<'i, A: Allocatable<MV, Store>, MV: MemoryView, Store: it_memory_traits::Sto
     ) -> LoResult<u32> {
         let byte_type_tag = type_tag_form_itype(&crate::IType::U8);
         let seq_writer = self.sequential_writer(store, bytes.len() as u32, byte_type_tag)?;
-        seq_writer.write_bytes(&self, bytes);
+        seq_writer.write_bytes(store, &self, bytes);
 
         Ok(seq_writer.start_offset())
     }
@@ -89,59 +89,63 @@ impl SequentialWriter {
     }
 
     pub fn write_array<
-        MV: MemoryView,
+        MV: MemoryView<Store>,
         Store: it_memory_traits::Store,
         A: Allocatable<MV, Store>,
         const N: usize,
     >(
         &self,
+        store: &mut <Store as it_memory_traits::Store>::ActualStore<'_>,
         writer: &MemoryWriter<'_, A, MV, Store>,
         values: [u8; N],
     ) {
         let offset = self.offset.get();
 
-        writer.view.borrow().write_bytes(offset, &values);
+        writer.view.borrow().write_bytes(store, offset, &values);
 
         self.offset.set(offset + N as u32);
     }
 
-    pub fn write_u8<MV: MemoryView, Store: it_memory_traits::Store, A: Allocatable<MV, Store>>(
+    pub fn write_u8<MV: MemoryView<Store>, Store: it_memory_traits::Store, A: Allocatable<MV, Store>>(
         &self,
+        store: &mut <Store as it_memory_traits::Store>::ActualStore<'_>,
         writer: &MemoryWriter<'_, A, MV, Store>,
         value: u8,
     ) {
         let offset = self.offset.get();
 
-        writer.view.borrow().write_byte(offset, value);
+        writer.view.borrow().write_byte(store, offset, value);
 
         self.offset.set(offset + 1);
     }
 
-    pub fn write_u32<MV: MemoryView, Store: it_memory_traits::Store, A: Allocatable<MV, Store>>(
+    pub fn write_u32<MV: MemoryView<Store>, Store: it_memory_traits::Store, A: Allocatable<MV, Store>>(
         &self,
+        store: &mut <Store as it_memory_traits::Store>::ActualStore<'_>,
         writer: &MemoryWriter<'_, A, MV, Store>,
         value: u32,
     ) {
         let offset = self.offset.get();
 
         let value = value.to_le_bytes();
-        writer.view.borrow().write_bytes(offset, &value);
+        writer.view.borrow().write_bytes(store, offset, &value);
 
         self.offset.set(offset + 4);
     }
 
     pub fn write_bytes<
-        MV: MemoryView,
+        MV: MemoryView<Store>,
         Store: it_memory_traits::Store,
         A: Allocatable<MV, Store>,
     >(
         &self,
+        store: &mut <Store as it_memory_traits::Store>::ActualStore<'_>,
         writer: &MemoryWriter<'_, A, MV, Store>,
         bytes: &[u8],
     ) {
         let offset = self.offset.get();
 
-        writer.view.borrow().write_bytes(offset, bytes);
+        writer.view.borrow().write_bytes(store, offset, bytes);
 
         self.offset.set(offset + bytes.len() as u32);
     }

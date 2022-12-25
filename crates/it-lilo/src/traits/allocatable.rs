@@ -19,7 +19,7 @@ use thiserror::Error as ThisError;
 
 pub const DEFAULT_MEMORY_INDEX: usize = 0;
 
-pub trait Allocatable<MV: MemoryView, Store: it_memory_traits::Store> {
+pub trait Allocatable<MV: MemoryView<Store>, Store: it_memory_traits::Store> {
     fn allocate(
         &mut self,
         store: &mut <Store as it_memory_traits::Store>::ActualStore<'_>,

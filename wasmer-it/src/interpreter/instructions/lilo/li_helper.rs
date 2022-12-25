@@ -10,8 +10,8 @@ pub struct LiHelper<'i, Instance, Export, LocalImport, Memory, MemoryView, Store
 where
     Export: wasm::structures::Export + 'i,
     LocalImport: wasm::structures::LocalImport<Store> + 'i,
-    Memory: wasm::structures::Memory<MemoryView> + 'i,
-    MemoryView: wasm::structures::MemoryView + 'i,
+    Memory: wasm::structures::Memory<MemoryView, Store> + 'i,
+    MemoryView: wasm::structures::MemoryView<Store> + 'i,
     Instance: wasm::structures::Instance<Export, LocalImport, Memory, MemoryView, Store>,
     Store: wasm::structures::Store,
 {
@@ -28,8 +28,8 @@ impl<'i, Instance, Export, LocalImport, Memory, MemoryView, Store>
 where
     Export: wasm::structures::Export + 'i,
     LocalImport: wasm::structures::LocalImport<Store> + 'i,
-    Memory: wasm::structures::Memory<MemoryView> + 'i,
-    MemoryView: wasm::structures::MemoryView,
+    Memory: wasm::structures::Memory<MemoryView, Store> + 'i,
+    MemoryView: wasm::structures::MemoryView<Store>,
     Instance: wasm::structures::Instance<Export, LocalImport, Memory, MemoryView, Store>,
     Store: wasm::structures::Store,
 {
@@ -50,8 +50,8 @@ impl<'i, Instance, Export, LocalImport, Memory, MemoryView, Store> RecordResolva
 where
     Export: wasm::structures::Export + 'i,
     LocalImport: wasm::structures::LocalImport<Store> + 'i,
-    Memory: wasm::structures::Memory<MemoryView> + 'i,
-    MemoryView: wasm::structures::MemoryView,
+    Memory: wasm::structures::Memory<MemoryView, Store> + 'i,
+    MemoryView: wasm::structures::MemoryView<Store>,
     Instance: wasm::structures::Instance<Export, LocalImport, Memory, MemoryView, Store>,
     Store: wasm::structures::Store,
 {

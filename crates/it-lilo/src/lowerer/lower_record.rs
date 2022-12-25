@@ -25,7 +25,7 @@ use it_memory_traits::MemoryView;
 
 pub fn record_lower_memory<
     A: Allocatable<MV, Store>,
-    MV: MemoryView,
+    MV: MemoryView<Store>,
     Store: it_memory_traits::Store,
 >(
     store: &mut <Store as it_memory_traits::Store>::ActualStore<'_>,

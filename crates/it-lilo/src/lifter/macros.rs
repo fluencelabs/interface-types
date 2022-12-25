@@ -16,37 +16,37 @@
 
 #[macro_export]
 macro_rules! value_der {
-    ($self:expr, $offset:expr, @seq_start $($ids:tt),* @seq_end) => {
-        [$($self.reader.view.read_byte($offset + $ids)),+]
+    ($self:expr, $store:expr, $offset:expr, @seq_start $($ids:tt),* @seq_end) => {
+        [$($self.reader.view.read_byte($store, $offset + $ids)),+]
     };
 
-    ($self:expr, $offset:expr, 1) => {
-        crate::value_der!($self, $offset, @seq_start 0 @seq_end)
+    ($self:expr, $store:expr, $offset:expr, 1) => {
+        crate::value_der!($self, $store, $offset, @seq_start 0 @seq_end)
     };
 
-    ($self:expr, $offset:expr, 2) => {
-        crate::value_der!($self, $offset, @seq_start 0, 1 @seq_end)
+    ($self:expr, $store:expr, $offset:expr, 2) => {
+        crate::value_der!($self, $store, $offset, @seq_start 0, 1 @seq_end)
     };
 
-    ($self:expr, $offset:expr, 4) => {
-        crate::value_der!($self, $offset, @seq_start 0, 1, 2, 3 @seq_end)
+    ($self:expr, $store:expr, $offset:expr, 4) => {
+        crate::value_der!($self, $store, $offset, @seq_start 0, 1, 2, 3 @seq_end)
     };
 
-    ($self:expr, $offset:expr, 8) => {
-        crate::value_der!($self, $offset, @seq_start 0, 1, 2, 3, 4, 5, 6, 7 @seq_end)
+    ($self:expr, $store:expr, $offset:expr, 8) => {
+        crate::value_der!($self, $store, $offset, @seq_start 0, 1, 2, 3, 4, 5, 6, 7 @seq_end)
     };
 
-    ($self:expr, $offset:expr, 16) => {
-        crate::value_der!($self, $offset, @seq_start 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 @seq_end)
+    ($self:expr, $store:expr, $offset:expr, 16) => {
+        crate::value_der!($self, $store, $offset, @seq_start 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 @seq_end)
     };
 }
 
 #[macro_export]
 macro_rules! read_ty {
     ($func_name:ident, $ty:ty, 1) => {
-        pub fn $func_name(&self) -> $ty {
+        pub fn $func_name(&self, store: &mut <Store as it_memory_traits::Store>::ActualStore<'_>,) -> $ty {
             let offset = self.offset.get();
-            let result = <$ty>::from_le_bytes(crate::value_der!(self, offset, 1));
+            let result = <$ty>::from_le_bytes(crate::value_der!(self, store, offset, 1));
 
             self.offset.set(offset + 1);
             result
@@ -54,9 +54,9 @@ macro_rules! read_ty {
     };
 
     ($func_name:ident, $ty:ty, 2) => {
-        pub fn $func_name(&self) -> $ty {
+        pub fn $func_name(&self, store: &mut <Store as it_memory_traits::Store>::ActualStore<'_>,) -> $ty {
             let offset = self.offset.get();
-            let result = <$ty>::from_le_bytes(crate::value_der!(self, offset, 2));
+            let result = <$ty>::from_le_bytes(crate::value_der!(self, store, offset, 2));
 
             self.offset.set(offset + 2);
             result
@@ -64,9 +64,9 @@ macro_rules! read_ty {
     };
 
     ($func_name:ident, $ty:ty, 4) => {
-        pub fn $func_name(&self) -> $ty {
+        pub fn $func_name(&self, store: &mut <Store as it_memory_traits::Store>::ActualStore<'_>,) -> $ty {
             let offset = self.offset.get();
-            let result = <$ty>::from_le_bytes(crate::value_der!(self, offset, 4));
+            let result = <$ty>::from_le_bytes(crate::value_der!(self, store, offset, 4));
 
             self.offset.set(offset + 4);
             result
@@ -74,9 +74,9 @@ macro_rules! read_ty {
     };
 
     ($func_name:ident, $ty:ty, 8) => {
-        pub fn $func_name(&self) -> $ty {
+        pub fn $func_name(&self, store: &mut <Store as it_memory_traits::Store>::ActualStore<'_>,) -> $ty {
             let offset = self.offset.get();
-            let result = <$ty>::from_le_bytes(crate::value_der!(self, offset, 8));
+            let result = <$ty>::from_le_bytes(crate::value_der!(self, store, offset, 8));
 
             self.offset.set(offset + 8);
             result
@@ -84,9 +84,9 @@ macro_rules! read_ty {
     };
 
     ($func_name:ident, $ty:ty, 16) => {
-        pub fn $func_name(&self) -> $ty {
+        pub fn $func_name(&self, store: &mut <Store as it_memory_traits::Store>::ActualStore<'_>,) -> $ty {
             let offset = self.offset.get();
-            let result = <$ty>::from_le_bytes(crate::value_der!(self, offset, 16));
+            let result = <$ty>::from_le_bytes(crate::value_der!(self, store, offset, 16));
 
             self.offset.set(offset + 16);
             result
@@ -97,23 +97,23 @@ macro_rules! read_ty {
 #[macro_export]
 macro_rules! read_ty_decl {
     ($func_name:ident, $ty:ty, 1) => {
-        fn $func_name(&self) -> $ty;
+        fn $func_name(&self, store: &mut <Store as it_memory_traits::Store>::ActualStore<'_>,) -> $ty;
     };
 
     ($func_name:ident, $ty:ty, 2) => {
-        fn $func_name(&self) -> $ty;
+        fn $func_name(&self, store: &mut <Store as it_memory_traits::Store>::ActualStore<'_>,) -> $ty;
     };
 
     ($func_name:ident, $ty:ty, 4) => {
-        fn $func_name(&self) -> $ty;
+        fn $func_name(&self, store: &mut <Store as it_memory_traits::Store>::ActualStore<'_>,) -> $ty;
     };
 
     ($func_name:ident, $ty:ty, 8) => {
-        fn $func_name(&self) -> $ty;
+        fn $func_name(&self, store: &mut <Store as it_memory_traits::Store>::ActualStore<'_>,) -> $ty;
     };
 
     ($func_name:ident, $ty:ty, 16) => {
-        fn $func_name(&self) -> $ty;
+        fn $func_name(&self, store: &mut <Store as it_memory_traits::Store>::ActualStore<'_>,) -> $ty;
     };
 }
 
@@ -122,15 +122,16 @@ macro_rules! read_array_ty {
     ($func_name:ident, $ty:ident, $ity:ident) => {
         pub fn $func_name(
             &self,
+            store: &mut <Store as it_memory_traits::Store>::ActualStore<'_>,
             offset: u32,
             elements_count: u32,
         ) -> super::LiResult<Vec<crate::IValue>> {
             let reader = self
-                .sequential_reader(offset, (std::mem::size_of::<$ty>() as u32) * elements_count)?;
+                .sequential_reader(store, offset, (std::mem::size_of::<$ty>() as u32) * elements_count)?;
             let mut result = Vec::with_capacity(elements_count as usize);
 
             for _ in 0..elements_count {
-                let value = paste::paste! { reader.[<read_ $ty>]()};
+                let value = paste::paste! { reader.[<read_ $ty>](store)};
                 result.push(IValue::$ity(value));
             }
 

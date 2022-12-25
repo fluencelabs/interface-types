@@ -32,12 +32,12 @@ pub use it_memory_traits::MemoryView;
 
 pub type LoResult<T> = std::result::Result<T, error::LoError>;
 
-pub struct ILowerer<'m, A: Allocatable<MV, Store>, MV: MemoryView, Store: it_memory_traits::Store> {
+pub struct ILowerer<'m, A: Allocatable<MV, Store>, MV: MemoryView<Store>, Store: it_memory_traits::Store> {
     pub writer: MemoryWriter<'m, A, MV, Store>,
     _store: PhantomData<Store>,
 }
 
-impl<'m, A: Allocatable<MV, Store>, MV: MemoryView, Store: it_memory_traits::Store>
+impl<'m, A: Allocatable<MV, Store>, MV: MemoryView<Store>, Store: it_memory_traits::Store>
     ILowerer<'m, A, MV, Store>
 {
     pub fn new(view: MV, allocatable: &'m mut A) -> LoResult<Self> {

@@ -26,8 +26,8 @@ pub(crate) fn array_lift_memory<Instance, Export, LocalImport, Memory, MemoryVie
 where
     Export: crate::interpreter::wasm::structures::Export,
     LocalImport: crate::interpreter::wasm::structures::LocalImport<Store>,
-    Memory: crate::interpreter::wasm::structures::Memory<MemoryView>,
-    MemoryView: crate::interpreter::wasm::structures::MemoryView,
+    Memory: crate::interpreter::wasm::structures::Memory<MemoryView, Store>,
+    MemoryView: crate::interpreter::wasm::structures::MemoryView<Store>,
     Instance: crate::interpreter::wasm::structures::Instance<
         Export,
         LocalImport,
@@ -40,7 +40,7 @@ where
     #[allow(unused_imports)]
     use crate::interpreter::stack::Stackable;
     Box::new({
-        move |runtime, _| -> _ {
+        move |runtime, store| -> _ {
             let mut inputs = runtime.stack.pop(2).ok_or_else(|| {
                 InstructionError::from_error_kind(
                     instruction.clone(),
@@ -74,7 +74,7 @@ where
 
             let li_helper = lilo::LiHelper::new(&**instance);
             let lifter = ILifter::new(memory_view, &li_helper);
-            let array = it_lilo::lifter::array_lift_memory(&lifter, &value_type, offset, size)
+            let array = it_lilo::lifter::array_lift_memory(store, &lifter, &value_type, offset, size)
                 .map_err(|e| InstructionError::from_li(instruction.clone(), e))?;
 
             log::trace!("array.lift_memory: pushing {:?} on the stack", array);
@@ -99,8 +99,8 @@ pub(crate) fn array_lower_memory<Instance, Export, LocalImport, Memory, MemoryVi
 where
     Export: crate::interpreter::wasm::structures::Export,
     LocalImport: crate::interpreter::wasm::structures::LocalImport<Store>,
-    Memory: crate::interpreter::wasm::structures::Memory<MemoryView>,
-    MemoryView: crate::interpreter::wasm::structures::MemoryView,
+    Memory: crate::interpreter::wasm::structures::Memory<MemoryView, Store>,
+    MemoryView: crate::interpreter::wasm::structures::MemoryView<Store>,
     Instance: crate::interpreter::wasm::structures::Instance<
         Export,
         LocalImport,

@@ -73,8 +73,8 @@ macro_rules! executable_instruction {
         where
             Export: crate::interpreter::wasm::structures::Export,
             LocalImport: crate::interpreter::wasm::structures::LocalImport<Store>,
-            Memory: crate::interpreter::wasm::structures::Memory<MemoryView>,
-            MemoryView: crate::interpreter::wasm::structures::MemoryView,
+            Memory: crate::interpreter::wasm::structures::Memory<MemoryView, Store>,
+            MemoryView: crate::interpreter::wasm::structures::MemoryView<Store>,
             Instance: crate::interpreter::wasm::structures::Instance<Export, LocalImport, Memory, MemoryView, Store>,
             Store: crate::interpreter::wasm::structures::Store,
         {

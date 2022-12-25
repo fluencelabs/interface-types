@@ -11,7 +11,7 @@ use it_lilo::traits::DEFAULT_MEMORY_INDEX;
 
 executable_instruction!(
     string_lift_memory(instruction: Instruction) -> _ {
-        move |runtime, _| -> _ {
+        move |runtime, store| -> _ {
             let mut inputs = runtime.stack.pop(2).ok_or_else(|| {
                 InstructionError::from_error_kind(
                     instruction.clone(),
@@ -41,10 +41,10 @@ executable_instruction!(
             }
 
             memory_view
-                .check_bounds(pointer, length)
+                .check_bounds(store, pointer, length)
                 .map_err(|e| InstructionError::from_memory_access(instruction.clone(), e))?;
 
-            let data = memory_view.read_vec(pointer, length);
+            let data = memory_view.read_vec(store, pointer, length);
             let string = String::from_utf8(data)
                 .map_err(|error| InstructionError::from_error_kind(instruction.clone(), InstructionErrorKind::String(error)))?;
 
@@ -58,7 +58,7 @@ executable_instruction!(
 
 executable_instruction!(
     string_lower_memory(instruction: Instruction) -> _ {
-        move |runtime, _| -> _ {
+        move |runtime, store| -> _ {
             let mut inputs = runtime.stack.pop(2).ok_or_else(|| {
                 InstructionError::from_error_kind(
                     instruction.clone(),
@@ -83,10 +83,10 @@ executable_instruction!(
                 })?;
 
             memory_view
-                .check_bounds(string_pointer, string_length)
+                .check_bounds(store, string_pointer, string_length)
                 .map_err(|e| InstructionError::from_memory_access(instruction.clone(), e))?;
 
-            memory_view.write_bytes(string_pointer, string_bytes);
+            memory_view.write_bytes(store, string_pointer, string_bytes);
 
             log::debug!("string.lower_memory: pushing {}, {} on the stack", string_pointer, string_length);
             runtime.stack.push(IValue::I32(string_pointer as i32));

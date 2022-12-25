@@ -25,8 +25,8 @@ pub(crate) struct Runtime<
 > where
     Export: wasm::structures::Export + 'instance,
     LocalImport: wasm::structures::LocalImport<Store> + 'instance,
-    Memory: wasm::structures::Memory<MemoryView> + 'instance,
-    MemoryView: wasm::structures::MemoryView,
+    Memory: wasm::structures::Memory<MemoryView, Store> + 'instance,
+    MemoryView: wasm::structures::MemoryView<Store>,
     Instance:
         wasm::structures::Instance<Export, LocalImport, Memory, MemoryView, Store> + 'instance,
     Store: wasm::structures::Store,
@@ -139,8 +139,8 @@ pub struct Interpreter<Instance, Export, LocalImport, Memory, MemoryView, Store>
 where
     Export: wasm::structures::Export,
     LocalImport: wasm::structures::LocalImport<Store>,
-    Memory: wasm::structures::Memory<MemoryView>,
-    MemoryView: wasm::structures::MemoryView,
+    Memory: wasm::structures::Memory<MemoryView, Store>,
+    MemoryView: wasm::structures::MemoryView<Store>,
     Instance: wasm::structures::Instance<Export, LocalImport, Memory, MemoryView, Store>,
     Store: wasm::structures::Store,
 {
@@ -153,8 +153,8 @@ impl<Instance, Export, LocalImport, Memory, MemoryView, Store>
 where
     Export: wasm::structures::Export,
     LocalImport: wasm::structures::LocalImport<Store>,
-    Memory: wasm::structures::Memory<MemoryView>,
-    MemoryView: wasm::structures::MemoryView,
+    Memory: wasm::structures::Memory<MemoryView, Store>,
+    MemoryView: wasm::structures::MemoryView<Store>,
     Instance: wasm::structures::Instance<Export, LocalImport, Memory, MemoryView, Store>,
     Store: wasm::structures::Store,
 {
@@ -198,8 +198,8 @@ impl<Instance, Export, LocalImport, Memory, MemoryView, Store> TryFrom<Vec<Instr
 where
     Export: wasm::structures::Export,
     LocalImport: wasm::structures::LocalImport<Store>,
-    Memory: wasm::structures::Memory<MemoryView>,
-    MemoryView: wasm::structures::MemoryView,
+    Memory: wasm::structures::Memory<MemoryView, Store>,
+    MemoryView: wasm::structures::MemoryView<Store>,
     Instance: wasm::structures::Instance<Export, LocalImport, Memory, MemoryView, Store>,
     Store: wasm::structures::Store,
 {

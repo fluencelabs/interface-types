@@ -242,8 +242,8 @@ pub(crate) fn check_function_signature<
 where
     Export: wasm::structures::Export + 'instance,
     LocalImport: wasm::structures::LocalImport<Store> + 'instance,
-    Memory: wasm::structures::Memory<MemoryView> + 'instance,
-    MemoryView: wasm::structures::MemoryView,
+    Memory: wasm::structures::Memory<MemoryView, Store> + 'instance,
+    MemoryView: wasm::structures::MemoryView<Store>,
     Instance: wasm::structures::Instance<Export, LocalImport, Memory, MemoryView, Store>,
     Store: wasm::structures::Store,
 {
@@ -273,8 +273,8 @@ pub(crate) fn is_value_compatible_to_type<
 where
     Export: wasm::structures::Export + 'instance,
     LocalImport: wasm::structures::LocalImport<Store> + 'instance,
-    Memory: wasm::structures::Memory<MemoryView> + 'instance,
-    MemoryView: wasm::structures::MemoryView,
+    Memory: wasm::structures::Memory<MemoryView, Store> + 'instance,
+    MemoryView: wasm::structures::MemoryView<Store>,
     Instance: wasm::structures::Instance<Export, LocalImport, Memory, MemoryView, Store>,
     Store: wasm::structures::Store,
 {
@@ -346,8 +346,8 @@ pub(crate) fn is_record_fields_compatible_to_type<
 where
     Export: wasm::structures::Export + 'instance,
     LocalImport: wasm::structures::LocalImport<Store> + 'instance,
-    Memory: wasm::structures::Memory<MemoryView> + 'instance,
-    MemoryView: wasm::structures::MemoryView,
+    Memory: wasm::structures::Memory<MemoryView, Store> + 'instance,
+    MemoryView: wasm::structures::MemoryView<Store>,
     Instance: wasm::structures::Instance<Export, LocalImport, Memory, MemoryView, Store>,
     Store: wasm::structures::Store,
 {
@@ -459,7 +459,7 @@ pub(crate) mod tests {
         }
     }
 
-    impl wasm::structures::Memory<MemoryView> for Memory {
+    impl wasm::structures::Memory<MemoryView, Store> for Memory {
         fn view(&self) -> MemoryView {
             self.view.clone()
         }

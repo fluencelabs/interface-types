@@ -73,8 +73,8 @@ pub trait Instance<E, LI, M, MV, S>
 where
     E: Export,
     LI: LocalImport<S>,
-    M: Memory<MV>,
-    MV: MemoryView,
+    M: Memory<MV, S>,
+    MV: MemoryView<S>,
     S: Store,
 {
     fn export(&self, export_name: &str) -> Option<&E>;
@@ -142,28 +142,28 @@ impl<Store: self::Store> LocalImport<Store> for () {
 
 pub(crate) struct EmptyMemoryView;
 
-impl MemoryWritable for EmptyMemoryView {
-    fn write_byte(&self, _offset: u32, _value: u8) {}
+impl<S: Store> MemoryWritable<S> for EmptyMemoryView {
+    fn write_byte(&self, _store: &mut <S as Store>::ActualStore<'_>, _offset: u32, _value: u8) {}
 
-    fn write_bytes(&self, _offset: u32, _bytes: &[u8]) {}
+    fn write_bytes(&self, _store: &mut <S as Store>::ActualStore<'_>, _offset: u32, _bytes: &[u8]) {}
 }
 
-impl MemoryReadable for EmptyMemoryView {
-    fn read_byte(&self, _offset: u32) -> u8 {
+impl<S: Store> MemoryReadable<S> for EmptyMemoryView {
+    fn read_byte(&self, _store: &mut <S as Store>::ActualStore<'_>, _offset: u32) -> u8 {
         0
     }
 
-    fn read_array<const COUNT: usize>(&self, _offset: u32) -> [u8; COUNT] {
+    fn read_array<const COUNT: usize>(&self, _store: &mut <S as Store>::ActualStore<'_>, _offset: u32) -> [u8; COUNT] {
         [0; COUNT]
     }
 
-    fn read_vec(&self, _offset: u32, _size: u32) -> Vec<u8> {
+    fn read_vec(&self, _store: &mut <S as Store>::ActualStore<'_>, _offset: u32, _size: u32) -> Vec<u8> {
         Vec::default()
     }
 }
 
-impl MemoryView for EmptyMemoryView {
-    fn check_bounds(&self, offset: u32, size: u32) -> Result<(), MemoryAccessError> {
+impl<S: Store> MemoryView<S> for EmptyMemoryView {
+    fn check_bounds(&self, _store: &mut <S as Store>::ActualStore<'_>, offset: u32, size: u32) -> Result<(), MemoryAccessError> {
         Err(MemoryAccessError::OutOfBounds {
             size,
             offset,
@@ -172,7 +172,7 @@ impl MemoryView for EmptyMemoryView {
     }
 }
 
-impl Memory<EmptyMemoryView> for () {
+impl<S: Store> Memory<EmptyMemoryView, S> for () {
     fn view(&self) -> EmptyMemoryView {
         EmptyMemoryView
     }
@@ -182,8 +182,8 @@ impl<E, LI, M, MV, S> Instance<E, LI, M, MV, S> for ()
 where
     E: Export,
     LI: LocalImport<S>,
-    M: Memory<MV>,
-    MV: MemoryView,
+    M: Memory<MV, S>,
+    MV: MemoryView<S>,
     S: Store,
 {
     fn export(&self, _export_name: &str) -> Option<&E> {
