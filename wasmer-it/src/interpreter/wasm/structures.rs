@@ -4,7 +4,7 @@ use crate::ast::FunctionArg;
 use crate::IRecordType;
 use crate::IType;
 use crate::IValue;
-use std::rc::Rc;
+use std::sync::Arc;
 
 pub use it_memory_traits::{Memory, MemoryAccessError, MemoryView};
 use it_memory_traits::{MemoryReadable, MemoryWritable};
@@ -81,7 +81,7 @@ where
     fn local_or_import<I: TypedIndex + LocalImportIndex>(&self, index: I) -> Option<&LI>;
     fn memory(&self, index: usize) -> Option<&M>;
     fn memory_view(&self, index: usize) -> Option<MV>;
-    fn wit_record_by_id(&self, index: u64) -> Option<&Rc<IRecordType>>;
+    fn wit_record_by_id(&self, index: u64) -> Option<&Arc<IRecordType>>;
 }
 
 impl Export for () {
@@ -202,7 +202,7 @@ where
         None
     }
 
-    fn wit_record_by_id(&self, _index: u64) -> Option<&Rc<IRecordType>> {
+    fn wit_record_by_id(&self, _index: u64) -> Option<&Arc<IRecordType>> {
         None
     }
 }

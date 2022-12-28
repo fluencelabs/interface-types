@@ -5,8 +5,8 @@ use crate::{interpreter::Instruction, IRecordType, IType};
 
 use serde::Deserialize;
 use serde::Serialize;
-use std::rc::Rc;
 use std::str;
+use std::sync::Arc;
 
 /// Represents the kind of type.
 #[derive(PartialEq, Eq, Debug, Clone, Hash, Serialize, Deserialize)]
@@ -38,10 +38,10 @@ pub enum Type {
     /// ```
     Function {
         /// Types for the parameters (`(param (name i32))`).
-        arguments: Rc<Vec<FunctionArg>>,
+        arguments: Arc<Vec<FunctionArg>>,
 
         /// Types for the results (`(result …)`).
-        output_types: Rc<Vec<IType>>,
+        output_types: Arc<Vec<IType>>,
     },
 
     /// A record type, like:
@@ -49,7 +49,7 @@ pub enum Type {
     /// ```wasm,ignore
     /// (@interface type (record string i32))
     /// ```
-    Record(Rc<IRecordType>),
+    Record(Arc<IRecordType>),
 }
 
 /// Represents an imported function.

@@ -54,7 +54,8 @@ pub(crate) type ExecutableInstruction<Instance, Export, LocalImport, Memory, Mem
                 &mut Runtime<Instance, Export, LocalImport, Memory, MemoryView, Store>,
                 &mut <Store as it_memory_traits::Store>::ActualStore<'_>,
             ) -> InstructionResult<()>
-            + Send,
+            + Send
+            + Sync,
     >;
 
 /// An interpreter is the central piece of this crate. It is a set of
