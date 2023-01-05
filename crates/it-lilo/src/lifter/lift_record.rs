@@ -28,7 +28,11 @@ use crate::NEVec;
 
 use it_memory_traits::MemoryView;
 
-pub fn record_lift_memory<R: RecordResolvable, MV: MemoryView<Store>, Store: it_memory_traits::Store>(
+pub fn record_lift_memory<
+    R: RecordResolvable,
+    MV: MemoryView<Store>,
+    Store: it_memory_traits::Store,
+>(
     store: &mut <Store as it_memory_traits::Store>::ActualStore<'_>,
     lifter: &ILifter<'_, R, MV, Store>,
     record_type: &IRecordType,

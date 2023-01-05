@@ -31,30 +31,54 @@ pub trait MemoryReadable<Store: self::Store> {
     /// This function will panic if `[offset..offset + COUNT]` is out of bounds.
     /// It is caller's responsibility to check if the offset is in bounds
     /// using `MemoryView::check_bounds` function.
-    fn read_array<const COUNT: usize>(&self, store: &mut <Store as self::Store>::ActualStore<'_>, offset: u32) -> [u8; COUNT];
+    fn read_array<const COUNT: usize>(
+        &self,
+        store: &mut <Store as self::Store>::ActualStore<'_>,
+        offset: u32,
+    ) -> [u8; COUNT];
 
     /// This function will panic if `[offset..offset + size]` is out of bounds.
     /// It is caller's responsibility to check if the offset is in bounds
     /// using `MemoryView::check_bounds` function.
-    fn read_vec(&self, store: &mut <Store as self::Store>::ActualStore<'_>, offset: u32, size: u32) -> Vec<u8>;
+    fn read_vec(
+        &self,
+        store: &mut <Store as self::Store>::ActualStore<'_>,
+        offset: u32,
+        size: u32,
+    ) -> Vec<u8>;
 }
 
 pub trait MemoryWritable<Store: self::Store> {
     /// This function will panic if `offset` is out of bounds.
     /// It is caller's responsibility to check if the offset is in bounds
     /// using `MemoryView::check_bounds` function.
-    fn write_byte(&self, store: &mut <Store as self::Store>::ActualStore<'_>, offset: u32, value: u8);
+    fn write_byte(
+        &self,
+        store: &mut <Store as self::Store>::ActualStore<'_>,
+        offset: u32,
+        value: u8,
+    );
 
     /// This function will panic if `[offset..offset + bytes.len()]`.is out of bounds.
     /// It is caller's responsibility to check if the offset is in bounds
     /// using `MemoryView::check_bounds` function.
-    fn write_bytes(&self, store: &mut <Store as self::Store>::ActualStore<'_>,  offset: u32, bytes: &[u8]);
+    fn write_bytes(
+        &self,
+        store: &mut <Store as self::Store>::ActualStore<'_>,
+        offset: u32,
+        bytes: &[u8],
+    );
 }
 
 pub trait MemoryView<Store: self::Store>: MemoryWritable<Store> + MemoryReadable<Store> {
     /// For optimization purposes, user must check bounds first, then try read-write to memory
     /// `MemoryWritable` and `MemoryReadable` functions will panic in case of out of bounds access`
-    fn check_bounds(&self, store: &mut <Store as self::Store>::ActualStore<'_>, offset: u32, size: u32) -> Result<(), MemoryAccessError>;
+    fn check_bounds(
+        &self,
+        store: &mut <Store as self::Store>::ActualStore<'_>,
+        offset: u32,
+        size: u32,
+    ) -> Result<(), MemoryAccessError>;
 }
 
 pub trait Memory<View, Store: self::Store>

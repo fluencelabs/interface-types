@@ -24,7 +24,11 @@ use crate::IValue;
 
 use it_memory_traits::MemoryView;
 
-pub fn array_lift_memory<R: RecordResolvable, MV: MemoryView<Store>, Store: it_memory_traits::Store>(
+pub fn array_lift_memory<
+    R: RecordResolvable,
+    MV: MemoryView<Store>,
+    Store: it_memory_traits::Store,
+>(
     store: &mut <Store as it_memory_traits::Store>::ActualStore<'_>,
     lifter: &ILifter<'_, R, MV, Store>,
     value_type: &IType,
@@ -69,9 +73,11 @@ fn read_string_array<R: RecordResolvable, MV: MemoryView<Store>, Store: it_memor
     elements_count: u32,
 ) -> LiResult<Vec<IValue>> {
     let mut result = Vec::with_capacity(elements_count as usize);
-    let seq_reader = lifter
-        .reader
-        .sequential_reader(store, offset, ser_type_size(&IType::String) * elements_count)?;
+    let seq_reader = lifter.reader.sequential_reader(
+        store,
+        offset,
+        ser_type_size(&IType::String) * elements_count,
+    )?;
 
     for _ in 0..elements_count {
         let offset = seq_reader.read_u32(store);
@@ -93,9 +99,10 @@ fn read_array_array<R: RecordResolvable, MV: MemoryView<Store>, Store: it_memory
     elements_count: u32,
 ) -> LiResult<Vec<IValue>> {
     let mut result = Vec::with_capacity(elements_count as usize);
-    let seq_reader = lifter
-        .reader
-        .sequential_reader(store, offset, ser_type_size(ty) * elements_count)?;
+    let seq_reader =
+        lifter
+            .reader
+            .sequential_reader(store, offset, ser_type_size(ty) * elements_count)?;
 
     for _ in 0..elements_count {
         let offset = seq_reader.read_u32(store);
@@ -116,9 +123,11 @@ fn read_record_array<R: RecordResolvable, MV: MemoryView<Store>, Store: it_memor
     elements_count: u32,
 ) -> LiResult<Vec<IValue>> {
     let mut result = Vec::with_capacity(elements_count as usize);
-    let seq_reader = lifter
-        .reader
-        .sequential_reader(store, offset, ser_type_size(&IType::Record(0)) * elements_count)?;
+    let seq_reader = lifter.reader.sequential_reader(
+        store,
+        offset,
+        ser_type_size(&IType::Record(0)) * elements_count,
+    )?;
 
     for _ in 0..elements_count {
         let offset = seq_reader.read_u32(store);

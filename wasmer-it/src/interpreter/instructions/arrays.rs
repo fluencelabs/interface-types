@@ -74,8 +74,9 @@ where
 
             let li_helper = lilo::LiHelper::new(&**instance);
             let lifter = ILifter::new(memory_view, &li_helper);
-            let array = it_lilo::lifter::array_lift_memory(store, &lifter, &value_type, offset, size)
-                .map_err(|e| InstructionError::from_li(instruction.clone(), e))?;
+            let array =
+                it_lilo::lifter::array_lift_memory(store, &lifter, &value_type, offset, size)
+                    .map_err(|e| InstructionError::from_li(instruction.clone(), e))?;
 
             log::trace!("array.lift_memory: pushing {:?} on the stack", array);
             runtime.stack.push(array);

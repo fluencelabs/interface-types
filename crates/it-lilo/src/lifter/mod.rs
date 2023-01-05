@@ -20,11 +20,11 @@ mod lift_record;
 mod macros;
 mod memory_reader;
 
-use std::marker::PhantomData;
 pub use error::LiError;
 pub use lift_array::array_lift_memory;
 pub use lift_record::record_lift_memory;
 pub use memory_reader::MemoryReader;
+use std::marker::PhantomData;
 
 use super::traits::RecordResolvable;
 
@@ -35,12 +35,18 @@ pub type LiResult<T> = std::result::Result<T, error::LiError>;
 pub struct ILifter<'r, R: RecordResolvable, MV: MemoryView<Store>, Store: it_memory_traits::Store> {
     pub reader: MemoryReader<MV, Store>,
     pub resolver: &'r R,
-    _phantom: PhantomData<Store>
+    _phantom: PhantomData<Store>,
 }
 
-impl<'r, R: RecordResolvable, MV: MemoryView<Store>, Store: it_memory_traits::Store> ILifter<'r, R, MV, Store> {
+impl<'r, R: RecordResolvable, MV: MemoryView<Store>, Store: it_memory_traits::Store>
+    ILifter<'r, R, MV, Store>
+{
     pub fn new(view: MV, resolver: &'r R) -> Self {
         let reader = MemoryReader::new(view);
-        Self { reader, resolver, _phantom: PhantomData }
+        Self {
+            reader,
+            resolver,
+            _phantom: PhantomData,
+        }
     }
 }

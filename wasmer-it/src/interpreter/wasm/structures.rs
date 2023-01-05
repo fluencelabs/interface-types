@@ -145,7 +145,8 @@ pub(crate) struct EmptyMemoryView;
 impl<S: Store> MemoryWritable<S> for EmptyMemoryView {
     fn write_byte(&self, _store: &mut <S as Store>::ActualStore<'_>, _offset: u32, _value: u8) {}
 
-    fn write_bytes(&self, _store: &mut <S as Store>::ActualStore<'_>, _offset: u32, _bytes: &[u8]) {}
+    fn write_bytes(&self, _store: &mut <S as Store>::ActualStore<'_>, _offset: u32, _bytes: &[u8]) {
+    }
 }
 
 impl<S: Store> MemoryReadable<S> for EmptyMemoryView {
@@ -153,17 +154,31 @@ impl<S: Store> MemoryReadable<S> for EmptyMemoryView {
         0
     }
 
-    fn read_array<const COUNT: usize>(&self, _store: &mut <S as Store>::ActualStore<'_>, _offset: u32) -> [u8; COUNT] {
+    fn read_array<const COUNT: usize>(
+        &self,
+        _store: &mut <S as Store>::ActualStore<'_>,
+        _offset: u32,
+    ) -> [u8; COUNT] {
         [0; COUNT]
     }
 
-    fn read_vec(&self, _store: &mut <S as Store>::ActualStore<'_>, _offset: u32, _size: u32) -> Vec<u8> {
+    fn read_vec(
+        &self,
+        _store: &mut <S as Store>::ActualStore<'_>,
+        _offset: u32,
+        _size: u32,
+    ) -> Vec<u8> {
         Vec::default()
     }
 }
 
 impl<S: Store> MemoryView<S> for EmptyMemoryView {
-    fn check_bounds(&self, _store: &mut <S as Store>::ActualStore<'_>, offset: u32, size: u32) -> Result<(), MemoryAccessError> {
+    fn check_bounds(
+        &self,
+        _store: &mut <S as Store>::ActualStore<'_>,
+        offset: u32,
+        size: u32,
+    ) -> Result<(), MemoryAccessError> {
         Err(MemoryAccessError::OutOfBounds {
             size,
             offset,

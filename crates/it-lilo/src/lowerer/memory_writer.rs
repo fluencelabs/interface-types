@@ -106,7 +106,11 @@ impl SequentialWriter {
         self.offset.set(offset + N as u32);
     }
 
-    pub fn write_u8<MV: MemoryView<Store>, Store: it_memory_traits::Store, A: Allocatable<MV, Store>>(
+    pub fn write_u8<
+        MV: MemoryView<Store>,
+        Store: it_memory_traits::Store,
+        A: Allocatable<MV, Store>,
+    >(
         &self,
         store: &mut <Store as it_memory_traits::Store>::ActualStore<'_>,
         writer: &MemoryWriter<'_, A, MV, Store>,
@@ -119,7 +123,11 @@ impl SequentialWriter {
         self.offset.set(offset + 1);
     }
 
-    pub fn write_u32<MV: MemoryView<Store>, Store: it_memory_traits::Store, A: Allocatable<MV, Store>>(
+    pub fn write_u32<
+        MV: MemoryView<Store>,
+        Store: it_memory_traits::Store,
+        A: Allocatable<MV, Store>,
+    >(
         &self,
         store: &mut <Store as it_memory_traits::Store>::ActualStore<'_>,
         writer: &MemoryWriter<'_, A, MV, Store>,
