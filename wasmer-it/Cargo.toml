@@ -14,7 +14,7 @@ it-lilo = { path = "../crates/it-lilo", version = "0.4.2" }
 it-memory-traits = { path = "../crates/it-memory-traits", version = "0.3.2" }
 
 nom = "7.1"
-wast = "8.0"
+wast = "52.0"
 
 # `serde` is useful only to simplify the users' life. It is not
 # required by WIT itself, is is used to cross the boundary between the
