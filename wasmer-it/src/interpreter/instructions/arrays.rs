@@ -40,7 +40,7 @@ where
     #[allow(unused_imports)]
     use crate::interpreter::stack::Stackable;
     Box::new({
-        move |runtime, store| -> _ {
+        move |runtime| -> _ {
             let mut inputs = runtime.stack.pop(2).ok_or_else(|| {
                 InstructionError::from_error_kind(
                     instruction.clone(),
@@ -75,7 +75,7 @@ where
             let li_helper = lilo::LiHelper::new(&**instance);
             let lifter = ILifter::new(memory_view, &li_helper);
             let array =
-                it_lilo::lifter::array_lift_memory(store, &lifter, &value_type, offset, size)
+                it_lilo::lifter::array_lift_memory(runtime.store, &lifter, &value_type, offset, size)
                     .map_err(|e| InstructionError::from_li(instruction.clone(), e))?;
 
             log::trace!("array.lift_memory: pushing {:?} on the stack", array);
@@ -114,7 +114,7 @@ where
     #[allow(unused_imports)]
     use crate::interpreter::stack::Stackable;
     Box::new({
-        move |runtime, store| -> _ {
+        move |runtime| -> _ {
             let instance = &mut runtime.wasm_instance;
             let stack_value = runtime.stack.pop1().ok_or_else(|| {
                 InstructionError::from_error_kind(
@@ -149,7 +149,7 @@ where
                         .map_err(|e| InstructionError::from_lo(instruction.clone(), e))?;
 
                     let LoweredArray { offset, size } =
-                        it_lilo::lowerer::array_lower_memory(store, &mut lowerer, values)
+                        it_lilo::lowerer::array_lower_memory(runtime.store, &mut lowerer, values)
                             .map_err(|e| InstructionError::from_lo(instruction.clone(), e))?;
 
                     log::trace!(
@@ -180,7 +180,7 @@ where
 
                     let offset = lowerer
                         .writer
-                        .write_bytes(store, &bytearray)
+                        .write_bytes(runtime.store, &bytearray)
                         .map_err(|e| InstructionError::from_lo(instruction.clone(), e))?;
                     let size = bytearray.len();
 

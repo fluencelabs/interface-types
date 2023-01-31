@@ -3,7 +3,7 @@ use crate::{errors::InstructionErrorKind, interpreter::Instruction};
 
 executable_instruction!(
     argument_get(index: u32, instruction: Instruction) -> _ {
-        move |runtime, _| -> _ {
+        move |runtime| -> _ {
             let invocation_inputs = runtime.invocation_inputs;
 
             if (index as usize) >= invocation_inputs.len() {

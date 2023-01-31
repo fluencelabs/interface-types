@@ -16,6 +16,8 @@ use std::{convert::TryFrom, marker::PhantomData};
 pub(crate) struct Runtime<
     'invocation,
     'instance,
+    'store_ref,
+    'store_param,
     Instance,
     Export,
     LocalImport,
@@ -41,6 +43,7 @@ pub(crate) struct Runtime<
     /// The WebAssembly module instance. It is used by adapter's
     /// instructions.
     wasm_instance: &'instance mut Instance,
+    store: &'store_ref mut <Store as it_memory_traits::Store>::ActualStore<'store_param>,
 
     /// Phantom data.
     _phantom: PhantomData<(Export, LocalImport, Memory, MemoryView, Store)>,
@@ -50,10 +53,7 @@ pub(crate) struct Runtime<
 /// details, but an instruction is a boxed closure instance.
 pub(crate) type ExecutableInstruction<Instance, Export, LocalImport, Memory, MemoryView, Store> =
     Box<
-        dyn Fn(
-                &mut Runtime<Instance, Export, LocalImport, Memory, MemoryView, Store>,
-                &mut <Store as it_memory_traits::Store>::ActualStore<'_>,
-            ) -> InstructionResult<()>
+        dyn Fn(&mut Runtime<Instance, Export, LocalImport, Memory, MemoryView, Store>, ) -> InstructionResult<()>
             + Send
             + Sync,
     >;
@@ -182,11 +182,12 @@ where
             invocation_inputs,
             stack: Stack::new(),
             wasm_instance,
+            store: wasm_store,
             _phantom: PhantomData,
         };
 
         for executable_instruction in self.iter() {
-            executable_instruction(&mut runtime, wasm_store)?;
+            executable_instruction(&mut runtime)?;
         }
 
         Ok(runtime.stack)

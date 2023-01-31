@@ -37,7 +37,7 @@ where
     #[allow(unused_imports)]
     use crate::interpreter::stack::Stackable;
     Box::new({
-        move |runtime, store| -> _ {
+        move |runtime| -> _ {
             let mut inputs = runtime.stack.pop(1).ok_or_else(|| {
                 InstructionError::from_error_kind(
                     instruction.clone(),
@@ -75,7 +75,7 @@ where
 
             let li_helper = lilo::LiHelper::new(&**instance);
             let lifter = ILifter::new(memory_view, &li_helper);
-            let record = it_lilo::lifter::record_lift_memory(store, &lifter, record_type, offset)
+            let record = it_lilo::lifter::record_lift_memory(runtime.store, &lifter, record_type, offset)
                 .map_err(|e| InstructionError::from_li(instruction.clone(), e))?;
 
             log::debug!("record.lift_memory: pushing {:?} on the stack", record);
@@ -114,7 +114,7 @@ where
     #[allow(unused_imports)]
     use crate::interpreter::stack::Stackable;
     Box::new({
-        move |runtime, store| -> _ {
+        move |runtime| -> _ {
             let instance = &mut runtime.wasm_instance;
 
             match runtime.stack.pop1() {
@@ -143,7 +143,7 @@ where
                     let mut memory_writer = ILowerer::new(memory_view, &mut lo_helper)
                         .map_err(|e| InstructionError::from_lo(instruction.clone(), e))?;
                     let offset = it_lilo::lowerer::record_lower_memory(
-                        store,
+                        runtime.store,
                         &mut memory_writer,
                         record_fields,
                     )
