@@ -61,39 +61,17 @@ pub fn array_lower_memory<
         match value {
             IValue::Boolean(value) => seq_writer.write_u8(store, &lowerer.writer, value as _),
             IValue::S8(value) => seq_writer.write_u8(store, &lowerer.writer, value as _),
-            IValue::S16(value) => {
-                seq_writer.write_bytes(store, &lowerer.writer, &value.to_le_bytes())
-            }
-            IValue::S32(value) => {
-                seq_writer.write_bytes(store, &lowerer.writer, &value.to_le_bytes())
-            }
-            IValue::S64(value) => {
-                seq_writer.write_bytes(store, &lowerer.writer, &value.to_le_bytes())
-            }
-            IValue::U8(value) => {
-                seq_writer.write_bytes(store, &lowerer.writer, &value.to_le_bytes())
-            }
-            IValue::U16(value) => {
-                seq_writer.write_bytes(store, &lowerer.writer, &value.to_le_bytes())
-            }
-            IValue::U32(value) => {
-                seq_writer.write_bytes(store, &lowerer.writer, &value.to_le_bytes())
-            }
-            IValue::U64(value) => {
-                seq_writer.write_bytes(store, &lowerer.writer, &value.to_le_bytes())
-            }
-            IValue::I32(value) => {
-                seq_writer.write_bytes(store, &lowerer.writer, &value.to_le_bytes())
-            }
-            IValue::I64(value) => {
-                seq_writer.write_bytes(store, &lowerer.writer, &value.to_le_bytes())
-            }
-            IValue::F32(value) => {
-                seq_writer.write_bytes(store, &lowerer.writer, &value.to_le_bytes())
-            }
-            IValue::F64(value) => {
-                seq_writer.write_bytes(store, &lowerer.writer, &value.to_le_bytes())
-            }
+            IValue::S16(value) => seq_writer.write_bytes(store, &lowerer.writer, &value.to_le_bytes()),
+            IValue::S32(value) => seq_writer.write_bytes(store, &lowerer.writer, &value.to_le_bytes()),
+            IValue::S64(value) => seq_writer.write_bytes(store, &lowerer.writer, &value.to_le_bytes()),
+            IValue::U8(value) => seq_writer.write_bytes(store, &lowerer.writer, &value.to_le_bytes()),
+            IValue::U16(value) => seq_writer.write_bytes(store, &lowerer.writer, &value.to_le_bytes()),
+            IValue::U32(value) => seq_writer.write_bytes(store, &lowerer.writer, &value.to_le_bytes()),
+            IValue::U64(value) => seq_writer.write_bytes(store, &lowerer.writer, &value.to_le_bytes()),
+            IValue::I32(value) => seq_writer.write_bytes(store, &lowerer.writer, &value.to_le_bytes()),
+            IValue::I64(value) => seq_writer.write_bytes(store, &lowerer.writer, &value.to_le_bytes()),
+            IValue::F32(value) => seq_writer.write_bytes(store, &lowerer.writer, &value.to_le_bytes()),
+            IValue::F64(value) => seq_writer.write_bytes(store, &lowerer.writer, &value.to_le_bytes()),
             IValue::String(value) => {
                 let offset = lowerer.writer.write_bytes(store, &value.as_bytes())? as u32;
 
