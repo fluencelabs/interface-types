@@ -102,7 +102,6 @@ impl<MV: MemoryView<Store>, Store: it_memory_traits::Store> MemoryReader<MV, Sto
 pub struct SequentialReader<'r, MV: MemoryView<Store>, Store: it_memory_traits::Store> {
     reader: &'r MemoryReader<MV, Store>,
     offset: Cell<u32>,
-    _phantom: PhantomData<Store>,
 }
 
 impl<'r, MV: MemoryView<Store>, Store: it_memory_traits::Store> SequentialReader<'r, MV, Store> {
@@ -110,7 +109,6 @@ impl<'r, MV: MemoryView<Store>, Store: it_memory_traits::Store> SequentialReader
         Self {
             reader,
             offset: Cell::new(offset),
-            _phantom: PhantomData,
         }
     }
 

@@ -24,7 +24,6 @@ pub use error::LiError;
 pub use lift_array::array_lift_memory;
 pub use lift_record::record_lift_memory;
 pub use memory_reader::MemoryReader;
-use std::marker::PhantomData;
 
 use super::traits::RecordResolvable;
 
@@ -35,7 +34,6 @@ pub type LiResult<T> = std::result::Result<T, error::LiError>;
 pub struct ILifter<'r, R: RecordResolvable, MV: MemoryView<Store>, Store: it_memory_traits::Store> {
     pub reader: MemoryReader<MV, Store>,
     pub resolver: &'r R,
-    _phantom: PhantomData<Store>,
 }
 
 impl<'r, R: RecordResolvable, MV: MemoryView<Store>, Store: it_memory_traits::Store>
@@ -46,7 +44,6 @@ impl<'r, R: RecordResolvable, MV: MemoryView<Store>, Store: it_memory_traits::St
         Self {
             reader,
             resolver,
-            _phantom: PhantomData,
         }
     }
 }
