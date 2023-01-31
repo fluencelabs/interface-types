@@ -8,8 +8,7 @@ use nom::{
     error::{make_error, ErrorKind, ParseError},
     Err, IResult,
 };
-use std::sync::Arc;
-use std::{convert::TryFrom, str};
+use std::{convert::TryFrom, str, sync::Arc};
 
 /// Parse a type kind.
 impl TryFrom<u8> for TypeKind {

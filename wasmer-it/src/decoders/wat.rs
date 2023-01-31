@@ -2,10 +2,12 @@
 
 use crate::IType;
 use crate::{ast::*, interpreter::Instruction};
-use std::sync::Arc;
+
 pub use wast::parser::ParseBuffer as Buffer;
 use wast::parser::{self, Cursor, Parse, Parser, Peek, Result};
 pub use wast::Error;
+
+use std::sync::Arc;
 
 mod keyword {
     pub use wast::{
