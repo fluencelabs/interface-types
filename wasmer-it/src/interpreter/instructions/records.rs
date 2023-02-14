@@ -9,17 +9,30 @@ use it_lilo::lifter::ILifter;
 use it_lilo::lowerer::ILowerer;
 use it_lilo::traits::DEFAULT_MEMORY_INDEX;
 
-pub(crate) fn record_lift_memory<Instance, Export, LocalImport, Memory, MemoryView>(
+pub(crate) fn record_lift_memory<Instance, Export, LocalImport, Memory, MemoryView, Store>(
     record_type_id: u64,
     instruction: Instruction,
-) -> crate::interpreter::ExecutableInstruction<Instance, Export, LocalImport, Memory, MemoryView>
+) -> crate::interpreter::ExecutableInstruction<
+    Instance,
+    Export,
+    LocalImport,
+    Memory,
+    MemoryView,
+    Store,
+>
 where
     Export: crate::interpreter::wasm::structures::Export,
-    LocalImport: crate::interpreter::wasm::structures::LocalImport,
-    Memory: crate::interpreter::wasm::structures::Memory<MemoryView>,
-    MemoryView: crate::interpreter::wasm::structures::MemoryView,
-    Instance:
-        crate::interpreter::wasm::structures::Instance<Export, LocalImport, Memory, MemoryView>,
+    LocalImport: crate::interpreter::wasm::structures::LocalImport<Store>,
+    Memory: crate::interpreter::wasm::structures::Memory<MemoryView, Store>,
+    MemoryView: crate::interpreter::wasm::structures::MemoryView<Store>,
+    Instance: crate::interpreter::wasm::structures::Instance<
+        Export,
+        LocalImport,
+        Memory,
+        MemoryView,
+        Store,
+    >,
+    Store: crate::interpreter::wasm::structures::Store,
 {
     #[allow(unused_imports)]
     use crate::interpreter::stack::Stackable;
@@ -62,7 +75,7 @@ where
 
             let li_helper = lilo::LiHelper::new(&**instance);
             let lifter = ILifter::new(memory_view, &li_helper);
-            let record = it_lilo::lifter::record_lift_memory(&lifter, record_type, offset)
+            let record = it_lilo::lifter::record_lift_memory(runtime.store, &lifter, record_type, offset)
                 .map_err(|e| InstructionError::from_li(instruction.clone(), e))?;
 
             log::debug!("record.lift_memory: pushing {:?} on the stack", record);
@@ -73,17 +86,30 @@ where
     })
 }
 
-pub(crate) fn record_lower_memory<Instance, Export, LocalImport, Memory, MemoryView>(
+pub(crate) fn record_lower_memory<Instance, Export, LocalImport, Memory, MemoryView, Store>(
     record_type_id: u64,
     instruction: Instruction,
-) -> crate::interpreter::ExecutableInstruction<Instance, Export, LocalImport, Memory, MemoryView>
+) -> crate::interpreter::ExecutableInstruction<
+    Instance,
+    Export,
+    LocalImport,
+    Memory,
+    MemoryView,
+    Store,
+>
 where
     Export: crate::interpreter::wasm::structures::Export,
-    LocalImport: crate::interpreter::wasm::structures::LocalImport,
-    Memory: crate::interpreter::wasm::structures::Memory<MemoryView>,
-    MemoryView: crate::interpreter::wasm::structures::MemoryView,
-    Instance:
-        crate::interpreter::wasm::structures::Instance<Export, LocalImport, Memory, MemoryView>,
+    LocalImport: crate::interpreter::wasm::structures::LocalImport<Store>,
+    Memory: crate::interpreter::wasm::structures::Memory<MemoryView, Store>,
+    MemoryView: crate::interpreter::wasm::structures::MemoryView<Store>,
+    Instance: crate::interpreter::wasm::structures::Instance<
+        Export,
+        LocalImport,
+        Memory,
+        MemoryView,
+        Store,
+    >,
+    Store: crate::interpreter::wasm::structures::Store,
 {
     #[allow(unused_imports)]
     use crate::interpreter::stack::Stackable;
@@ -113,12 +139,15 @@ where
                         })?
                         .view();
 
-                    let lo_helper = lilo::LoHelper::new(&**instance);
-                    let memory_writer = ILowerer::new(memory_view, &lo_helper)
+                    let mut lo_helper = lilo::LoHelper::new(&**instance);
+                    let mut memory_writer = ILowerer::new(memory_view, &mut lo_helper)
                         .map_err(|e| InstructionError::from_lo(instruction.clone(), e))?;
-                    let offset =
-                        it_lilo::lowerer::record_lower_memory(&memory_writer, record_fields)
-                            .map_err(|e| InstructionError::from_lo(instruction.clone(), e))?;
+                    let offset = it_lilo::lowerer::record_lower_memory(
+                        runtime.store,
+                        &mut memory_writer,
+                        record_fields,
+                    )
+                    .map_err(|e| InstructionError::from_lo(instruction.clone(), e))?;
 
                     log::debug!("record.lower_memory: pushing {} on the stack", offset);
                     runtime.stack.push(IValue::I32(offset as i32));

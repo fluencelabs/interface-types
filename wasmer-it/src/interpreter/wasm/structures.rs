@@ -4,7 +4,7 @@ use crate::ast::FunctionArg;
 use crate::IRecordType;
 use crate::IType;
 use crate::IValue;
-use std::rc::Rc;
+use std::sync::Arc;
 
 pub use it_memory_traits::{Memory, MemoryAccessError, MemoryView};
 use it_memory_traits::{MemoryReadable, MemoryWritable};
@@ -54,27 +54,34 @@ pub trait Export {
     fn call(&self, arguments: &[IValue]) -> Result<Vec<IValue>, ()>;
 }
 
-pub trait LocalImport {
+pub trait LocalImport<Store: self::Store> {
     fn name(&self) -> &str;
     fn inputs_cardinality(&self) -> usize;
     fn outputs_cardinality(&self) -> usize;
     fn arguments(&self) -> &[FunctionArg];
     fn outputs(&self) -> &[IType];
-    fn call(&self, arguments: &[IValue]) -> Result<Vec<IValue>, ()>;
+    fn call(
+        &self,
+        store: &mut <Store as self::Store>::ActualStore<'_>,
+        arguments: &[IValue],
+    ) -> Result<Vec<IValue>, ()>;
 }
 
-pub trait Instance<E, LI, M, MV>
+pub use it_memory_traits::Store;
+
+pub trait Instance<E, LI, M, MV, S>
 where
     E: Export,
-    LI: LocalImport,
-    M: Memory<MV>,
-    MV: MemoryView,
+    LI: LocalImport<S>,
+    M: Memory<MV, S>,
+    MV: MemoryView<S>,
+    S: Store,
 {
     fn export(&self, export_name: &str) -> Option<&E>;
     fn local_or_import<I: TypedIndex + LocalImportIndex>(&self, index: I) -> Option<&LI>;
     fn memory(&self, index: usize) -> Option<&M>;
     fn memory_view(&self, index: usize) -> Option<MV>;
-    fn wit_record_by_id(&self, index: u64) -> Option<&Rc<IRecordType>>;
+    fn wit_record_by_id(&self, index: u64) -> Option<&Arc<IRecordType>>;
 }
 
 impl Export for () {
@@ -103,7 +110,7 @@ impl Export for () {
     }
 }
 
-impl LocalImport for () {
+impl<Store: self::Store> LocalImport<Store> for () {
     fn name(&self) -> &str {
         ""
     }
@@ -124,35 +131,54 @@ impl LocalImport for () {
         &[]
     }
 
-    fn call(&self, _arguments: &[IValue]) -> Result<Vec<IValue>, ()> {
+    fn call(
+        &self,
+        _store: &mut <Store as self::Store>::ActualStore<'_>,
+        _arguments: &[IValue],
+    ) -> Result<Vec<IValue>, ()> {
         Err(())
     }
 }
 
 pub(crate) struct EmptyMemoryView;
 
-impl MemoryWritable for EmptyMemoryView {
-    fn write_byte(&self, _offset: u32, _value: u8) {}
+impl<S: Store> MemoryWritable<S> for EmptyMemoryView {
+    fn write_byte(&self, _store: &mut <S as Store>::ActualStore<'_>, _offset: u32, _value: u8) {}
 
-    fn write_bytes(&self, _offset: u32, _bytes: &[u8]) {}
+    fn write_bytes(&self, _store: &mut <S as Store>::ActualStore<'_>, _offset: u32, _bytes: &[u8]) {
+    }
 }
 
-impl MemoryReadable for EmptyMemoryView {
-    fn read_byte(&self, _offset: u32) -> u8 {
+impl<S: Store> MemoryReadable<S> for EmptyMemoryView {
+    fn read_byte(&self, _store: &mut <S as Store>::ActualStore<'_>, _offset: u32) -> u8 {
         0
     }
 
-    fn read_array<const COUNT: usize>(&self, _offset: u32) -> [u8; COUNT] {
+    fn read_array<const COUNT: usize>(
+        &self,
+        _store: &mut <S as Store>::ActualStore<'_>,
+        _offset: u32,
+    ) -> [u8; COUNT] {
         [0; COUNT]
     }
 
-    fn read_vec(&self, _offset: u32, _size: u32) -> Vec<u8> {
+    fn read_vec(
+        &self,
+        _store: &mut <S as Store>::ActualStore<'_>,
+        _offset: u32,
+        _size: u32,
+    ) -> Vec<u8> {
         Vec::default()
     }
 }
 
-impl MemoryView for EmptyMemoryView {
-    fn check_bounds(&self, offset: u32, size: u32) -> Result<(), MemoryAccessError> {
+impl<S: Store> MemoryView<S> for EmptyMemoryView {
+    fn check_bounds(
+        &self,
+        _store: &mut <S as Store>::ActualStore<'_>,
+        offset: u32,
+        size: u32,
+    ) -> Result<(), MemoryAccessError> {
         Err(MemoryAccessError::OutOfBounds {
             size,
             offset,
@@ -161,18 +187,19 @@ impl MemoryView for EmptyMemoryView {
     }
 }
 
-impl Memory<EmptyMemoryView> for () {
+impl<S: Store> Memory<EmptyMemoryView, S> for () {
     fn view(&self) -> EmptyMemoryView {
         EmptyMemoryView
     }
 }
 
-impl<E, LI, M, MV> Instance<E, LI, M, MV> for ()
+impl<E, LI, M, MV, S> Instance<E, LI, M, MV, S> for ()
 where
     E: Export,
-    LI: LocalImport,
-    M: Memory<MV>,
-    MV: MemoryView,
+    LI: LocalImport<S>,
+    M: Memory<MV, S>,
+    MV: MemoryView<S>,
+    S: Store,
 {
     fn export(&self, _export_name: &str) -> Option<&E> {
         None
@@ -190,7 +217,7 @@ where
         None
     }
 
-    fn wit_record_by_id(&self, _index: u64) -> Option<&Rc<IRecordType>> {
+    fn wit_record_by_id(&self, _index: u64) -> Option<&Arc<IRecordType>> {
         None
     }
 }

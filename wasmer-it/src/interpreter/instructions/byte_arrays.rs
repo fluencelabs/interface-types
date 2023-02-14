@@ -42,10 +42,10 @@ executable_instruction!(
             }
 
             memory_view
-                .check_bounds(pointer, length)
+                .check_bounds(runtime.store, pointer, length)
                 .map_err(|e| InstructionError::from_memory_access(instruction.clone(), e))?;
 
-            let data = memory_view.read_vec(pointer, length);
+            let data = memory_view.read_vec(runtime.store, pointer, length);
 
             log::debug!("byte_array.lift_memory: pushing {:?} on the stack", data);
             runtime.stack.push(IValue::ByteArray(data));
@@ -82,10 +82,10 @@ executable_instruction!(
                 .view();
 
             memory_view
-                .check_bounds(array_pointer, array.len() as u32)
+                .check_bounds(runtime.store, array_pointer, array.len() as u32)
                 .map_err(|e| InstructionError::from_memory_access(instruction.clone(), e))?;
 
-            memory_view.write_bytes(array_pointer, &array);
+            memory_view.write_bytes(runtime.store, array_pointer, &array);
 
             log::debug!("string.lower_memory: pushing {}, {} on the stack", array_pointer, length);
             runtime.stack.push(IValue::I32(array_pointer as i32));

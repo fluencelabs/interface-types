@@ -34,7 +34,7 @@ executable_instruction!(
 
             log::debug!("call-core: calling {} with arguments: {:?}", local_or_import.name(), inputs);
 
-            let outputs = local_or_import.call(&inputs).map_err(|_| {
+            let outputs = local_or_import.call(runtime.store, &inputs).map_err(|_| {
                 InstructionError::from_error_kind(
                     instruction.clone(),
                     InstructionErrorKind::LocalOrImportCall {

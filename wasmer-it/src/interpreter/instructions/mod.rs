@@ -233,6 +233,7 @@ pub(crate) fn check_function_signature<
     LocalImport,
     Memory,
     MemoryView,
+    Store,
 >(
     instance: &'instance Instance,
     local_import: &LocalImport,
@@ -240,10 +241,11 @@ pub(crate) fn check_function_signature<
 ) -> Result<(), InstructionErrorKind>
 where
     Export: wasm::structures::Export + 'instance,
-    LocalImport: wasm::structures::LocalImport + 'instance,
-    Memory: wasm::structures::Memory<MemoryView> + 'instance,
-    MemoryView: wasm::structures::MemoryView,
-    Instance: wasm::structures::Instance<Export, LocalImport, Memory, MemoryView>,
+    LocalImport: wasm::structures::LocalImport<Store> + 'instance,
+    Memory: wasm::structures::Memory<MemoryView, Store> + 'instance,
+    MemoryView: wasm::structures::MemoryView<Store>,
+    Instance: wasm::structures::Instance<Export, LocalImport, Memory, MemoryView, Store>,
+    Store: wasm::structures::Store,
 {
     let func_inputs = local_import.arguments();
 
@@ -262,6 +264,7 @@ pub(crate) fn is_value_compatible_to_type<
     LocalImport,
     Memory,
     MemoryView,
+    Store,
 >(
     instance: &'instance Instance,
     interface_type: &IType,
@@ -269,10 +272,11 @@ pub(crate) fn is_value_compatible_to_type<
 ) -> Result<(), InstructionErrorKind>
 where
     Export: wasm::structures::Export + 'instance,
-    LocalImport: wasm::structures::LocalImport + 'instance,
-    Memory: wasm::structures::Memory<MemoryView> + 'instance,
-    MemoryView: wasm::structures::MemoryView,
-    Instance: wasm::structures::Instance<Export, LocalImport, Memory, MemoryView>,
+    LocalImport: wasm::structures::LocalImport<Store> + 'instance,
+    Memory: wasm::structures::Memory<MemoryView, Store> + 'instance,
+    MemoryView: wasm::structures::MemoryView<Store>,
+    Instance: wasm::structures::Instance<Export, LocalImport, Memory, MemoryView, Store>,
+    Store: wasm::structures::Store,
 {
     match (&interface_type, interface_value) {
         (IType::Boolean, IValue::Boolean(_)) => Ok(()),
@@ -333,6 +337,7 @@ pub(crate) fn is_record_fields_compatible_to_type<
     LocalImport,
     Memory,
     MemoryView,
+    Store,
 >(
     instance: &'instance Instance,
     record_type_id: u64,
@@ -340,10 +345,11 @@ pub(crate) fn is_record_fields_compatible_to_type<
 ) -> Result<(), InstructionErrorKind>
 where
     Export: wasm::structures::Export + 'instance,
-    LocalImport: wasm::structures::LocalImport + 'instance,
-    Memory: wasm::structures::Memory<MemoryView> + 'instance,
-    MemoryView: wasm::structures::MemoryView,
-    Instance: wasm::structures::Instance<Export, LocalImport, Memory, MemoryView>,
+    LocalImport: wasm::structures::LocalImport<Store> + 'instance,
+    Memory: wasm::structures::Memory<MemoryView, Store> + 'instance,
+    MemoryView: wasm::structures::MemoryView<Store>,
+    Instance: wasm::structures::Instance<Export, LocalImport, Memory, MemoryView, Store>,
+    Store: wasm::structures::Store,
 {
     let record_type = instance
         .wit_record_by_id(record_type_id)
@@ -453,7 +459,7 @@ pub(crate) mod tests {
         }
     }
 
-    impl wasm::structures::Memory<MemoryView> for Memory {
+    impl wasm::structures::Memory<MemoryView, Store> for Memory {
         fn view(&self) -> MemoryView {
             self.view.clone()
         }

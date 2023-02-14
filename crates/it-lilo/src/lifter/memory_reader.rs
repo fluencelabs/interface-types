@@ -22,43 +22,63 @@ use crate::IValue;
 use it_memory_traits::MemoryView;
 
 use std::cell::Cell;
+use std::marker::PhantomData;
 
-pub struct MemoryReader<MV> {
+pub struct MemoryReader<MV: MemoryView<Store>, Store: it_memory_traits::Store> {
     pub(self) view: MV,
+    _phantom: PhantomData<Store>,
 }
 
-impl<MV: MemoryView> MemoryReader<MV> {
+impl<MV: MemoryView<Store>, Store: it_memory_traits::Store> MemoryReader<MV, Store> {
     pub fn new(view: MV) -> Self {
-        Self { view }
+        Self {
+            view,
+            _phantom: PhantomData,
+        }
     }
 
     /// Returns reader that allows read sequentially. It's important that memory limit is checked
     /// only inside this function. All others functions of the returned reader don't have any
     /// checks assuming that reader is well-formed.
-    pub fn sequential_reader(&self, offset: u32, size: u32) -> LiResult<SequentialReader<'_, MV>> {
-        self.view.check_bounds(offset, size)?;
+    pub fn sequential_reader(
+        &self,
+        store: &mut <Store as it_memory_traits::Store>::ActualStore<'_>,
+        offset: u32,
+        size: u32,
+    ) -> LiResult<SequentialReader<'_, MV, Store>> {
+        self.view.check_bounds(store, offset, size)?;
         let seq_reader = SequentialReader::new(&self, offset);
         Ok(seq_reader)
     }
 
-    pub fn read_raw_u8_array(&self, offset: u32, elements_count: u32) -> LiResult<Vec<u8>> {
-        let reader = self.sequential_reader(offset, elements_count)?;
+    pub fn read_raw_u8_array(
+        &self,
+        store: &mut <Store as it_memory_traits::Store>::ActualStore<'_>,
+        offset: u32,
+        elements_count: u32,
+    ) -> LiResult<Vec<u8>> {
+        let reader = self.sequential_reader(store, offset, elements_count)?;
         let mut result = Vec::with_capacity(elements_count as usize);
 
         for _ in 0..elements_count {
-            let value = reader.read_u8();
+            let value = reader.read_u8(store);
             result.push(value);
         }
 
         Ok(result)
     }
 
-    pub fn read_bool_array(&self, offset: u32, elements_count: u32) -> LiResult<Vec<IValue>> {
-        let reader = self.sequential_reader(offset, elements_count)?;
+    pub fn read_bool_array(
+        &self,
+        store: &mut <Store as it_memory_traits::Store>::ActualStore<'_>,
+        offset: u32,
+        elements_count: u32,
+    ) -> LiResult<Vec<IValue>> {
+        let reader = self.sequential_reader(store, offset, elements_count)?;
         let mut result = Vec::with_capacity(elements_count as usize);
 
         for _ in 0..elements_count {
-            let value = reader.read_u8();
+            let value = reader.read_u8(store);
             result.push(IValue::Boolean(value != 0));
         }
 
@@ -79,21 +99,24 @@ impl<MV: MemoryView> MemoryReader<MV> {
     read_array_ty!(read_f64_array, f64, F64);
 }
 
-pub struct SequentialReader<'r, MV: MemoryView> {
-    reader: &'r MemoryReader<MV>,
+pub struct SequentialReader<'r, MV: MemoryView<Store>, Store: it_memory_traits::Store> {
+    reader: &'r MemoryReader<MV, Store>,
     offset: Cell<u32>,
 }
 
-impl<'r, MV: MemoryView> SequentialReader<'r, MV> {
-    fn new(reader: &'r MemoryReader<MV>, offset: u32) -> Self {
+impl<'r, MV: MemoryView<Store>, Store: it_memory_traits::Store> SequentialReader<'r, MV, Store> {
+    fn new(reader: &'r MemoryReader<MV, Store>, offset: u32) -> Self {
         Self {
             reader,
             offset: Cell::new(offset),
         }
     }
 
-    pub fn read_bool(&self) -> bool {
-        self.read_u8() != 0
+    pub fn read_bool(
+        &self,
+        store: &mut <Store as it_memory_traits::Store>::ActualStore<'_>,
+    ) -> bool {
+        self.read_u8(store) != 0
     }
 
     read_ty!(read_u8, u8, 1);

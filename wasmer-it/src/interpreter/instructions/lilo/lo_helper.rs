@@ -8,29 +8,32 @@ use it_lilo::traits::DEFAULT_MEMORY_INDEX;
 
 use std::marker::PhantomData;
 
-pub struct LoHelper<'i, Instance, Export, LocalImport, Memory, MemoryView>
+pub struct LoHelper<'i, Instance, Export, LocalImport, Memory, MemoryView, Store>
 where
     Export: wasm::structures::Export + 'i,
-    LocalImport: wasm::structures::LocalImport + 'i,
-    Memory: wasm::structures::Memory<MemoryView> + 'i,
-    MemoryView: wasm::structures::MemoryView,
-    Instance: wasm::structures::Instance<Export, LocalImport, Memory, MemoryView>,
+    LocalImport: wasm::structures::LocalImport<Store> + 'i,
+    Memory: wasm::structures::Memory<MemoryView, Store> + 'i,
+    MemoryView: wasm::structures::MemoryView<Store>,
+    Instance: wasm::structures::Instance<Export, LocalImport, Memory, MemoryView, Store>,
+    Store: wasm::structures::Store,
 {
     pub(crate) instance: &'i Instance,
     _export: PhantomData<Export>,
     _local_import: PhantomData<LocalImport>,
     _memory: PhantomData<Memory>,
     _memory_view: PhantomData<MemoryView>,
+    _store: PhantomData<Store>,
 }
 
-impl<'i, Instance, Export, LocalImport, Memory, MemoryView>
-    LoHelper<'i, Instance, Export, LocalImport, Memory, MemoryView>
+impl<'i, Instance, Export, LocalImport, Memory, MemoryView, Store>
+    LoHelper<'i, Instance, Export, LocalImport, Memory, MemoryView, Store>
 where
     Export: wasm::structures::Export + 'i,
-    LocalImport: wasm::structures::LocalImport + 'i,
-    Memory: wasm::structures::Memory<MemoryView> + 'i,
-    MemoryView: wasm::structures::MemoryView,
-    Instance: wasm::structures::Instance<Export, LocalImport, Memory, MemoryView>,
+    LocalImport: wasm::structures::LocalImport<Store> + 'i,
+    Memory: wasm::structures::Memory<MemoryView, Store> + 'i,
+    MemoryView: wasm::structures::MemoryView<Store>,
+    Instance: wasm::structures::Instance<Export, LocalImport, Memory, MemoryView, Store>,
+    Store: wasm::structures::Store,
 {
     pub(crate) fn new(instance: &'i Instance) -> Self {
         Self {
@@ -39,20 +42,27 @@ where
             _local_import: PhantomData,
             _memory: PhantomData,
             _memory_view: PhantomData,
+            _store: PhantomData,
         }
     }
 }
 
-impl<'i, Instance, Export, LocalImport, Memory, MemoryView> Allocatable<MemoryView>
-    for LoHelper<'i, Instance, Export, LocalImport, Memory, MemoryView>
+impl<'i, Instance, Export, LocalImport, Memory, MemoryView, Store> Allocatable<MemoryView, Store>
+    for LoHelper<'i, Instance, Export, LocalImport, Memory, MemoryView, Store>
 where
     Export: wasm::structures::Export + 'i,
-    LocalImport: wasm::structures::LocalImport + 'i,
-    Memory: wasm::structures::Memory<MemoryView> + 'i,
-    MemoryView: wasm::structures::MemoryView,
-    Instance: wasm::structures::Instance<Export, LocalImport, Memory, MemoryView>,
+    LocalImport: wasm::structures::LocalImport<Store> + 'i,
+    Memory: wasm::structures::Memory<MemoryView, Store> + 'i,
+    MemoryView: wasm::structures::MemoryView<Store>,
+    Instance: wasm::structures::Instance<Export, LocalImport, Memory, MemoryView, Store>,
+    Store: wasm::structures::Store,
 {
-    fn allocate(&self, size: u32, type_tag: u32) -> Result<(u32, MemoryView), AllocatableError> {
+    fn allocate(
+        &mut self,
+        store: &mut <Store as wasm::structures::Store>::ActualStore<'_>,
+        size: u32,
+        type_tag: u32,
+    ) -> Result<(u32, MemoryView), AllocatableError> {
         use AllocatableError::*;
 
         use crate::interpreter::instructions::ALLOCATE_FUNC_INDEX;
@@ -76,7 +86,7 @@ where
         .map_err(|_| AllocateFuncIncompatibleSignature)?;
 
         let outcome = local_or_import
-            .call(&inputs)
+            .call(store, &inputs)
             .map_err(|_| AllocateCallFailed)?;
 
         if outcome.len() != 1 {

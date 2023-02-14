@@ -67,15 +67,16 @@ macro_rules! consume {
 /// Check the existing executable instruction to get more examples.
 macro_rules! executable_instruction {
     ($name:ident ( $($argument_name:ident: $argument_type:ty),* ) -> _ $implementation:block ) => {
-        pub(crate) fn $name<Instance, Export, LocalImport, Memory, MemoryView>(
+        pub(crate) fn $name<Instance, Export, LocalImport, Memory, MemoryView, Store>(
             $($argument_name: $argument_type),*
-        ) -> crate::interpreter::ExecutableInstruction<Instance, Export, LocalImport, Memory, MemoryView>
+        ) -> crate::interpreter::ExecutableInstruction<Instance, Export, LocalImport, Memory, MemoryView, Store>
         where
             Export: crate::interpreter::wasm::structures::Export,
-            LocalImport: crate::interpreter::wasm::structures::LocalImport,
-            Memory: crate::interpreter::wasm::structures::Memory<MemoryView>,
-            MemoryView: crate::interpreter::wasm::structures::MemoryView,
-            Instance: crate::interpreter::wasm::structures::Instance<Export, LocalImport, Memory, MemoryView>,
+            LocalImport: crate::interpreter::wasm::structures::LocalImport<Store>,
+            Memory: crate::interpreter::wasm::structures::Memory<MemoryView, Store>,
+            MemoryView: crate::interpreter::wasm::structures::MemoryView<Store>,
+            Instance: crate::interpreter::wasm::structures::Instance<Export, LocalImport, Memory, MemoryView, Store>,
+            Store: crate::interpreter::wasm::structures::Store,
         {
             #[allow(unused_imports)]
             use crate::interpreter::{stack::Stackable};

@@ -2,10 +2,12 @@
 
 use crate::IType;
 use crate::{ast::*, interpreter::Instruction};
-use std::rc::Rc;
+
 pub use wast::parser::ParseBuffer as Buffer;
 use wast::parser::{self, Cursor, Parse, Parser, Peek, Result};
 pub use wast::Error;
+
+use std::sync::Arc;
 
 mod keyword {
     pub use wast::{
@@ -491,11 +493,11 @@ impl<'a> Parse<'a> for Type {
                 }
 
                 Ok(Type::Function {
-                    arguments: Rc::new(arguments),
-                    output_types: Rc::new(output_types),
+                    arguments: Arc::new(arguments),
+                    output_types: Arc::new(output_types),
                 })
             } else if lookahead.peek::<keyword::record>() {
-                Ok(Type::Record(Rc::new(parser.parse()?)))
+                Ok(Type::Record(Arc::new(parser.parse()?)))
             } else {
                 Err(lookahead.error())
             }

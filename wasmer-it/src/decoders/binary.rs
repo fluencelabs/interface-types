@@ -8,8 +8,7 @@ use nom::{
     error::{make_error, ErrorKind, ParseError},
     Err, IResult,
 };
-use std::rc::Rc;
-use std::{convert::TryFrom, str};
+use std::{convert::TryFrom, str, sync::Arc};
 
 /// Parse a type kind.
 impl TryFrom<u8> for TypeKind {
@@ -386,15 +385,15 @@ fn types<'input, E: ParseError<&'input [u8]>>(
                 consume!((input, output_types) = list(input, ty)?);
 
                 types.push(Type::Function {
-                    arguments: Rc::new(arguments),
-                    output_types: Rc::new(output_types),
+                    arguments: Arc::new(arguments),
+                    output_types: Arc::new(output_types),
                 });
             }
 
             TypeKind::Record => {
                 consume!((input, record_type) = record_type(input)?);
 
-                types.push(Type::Record(Rc::new(record_type)));
+                types.push(Type::Record(Arc::new(record_type)));
             }
         }
     }

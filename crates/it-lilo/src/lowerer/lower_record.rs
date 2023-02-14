@@ -23,8 +23,13 @@ use crate::NEVec;
 
 use it_memory_traits::MemoryView;
 
-pub fn record_lower_memory<A: Allocatable<MV>, MV: MemoryView>(
-    lowerer: &ILowerer<'_, A, MV>,
+pub fn record_lower_memory<
+    A: Allocatable<MV, Store>,
+    MV: MemoryView<Store>,
+    Store: it_memory_traits::Store,
+>(
+    store: &mut <Store as it_memory_traits::Store>::ActualStore<'_>,
+    lowerer: &mut ILowerer<'_, A, MV, Store>,
     values: NEVec<IValue>,
 ) -> LoResult<u32> {
     let average_field_size = 4;
@@ -47,34 +52,35 @@ pub fn record_lower_memory<A: Allocatable<MV>, MV: MemoryView>(
             IValue::F32(value) => result.extend_from_slice(&value.to_le_bytes()),
             IValue::F64(value) => result.extend_from_slice(&value.to_le_bytes()),
             IValue::String(value) => {
-                let offset = lowerer.writer.write_bytes(value.as_bytes())?;
+                let offset = lowerer.writer.write_bytes(store, value.as_bytes())?;
 
                 result.extend_from_slice(&offset.to_le_bytes());
                 result.extend_from_slice(&(value.len() as u32).to_le_bytes());
             }
             IValue::ByteArray(value) => {
-                let offset = lowerer.writer.write_bytes(&value)?;
+                let offset = lowerer.writer.write_bytes(store, &value)?;
 
                 result.extend_from_slice(&offset.to_le_bytes());
                 result.extend_from_slice(&(value.len() as u32).to_le_bytes());
             }
 
             IValue::Array(values) => {
-                let LoweredArray { offset, size } = super::array_lower_memory(lowerer, values)?;
+                let LoweredArray { offset, size } =
+                    super::array_lower_memory(store, lowerer, values)?;
 
                 result.extend_from_slice(&(offset).to_le_bytes());
                 result.extend_from_slice(&(size).to_le_bytes());
             }
 
             IValue::Record(values) => {
-                let offset = record_lower_memory(lowerer, values)?;
+                let offset = record_lower_memory(store, lowerer, values)?;
 
                 result.extend_from_slice(&offset.to_le_bytes());
             }
         }
     }
 
-    let result_pointer = lowerer.writer.write_bytes(&result)?;
+    let result_pointer = lowerer.writer.write_bytes(store, &result)?;
 
     Ok(result_pointer)
 }
