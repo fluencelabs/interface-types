@@ -1,6 +1,6 @@
 [package]
 name = "fluence-it-types"
-version = "0.3.3"
+version = "0.4.0"
 description = "Definitions of IValue and IType"
 authors = ["Fluence Labs"]
 edition = "2018"
