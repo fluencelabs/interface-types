@@ -1,11 +1,22 @@
 use crate::{
-    errors::{InstructionError, InstructionErrorKind},
+    errors::{InstructionError, InstructionErrorKind, InstructionResult},
+    interpreter::stack::Stackable,
+    interpreter::AsyncExecutableInstructionImpl,
     interpreter::Instruction,
+    interpreter::Runtime,
 };
 
-executable_instruction!(
+struct DupAsync {
+    instruction: Instruction,
+}
+
+impl_async_executable_instruction!(
     dup(instruction: Instruction) -> _ {
-        move |runtime| -> _ {
+        Box::new(DupAsync{instruction})
+    }
+    DupAsync {
+        async fn execute(&self, runtime: &mut Runtime<Instance, Export, LocalImport, Memory, MemoryView, Store>) -> InstructionResult<()> {
+            let instruction = &self.instruction;
             let value = runtime.stack.peek1().ok_or_else(|| {
                 InstructionError::from_error_kind(
                     instruction.clone(),

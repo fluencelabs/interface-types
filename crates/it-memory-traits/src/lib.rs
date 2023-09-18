@@ -18,8 +18,8 @@ mod errors;
 
 pub use errors::MemoryAccessError;
 
-pub trait Store {
-    type ActualStore<'c>;
+pub trait Store: Send {
+    type ActualStore<'c>: Send;
 }
 
 pub trait MemoryReadable<Store: self::Store> {
@@ -70,7 +70,9 @@ pub trait MemoryWritable<Store: self::Store> {
     );
 }
 
-pub trait MemoryView<Store: self::Store>: MemoryWritable<Store> + MemoryReadable<Store> {
+pub trait MemoryView<Store: self::Store>:
+    Send + MemoryWritable<Store> + MemoryReadable<Store>
+{
     /// For optimization purposes, user must check bounds first, then try read-write to memory
     /// `MemoryWritable` and `MemoryReadable` functions will panic in case of out of bounds access`
     fn check_bounds(
@@ -81,7 +83,7 @@ pub trait MemoryView<Store: self::Store>: MemoryWritable<Store> + MemoryReadable
     ) -> Result<(), MemoryAccessError>;
 }
 
-pub trait Memory<View, Store: self::Store>
+pub trait Memory<View, Store: self::Store>: Send
 where
     View: MemoryView<Store>,
 {

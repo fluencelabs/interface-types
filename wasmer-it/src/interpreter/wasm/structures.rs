@@ -4,6 +4,9 @@ use crate::ast::FunctionArg;
 use crate::IRecordType;
 use crate::IType;
 use crate::IValue;
+
+use async_trait::async_trait;
+
 use std::sync::Arc;
 
 pub use it_memory_traits::{Memory, MemoryAccessError, MemoryView};
@@ -45,16 +48,19 @@ impl LocalImportIndex for FunctionIndex {
     type Import = ImportFunctionIndex;
 }
 
-pub trait Export {
+#[async_trait]
+pub trait Export: Send {
     fn name(&self) -> &str;
     fn inputs_cardinality(&self) -> usize;
     fn outputs_cardinality(&self) -> usize;
     fn arguments(&self) -> &[FunctionArg];
     fn outputs(&self) -> &[IType];
     fn call(&self, arguments: &[IValue]) -> Result<Vec<IValue>, ()>;
+    async fn call_async(&self, arguments: &[IValue]) -> Result<Vec<IValue>, ()>;
 }
 
-pub trait LocalImport<Store: self::Store> {
+#[async_trait]
+pub trait LocalImport<Store: self::Store>: Send {
     fn name(&self) -> &str;
     fn inputs_cardinality(&self) -> usize;
     fn outputs_cardinality(&self) -> usize;
@@ -65,11 +71,19 @@ pub trait LocalImport<Store: self::Store> {
         store: &mut <Store as self::Store>::ActualStore<'_>,
         arguments: &[IValue],
     ) -> Result<Vec<IValue>, ()>;
+    async fn call_async(
+        &self,
+        store: &mut <Store as self::Store>::ActualStore<'_>,
+        arguments: &[IValue],
+    ) -> Result<Vec<IValue>, ()>;
 }
+
+#[async_trait]
+pub trait LocalImportAsync<Store: self::Store>: Send + LocalImport<Store> {}
 
 pub use it_memory_traits::Store;
 
-pub trait Instance<E, LI, M, MV, S>
+pub trait Instance<E, LI, M, MV, S>: Send
 where
     E: Export,
     LI: LocalImport<S>,
@@ -84,6 +98,7 @@ where
     fn wit_record_by_id(&self, index: u64) -> Option<&Arc<IRecordType>>;
 }
 
+#[async_trait]
 impl Export for () {
     fn name(&self) -> &str {
         ""
@@ -108,8 +123,13 @@ impl Export for () {
     fn call(&self, _arguments: &[IValue]) -> Result<Vec<IValue>, ()> {
         Err(())
     }
+
+    async fn call_async(&self, _arguments: &[IValue]) -> Result<Vec<IValue>, ()> {
+        Err(())
+    }
 }
 
+#[async_trait]
 impl<Store: self::Store> LocalImport<Store> for () {
     fn name(&self) -> &str {
         ""
@@ -134,6 +154,14 @@ impl<Store: self::Store> LocalImport<Store> for () {
     fn call(
         &self,
         _store: &mut <Store as self::Store>::ActualStore<'_>,
+        _arguments: &[IValue],
+    ) -> Result<Vec<IValue>, ()> {
+        Err(())
+    }
+
+    async fn call_async(
+        &self,
+        _store: &mut <Store as it_memory_traits::Store>::ActualStore<'_>,
         _arguments: &[IValue],
     ) -> Result<Vec<IValue>, ()> {
         Err(())
@@ -196,7 +224,7 @@ impl<S: Store> Memory<EmptyMemoryView, S> for () {
 impl<E, LI, M, MV, S> Instance<E, LI, M, MV, S> for ()
 where
     E: Export,
-    LI: LocalImport<S>,
+    LI: LocalImportAsync<S>,
     M: Memory<MV, S>,
     MV: MemoryView<S>,
     S: Store,

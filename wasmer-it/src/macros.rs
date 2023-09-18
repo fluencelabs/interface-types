@@ -56,7 +56,7 @@ macro_rules! consume {
 /// //      ^ the `x` argument
 ///
 ///     // an executable instruction is a closure that takes a `Runtime` instance
-///     move |runtime| -> _ {
+///     move |runtime| -> Pin<Box<dyn Future<Output = Result<(), InstructionError>> + 'static>> _ {
 ///         // Do something.
 ///
 ///         Ok(())
@@ -65,7 +65,81 @@ macro_rules! consume {
 /// ```
 ///
 /// Check the existing executable instruction to get more examples.
-macro_rules! executable_instruction {
+macro_rules! executable_instruction{
+    //($name:ident ( $($argument_name:ident: $argument_type:ty),* ) -> Box<dyn Fn(&mut Runtime) -> Box<dyn InstructionFuture> $implementation:block ) =>
+    ($name:ident ( $($argument_name:ident: $argument_type:ty),* ) -> _ $implementation:block ) => {
+        pub(crate) fn $name<Instance, Export, LocalImport, Memory, MemoryView, Store>(
+            $($argument_name: $argument_type),*
+        ) -> crate::interpreter::AsyncExecutableInstruction<Instance, Export, LocalImport, Memory, MemoryView, Store>
+        where
+            Export: crate::interpreter::wasm::structures::Export,
+            LocalImport: crate::interpreter::wasm::structures::LocalImport<Store>,
+            Memory: crate::interpreter::wasm::structures::Memory<MemoryView, Store>,
+            MemoryView: crate::interpreter::wasm::structures::MemoryView<Store>,
+            Instance: crate::interpreter::wasm::structures::Instance<Export, LocalImport, Memory, MemoryView, Store>,
+            Store: crate::interpreter::wasm::structures::Store,
+        {
+            #[allow(unused_imports)]
+            use crate::interpreter::{stack::Stackable};
+
+            Box::new($implementation)
+        }
+    };
+}
+
+macro_rules! impl_async_executable_instruction{
+    //($name:ident ( $($argument_name:ident: $argument_type:ty),* ) -> Box<dyn Fn(&mut Runtime) -> Box<dyn InstructionFuture> $implementation:block ) =>
+    ($getter_name:ident($($argument_name:ident: $argument_type:ty),*) -> _ $getter_implementation:block $name:ident $($implementation:tt)*) => {
+        #[async_trait::async_trait]
+        impl<Instance, Export, LocalImport, Memory, MemoryView, Store> crate::interpreter::AsyncExecutableInstructionImpl<Instance, Export, LocalImport, Memory, MemoryView, Store> for $name
+        where
+            Export: crate::interpreter::wasm::structures::Export,
+            LocalImport: crate::interpreter::wasm::structures::LocalImport<Store>,
+            Memory: crate::interpreter::wasm::structures::Memory<MemoryView, Store>,
+            MemoryView: crate::interpreter::wasm::structures::MemoryView<Store>,
+            Instance: crate::interpreter::wasm::structures::Instance<Export, LocalImport, Memory, MemoryView, Store>,
+            Store: crate::interpreter::wasm::structures::Store, $($implementation)*
+
+        pub(crate) fn$getter_name<Instance, Export, LocalImport, Memory, MemoryView, Store>($($argument_name: $argument_type),*) -> Box<dyn AsyncExecutableInstructionImpl<Instance, Export, LocalImport, Memory, MemoryView, Store>>
+        where
+        Export: crate::interpreter::wasm::structures::Export,
+        LocalImport: crate::interpreter::wasm::structures::LocalImport<Store>,
+        Memory: crate::interpreter::wasm::structures::Memory<MemoryView, Store>,
+        MemoryView: crate::interpreter::wasm::structures::MemoryView<Store>,
+        Instance: crate::interpreter::wasm::structures::Instance<Export, LocalImport, Memory, MemoryView, Store>,
+        Store: crate::interpreter::wasm::structures::Store, {
+            $getter_implementation
+        }
+    }
+}
+
+/// This macro creates an executable instruction for the interpreter.
+///
+/// # Example
+///
+/// The following example creates a `foo` executable instruction.clone(),
+/// which takes 2 arguments (`x` and `y`), and does something
+/// mysterious by using the `interpreter::Runtime` API.
+///
+/// ```rust,ignore
+/// executable_instruction!(
+///     foo(x: u64, y: u64, instruction_name: String) -> _ {
+/// //                                                   ^ output type is purposely blank
+/// //                      ^^^^^^^^^^^^^^^^ the instruction name, for debugging purposes
+/// //              ^ the `y` argument
+/// //      ^ the `x` argument
+///
+///     // an executable instruction is a closure that takes a `Runtime` instance
+///     move |runtime| -> Pin<Box<dyn Future<Output = Result<(), InstructionError>> + 'static>> _ {
+///         // Do something.
+///
+///         Ok(())
+///     }
+/// );
+/// ```
+///
+/// Check the existing executable instruction to get more examples.
+macro_rules! executable_instruction_old{
     ($name:ident ( $($argument_name:ident: $argument_type:ty),* ) -> _ $implementation:block ) => {
         pub(crate) fn $name<Instance, Export, LocalImport, Memory, MemoryView, Store>(
             $($argument_name: $argument_type),*

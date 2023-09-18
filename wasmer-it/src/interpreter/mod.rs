@@ -9,6 +9,8 @@ pub use instructions::Instruction;
 use crate::errors::{InstructionResult, InterpreterResult};
 use crate::IValue;
 use stack::Stack;
+//use std::pin::Pin;
+use async_trait::async_trait;
 use std::{convert::TryFrom, marker::PhantomData};
 
 /// Represents the `Runtime`, which is used by an adapter to execute
@@ -53,10 +55,45 @@ pub(crate) struct Runtime<
 /// details, but an instruction is a boxed closure instance.
 pub(crate) type ExecutableInstruction<Instance, Export, LocalImport, Memory, MemoryView, Store> =
     Box<
-        dyn Fn(&mut Runtime<Instance, Export, LocalImport, Memory, MemoryView, Store>, ) -> InstructionResult<()>
+        dyn Fn(
+                &mut Runtime<Instance, Export, LocalImport, Memory, MemoryView, Store>,
+            ) -> InstructionResult<()>
             + Send
             + Sync,
     >;
+
+pub(crate) type AsyncExecutableInstruction<
+    Instance,
+    Export,
+    LocalImport,
+    Memory,
+    MemoryView,
+    Store,
+> = Box<
+    dyn AsyncExecutableInstructionImpl<Instance, Export, LocalImport, Memory, MemoryView, Store>,
+>;
+
+#[async_trait]
+pub(crate) trait AsyncExecutableInstructionImpl<
+    Instance,
+    Export,
+    LocalImport,
+    Memory,
+    MemoryView,
+    Store,
+> where
+    Export: wasm::structures::Export,
+    LocalImport: wasm::structures::LocalImport<Store>,
+    Memory: wasm::structures::Memory<MemoryView, Store>,
+    MemoryView: wasm::structures::MemoryView<Store>,
+    Instance: wasm::structures::Instance<Export, LocalImport, Memory, MemoryView, Store>,
+    Store: wasm::structures::Store,
+{
+    async fn execute(
+        &self,
+        runtime: &mut Runtime<Instance, Export, LocalImport, Memory, MemoryView, Store>,
+    ) -> InstructionResult<()>;
+}
 
 /// An interpreter is the central piece of this crate. It is a set of
 /// executable instructions. Each instruction takes the runtime as
@@ -149,6 +186,20 @@ where
         Vec<ExecutableInstruction<Instance, Export, LocalImport, Memory, MemoryView, Store>>,
 }
 
+/// Async version of `Interpreter`
+pub struct AsyncInterpreter<Instance, Export, LocalImport, Memory, MemoryView, Store>
+where
+    Export: wasm::structures::Export,
+    LocalImport: wasm::structures::LocalImport<Store>,
+    Memory: wasm::structures::Memory<MemoryView, Store>,
+    MemoryView: wasm::structures::MemoryView<Store>,
+    Instance: wasm::structures::Instance<Export, LocalImport, Memory, MemoryView, Store>,
+    Store: wasm::structures::Store,
+{
+    executable_instructions:
+        Vec<AsyncExecutableInstruction<Instance, Export, LocalImport, Memory, MemoryView, Store>>,
+}
+
 impl<Instance, Export, LocalImport, Memory, MemoryView, Store>
     Interpreter<Instance, Export, LocalImport, Memory, MemoryView, Store>
 where
@@ -194,6 +245,58 @@ where
     }
 }
 
+impl<Instance, Export, LocalImport, Memory, MemoryView, Store>
+    AsyncInterpreter<Instance, Export, LocalImport, Memory, MemoryView, Store>
+where
+    Export: wasm::structures::Export,
+    LocalImport: wasm::structures::LocalImport<Store>,
+    Memory: wasm::structures::Memory<MemoryView, Store>,
+    MemoryView: wasm::structures::MemoryView<Store>,
+    Instance: wasm::structures::Instance<Export, LocalImport, Memory, MemoryView, Store>,
+    Store: wasm::structures::Store,
+{
+    fn iter(
+        &self,
+    ) -> impl Iterator<
+        Item = &AsyncExecutableInstruction<
+            Instance,
+            Export,
+            LocalImport,
+            Memory,
+            MemoryView,
+            Store,
+        >,
+    > + '_ {
+        self.executable_instructions.iter()
+    }
+
+    /// Runs the interpreter, such as:
+    ///   1. Create a fresh stack,
+    ///   2. Create a fresh stack,
+    ///   3. Execute the instructions one after the other, and
+    ///      returns the stack.
+    pub async fn run(
+        &self,
+        invocation_inputs: &[IValue],
+        wasm_instance: &mut Instance,
+        wasm_store: &mut <Store as wasm::structures::Store>::ActualStore<'_>,
+    ) -> InterpreterResult<Stack<IValue>> {
+        let mut runtime = Runtime {
+            invocation_inputs,
+            stack: Stack::new(),
+            wasm_instance,
+            store: wasm_store,
+            _phantom: PhantomData,
+        };
+
+        for executable_instruction in self.iter() {
+            executable_instruction.execute(&mut runtime).await?;
+        }
+
+        Ok(runtime.stack)
+    }
+}
+/*
 /// Transforms a `Vec<Instruction>` into an `Interpreter`.
 impl<Instance, Export, LocalImport, Memory, MemoryView, Store> TryFrom<Vec<Instruction>>
     for Interpreter<Instance, Export, LocalImport, Memory, MemoryView, Store>
@@ -288,6 +391,105 @@ where
             .collect();
 
         Ok(Interpreter {
+            executable_instructions,
+        })
+    }
+}
+*/
+/// Transforms a `Vec<Instruction>` into an `Interpreter`.
+impl<Instance, Export, LocalImport, Memory, MemoryView, Store> TryFrom<Vec<Instruction>>
+    for AsyncInterpreter<Instance, Export, LocalImport, Memory, MemoryView, Store>
+where
+    Export: wasm::structures::Export,
+    LocalImport: wasm::structures::LocalImport<Store>,
+    Memory: wasm::structures::Memory<MemoryView, Store>,
+    MemoryView: wasm::structures::MemoryView<Store>,
+    Instance: wasm::structures::Instance<Export, LocalImport, Memory, MemoryView, Store>,
+    Store: wasm::structures::Store,
+{
+    type Error = ();
+
+    fn try_from(instructions: Vec<Instruction>) -> Result<Self, Self::Error> {
+        let executable_instructions = instructions
+            .into_iter()
+            .map(|instruction| match instruction {
+                Instruction::ArgumentGet { index } => {
+                    instructions::argument_get(index, instruction)
+                }
+
+                Instruction::CallCore { function_index } => {
+                    instructions::call_core(function_index, instruction)
+                }
+
+                Instruction::BoolFromI32 => instructions::bool_from_i32(instruction),
+                Instruction::S8FromI32 => instructions::s8_from_i32(instruction),
+                Instruction::S8FromI64 => instructions::s8_from_i64(instruction),
+                Instruction::S16FromI32 => instructions::s16_from_i32(instruction),
+                Instruction::S16FromI64 => instructions::s16_from_i64(instruction),
+                Instruction::S32FromI32 => instructions::s32_from_i32(instruction),
+                Instruction::S32FromI64 => instructions::s32_from_i64(instruction),
+                Instruction::S64FromI32 => instructions::s64_from_i32(instruction),
+                Instruction::S64FromI64 => instructions::s64_from_i64(instruction),
+                Instruction::I32FromBool => instructions::i32_from_bool(instruction),
+                Instruction::I32FromS8 => instructions::i32_from_s8(instruction),
+                Instruction::I32FromS16 => instructions::i32_from_s16(instruction),
+                Instruction::I32FromS32 => instructions::i32_from_s32(instruction),
+                Instruction::I32FromS64 => instructions::i32_from_s64(instruction),
+                Instruction::I64FromS8 => instructions::i64_from_s8(instruction),
+                Instruction::I64FromS16 => instructions::i64_from_s16(instruction),
+                Instruction::I64FromS32 => instructions::i64_from_s32(instruction),
+                Instruction::I64FromS64 => instructions::i64_from_s64(instruction),
+                Instruction::U8FromI32 => instructions::u8_from_i32(instruction),
+                Instruction::U8FromI64 => instructions::u8_from_i64(instruction),
+                Instruction::U16FromI32 => instructions::u16_from_i32(instruction),
+                Instruction::U16FromI64 => instructions::u16_from_i64(instruction),
+                Instruction::U32FromI32 => instructions::u32_from_i32(instruction),
+                Instruction::U32FromI64 => instructions::u32_from_i64(instruction),
+                Instruction::U64FromI32 => instructions::u64_from_i32(instruction),
+                Instruction::U64FromI64 => instructions::u64_from_i64(instruction),
+                Instruction::I32FromU8 => instructions::i32_from_u8(instruction),
+                Instruction::I32FromU16 => instructions::i32_from_u16(instruction),
+                Instruction::I32FromU32 => instructions::i32_from_u32(instruction),
+                Instruction::I32FromU64 => instructions::i32_from_u64(instruction),
+                Instruction::I64FromU8 => instructions::i64_from_u8(instruction),
+                Instruction::I64FromU16 => instructions::i64_from_u16(instruction),
+                Instruction::I64FromU32 => instructions::i64_from_u32(instruction),
+                Instruction::I64FromU64 => instructions::i64_from_u64(instruction),
+                Instruction::PushI32 { value } => instructions::push_i32(value),
+                Instruction::PushI64 { value } => instructions::push_i64(value),
+
+                Instruction::StringLiftMemory => instructions::string_lift_memory(instruction),
+                Instruction::StringLowerMemory => instructions::string_lower_memory(instruction),
+                Instruction::StringSize => instructions::string_size(instruction),
+
+                Instruction::ByteArrayLiftMemory => {
+                    instructions::byte_array_lift_memory(instruction)
+                }
+                Instruction::ByteArrayLowerMemory => {
+                    instructions::byte_array_lower_memory(instruction)
+                }
+                Instruction::ByteArraySize => instructions::byte_array_size(instruction),
+
+                Instruction::ArrayLiftMemory { ref value_type } => {
+                    let value_type = value_type.clone();
+                    instructions::array_lift_memory(instruction, value_type)
+                }
+                Instruction::ArrayLowerMemory { ref value_type } => {
+                    let value_type = value_type.clone();
+                    instructions::array_lower_memory(instruction, value_type)
+                }
+                Instruction::RecordLiftMemory { record_type_id } => {
+                    instructions::record_lift_memory(record_type_id as _, instruction)
+                }
+                Instruction::RecordLowerMemory { record_type_id } => {
+                    instructions::record_lower_memory(record_type_id as _, instruction)
+                }
+                Instruction::Dup => instructions::dup(instruction),
+                Instruction::Swap2 => instructions::swap2(instruction),
+            })
+            .collect();
+
+        Ok(AsyncInterpreter {
             executable_instructions,
         })
     }

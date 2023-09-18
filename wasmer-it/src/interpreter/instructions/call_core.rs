@@ -1,12 +1,27 @@
 use crate::{
-    errors::{InstructionError, InstructionErrorKind},
+    errors::{InstructionError, InstructionErrorKind, InstructionResult},
+    interpreter::stack::Stackable,
     interpreter::wasm::structures::{FunctionIndex, TypedIndex},
+    interpreter::AsyncExecutableInstructionImpl,
     interpreter::Instruction,
+    interpreter::Runtime,
 };
 
-executable_instruction!(
+struct CallCoreAsync {
+    function_index: u32,
+    instruction: Instruction,
+}
+
+impl_async_executable_instruction!(
     call_core(function_index: u32, instruction: Instruction) -> _ {
-        move |runtime| -> _ {
+        Box::new(CallCoreAsync{function_index, instruction})
+    }
+
+    CallCoreAsync {
+        async fn execute(&self, runtime: &mut Runtime<Instance, Export, LocalImport, Memory, MemoryView, Store>) -> InstructionResult<()> {
+            let instruction = &self.instruction;
+            let function_index = self.function_index;
+
             let instance = &runtime.wasm_instance;
             let index = FunctionIndex::new(function_index as usize);
 

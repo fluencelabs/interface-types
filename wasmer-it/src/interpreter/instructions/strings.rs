@@ -3,15 +3,26 @@ use crate::instr_error;
 use crate::IType;
 use crate::IValue;
 use crate::{
-    errors::{InstructionError, InstructionErrorKind},
+    errors::{InstructionError, InstructionErrorKind, InstructionResult},
+    interpreter::stack::Stackable,
+    interpreter::AsyncExecutableInstructionImpl,
     interpreter::Instruction,
+    interpreter::Runtime,
 };
 
 use it_lilo::traits::DEFAULT_MEMORY_INDEX;
 
-executable_instruction!(
+struct StringLiftMemory {
+    instruction: Instruction,
+}
+
+impl_async_executable_instruction!(
     string_lift_memory(instruction: Instruction) -> _ {
-        move |runtime| -> _ {
+        Box::new(StringLiftMemory{instruction})
+    }
+    StringLiftMemory {
+        async fn execute(&self, runtime: &mut Runtime<Instance, Export, LocalImport, Memory, MemoryView, Store>) -> InstructionResult<()> {
+            let instruction = &self.instruction;
             let mut inputs = runtime.stack.pop(2).ok_or_else(|| {
                 InstructionError::from_error_kind(
                     instruction.clone(),
@@ -56,9 +67,17 @@ executable_instruction!(
     }
 );
 
-executable_instruction!(
+struct StringLowerMemoryAsync {
+    instruction: Instruction,
+}
+
+impl_async_executable_instruction!(
     string_lower_memory(instruction: Instruction) -> _ {
-        move |runtime| -> _ {
+        Box::new(StringLowerMemoryAsync {instruction})
+    }
+    StringLowerMemoryAsync {
+        async fn execute(&self, runtime: &mut Runtime<Instance, Export, LocalImport, Memory, MemoryView, Store>) -> InstructionResult<()> {
+            let instruction = &self.instruction;
             let mut inputs = runtime.stack.pop(2).ok_or_else(|| {
                 InstructionError::from_error_kind(
                     instruction.clone(),
@@ -97,9 +116,18 @@ executable_instruction!(
     }
 );
 
-executable_instruction!(
+struct StringSize {
+    instruction: Instruction,
+}
+
+impl_async_executable_instruction!(
     string_size(instruction: Instruction) -> _ {
-        move |runtime| -> _ {
+        Box::new( StringSize{instruction } )
+    }
+
+    StringSize {
+        async fn execute(&self, runtime: &mut Runtime<Instance, Export, LocalImport, Memory, MemoryView, Store>) -> InstructionResult<()> {
+            let instruction = &self.instruction;
             match runtime.stack.pop1() {
                 Some(IValue::String(string)) => {
                     let length = string.len() as i32;

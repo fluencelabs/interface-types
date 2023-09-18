@@ -2,17 +2,29 @@ use crate::instr_error;
 use crate::IType;
 use crate::IValue;
 use crate::{
-    errors::{InstructionError, InstructionErrorKind},
+    errors::{InstructionError, InstructionErrorKind, InstructionResult},
+    interpreter::stack::Stackable,
+    interpreter::AsyncExecutableInstructionImpl,
     interpreter::Instruction,
+    interpreter::Runtime,
 };
 
 use std::convert::TryInto;
 
 macro_rules! lowering_lifting {
-    ($instruction_function_name:ident, $instruction_name:expr, $to_variant:ident, $from_variant:ident) => {
-        executable_instruction!(
+    ($instruction_function_name:ident, $instruction_name:expr, $to_variant:ident, $from_variant:ident) => {paste::paste!{
+        #[allow(nonstandard_style)]
+        struct [< $instruction_function_name _Async>] {
+            instruction: Instruction
+        }
+
+        impl_async_executable_instruction!(
             $instruction_function_name(instruction: Instruction) -> _ {
-                move |runtime| -> _ {
+                Box::new([< $instruction_function_name _Async>] {instruction})
+            }
+            [< $instruction_function_name _Async>] {
+                async fn execute(&self, runtime: &mut Runtime<Instance, Export, LocalImport, Memory, MemoryView, Store>) -> InstructionResult<()> {
+                    let instruction = &self.instruction;
                     match runtime.stack.pop1() {
                         Some(IValue::$from_variant(value)) => {
                             runtime
@@ -57,7 +69,7 @@ macro_rules! lowering_lifting {
                 }
             }
         );
-    };
+    }};
 }
 
 lowering_lifting!(s8_from_i32, "s8.from_i32", S8, I32);
@@ -94,9 +106,17 @@ lowering_lifting!(i64_from_u16, "i64.from_u16", I64, U16);
 lowering_lifting!(i64_from_u32, "i64.from_u32", I64, U32);
 lowering_lifting!(i64_from_u64, "i64.from_u64", I64, U64);
 
-executable_instruction!(
+struct BoolFromI32Async {
+    instruction: Instruction,
+}
+
+impl_async_executable_instruction!(
     bool_from_i32(instruction: Instruction) -> _ {
-        move |runtime| -> _ {
+        Box::new(BoolFromI32Async{instruction})
+    }
+    BoolFromI32Async {
+        async fn execute(&self, runtime: &mut Runtime<Instance, Export, LocalImport, Memory, MemoryView, Store>) -> InstructionResult<()> {
+            let instruction = &self.instruction;
             match runtime.stack.pop1() {
                 Some(IValue::I32(value)) => {
                     runtime

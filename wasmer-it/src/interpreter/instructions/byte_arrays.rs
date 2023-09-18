@@ -3,18 +3,28 @@ use crate::instr_error;
 use crate::IType;
 use crate::IValue;
 use crate::{
-    errors::{InstructionError, InstructionErrorKind},
+    errors::{InstructionError, InstructionErrorKind, InstructionResult},
+    interpreter::stack::Stackable,
+    interpreter::AsyncExecutableInstructionImpl,
     interpreter::Instruction,
+    interpreter::Runtime,
 };
 
 use it_lilo::traits::DEFAULT_MEMORY_INDEX;
 
-executable_instruction!(
+struct ByteArrayLiftMemoryAsync {
+    instruction: Instruction,
+}
+
+impl_async_executable_instruction!(
     byte_array_lift_memory(instruction: Instruction) -> _ {
-        move |runtime| -> _ {
+        Box::new(ByteArrayLiftMemoryAsync{instruction})
+    }
+    ByteArrayLiftMemoryAsync {
+        async fn execute(&self, runtime: &mut Runtime<Instance, Export, LocalImport, Memory, MemoryView, Store>) -> InstructionResult<()> {
             let mut inputs = runtime.stack.pop(2).ok_or_else(|| {
                 InstructionError::from_error_kind(
-                    instruction.clone(),
+                    self.instruction.clone(),
                     InstructionErrorKind::StackIsTooSmall { needed: 2 },
                 )
             })?;
@@ -25,13 +35,13 @@ executable_instruction!(
                 .memory(memory_index)
                 .ok_or_else(|| {
                     InstructionError::from_error_kind(
-                        instruction.clone(),
+                        self.instruction.clone(),
                         InstructionErrorKind::MemoryIsMissing { memory_index },
                     )
                 })?;
 
-            let pointer = to_native::<i32>(inputs.remove(0), instruction.clone())? as u32;
-            let length = to_native::<i32>(inputs.remove(0), instruction.clone())? as u32;
+            let pointer = to_native::<i32>(inputs.remove(0), self.instruction.clone())? as u32;
+            let length = to_native::<i32>(inputs.remove(0), self.instruction.clone())? as u32;
 
             let memory_view = memory.view();
 
@@ -43,7 +53,7 @@ executable_instruction!(
 
             memory_view
                 .check_bounds(runtime.store, pointer, length)
-                .map_err(|e| InstructionError::from_memory_access(instruction.clone(), e))?;
+                .map_err(|e| InstructionError::from_memory_access(self.instruction.clone(), e))?;
 
             let data = memory_view.read_vec(runtime.store, pointer, length);
 
@@ -55,9 +65,18 @@ executable_instruction!(
     }
 );
 
-executable_instruction!(
+struct ByteArrayLowerMemoryAsync {
+    instruction: Instruction,
+}
+
+impl_async_executable_instruction!(
     byte_array_lower_memory(instruction: Instruction) -> _ {
-        move |runtime| -> _ {
+        Box::new(ByteArrayLowerMemoryAsync{instruction})
+    }
+
+    ByteArrayLowerMemoryAsync {
+         async fn execute(&self, runtime: &mut Runtime<Instance, Export, LocalImport, Memory, MemoryView, Store>) -> InstructionResult<()> {
+            let instruction = &self.instruction;
             let mut inputs = runtime.stack.pop(2).ok_or_else(|| {
                 InstructionError::from_error_kind(
                     instruction.clone(),
@@ -96,9 +115,18 @@ executable_instruction!(
     }
 );
 
-executable_instruction!(
+struct ByteArraySizeAsync {
+    instruction: Instruction,
+}
+
+impl_async_executable_instruction!(
     byte_array_size(instruction: Instruction) -> _ {
-        move |runtime| -> _ {
+        Box::new(ByteArraySizeAsync{instruction})
+    }
+
+    ByteArraySizeAsync {
+        async fn execute(&self, runtime: &mut Runtime<Instance, Export, LocalImport, Memory, MemoryView, Store>) -> InstructionResult<()> {
+            let instruction = &self.instruction;
             match runtime.stack.pop1() {
                 Some(IValue::ByteArray(array)) => {
                     let length = array.len() as i32;
