@@ -8,7 +8,7 @@ use async_trait::async_trait;
 
 use crate::errors::InstructionResult;
 use crate::interpreter::stack::Stackable;
-use crate::interpreter::{AsyncExecutableInstructionImpl, Runtime};
+use crate::interpreter::{AsyncExecutableInstruction, AsyncExecutableInstructionImpl, Runtime};
 use it_lilo::lifter::ILifter;
 use it_lilo::lowerer::ILowerer;
 use it_lilo::traits::DEFAULT_MEMORY_INDEX;
@@ -21,7 +21,7 @@ struct RecordLiftMemoryAsync {
 pub(crate) fn record_lift_memory<Instance, Export, LocalImport, Memory, MemoryView, Store>(
     record_type_id: u64,
     instruction: Instruction,
-) -> Box<dyn AsyncExecutableInstructionImpl<Instance, Export, LocalImport, Memory, MemoryView, Store>>
+) -> AsyncExecutableInstruction<Instance, Export, LocalImport, Memory, MemoryView, Store>
 where
     Export: crate::interpreter::wasm::structures::Export,
     LocalImport: crate::interpreter::wasm::structures::LocalImport<Store>,
@@ -123,7 +123,7 @@ struct RecordLowerMemoryAsync {
 pub(crate) fn record_lower_memory<Instance, Export, LocalImport, Memory, MemoryView, Store>(
     record_type_id: u64,
     instruction: Instruction,
-) -> Box<dyn AsyncExecutableInstructionImpl<Instance, Export, LocalImport, Memory, MemoryView, Store>>
+) -> AsyncExecutableInstruction<Instance, Export, LocalImport, Memory, MemoryView, Store>
 where
     Export: crate::interpreter::wasm::structures::Export,
     LocalImport: crate::interpreter::wasm::structures::LocalImport<Store>,
@@ -199,7 +199,7 @@ where
                     runtime.store,
                     &mut memory_writer,
                     record_fields,
-                )
+                ).await
                 .map_err(|e| InstructionError::from_lo(instruction.clone(), e))?;
 
                 log::debug!("record.lower_memory: pushing {} on the stack", offset);

@@ -100,7 +100,7 @@ macro_rules! impl_async_executable_instruction{
             Instance: crate::interpreter::wasm::structures::Instance<Export, LocalImport, Memory, MemoryView, Store>,
             Store: crate::interpreter::wasm::structures::Store, $($implementation)*
 
-        pub(crate) fn$getter_name<Instance, Export, LocalImport, Memory, MemoryView, Store>($($argument_name: $argument_type),*) -> Box<dyn AsyncExecutableInstructionImpl<Instance, Export, LocalImport, Memory, MemoryView, Store>>
+        pub(crate) fn$getter_name<Instance, Export, LocalImport, Memory, MemoryView, Store>($($argument_name: $argument_type),*) -> crate::interpreter::AsyncExecutableInstruction<Instance, Export, LocalImport, Memory, MemoryView, Store>
         where
         Export: crate::interpreter::wasm::structures::Export,
         LocalImport: crate::interpreter::wasm::structures::LocalImport<Store>,

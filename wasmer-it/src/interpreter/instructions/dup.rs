@@ -1,7 +1,6 @@
 use crate::{
     errors::{InstructionError, InstructionErrorKind, InstructionResult},
     interpreter::stack::Stackable,
-    interpreter::AsyncExecutableInstructionImpl,
     interpreter::Instruction,
     interpreter::Runtime,
 };

@@ -4,7 +4,7 @@ use crate::errors::InstructionResult;
 use crate::instr_error;
 use crate::interpreter::instructions::to_native;
 use crate::interpreter::stack::Stackable;
-use crate::interpreter::{AsyncExecutableInstructionImpl, Runtime};
+use crate::interpreter::{AsyncExecutableInstruction, AsyncExecutableInstructionImpl, Runtime};
 use crate::{
     errors::{InstructionError, InstructionErrorKind},
     interpreter::Instruction,
@@ -22,7 +22,7 @@ struct ArrayLiftMemoryAsync {
 pub(crate) fn array_lift_memory<Instance, Export, LocalImport, Memory, MemoryView, Store>(
     instruction: Instruction,
     value_type: IType,
-) -> Box<dyn AsyncExecutableInstructionImpl<Instance, Export, LocalImport, Memory, MemoryView, Store>>
+) -> AsyncExecutableInstruction<Instance, Export, LocalImport, Memory, MemoryView, Store>
 where
     Export: crate::interpreter::wasm::structures::Export,
     LocalImport: crate::interpreter::wasm::structures::LocalImport<Store>,
@@ -120,7 +120,7 @@ struct ArrayLowerMemoryAsync {
 pub(crate) fn array_lower_memory<Instance, Export, LocalImport, Memory, MemoryView, Store>(
     instruction: Instruction,
     value_type: IType,
-) -> Box<dyn AsyncExecutableInstructionImpl<Instance, Export, LocalImport, Memory, MemoryView, Store>>
+) -> AsyncExecutableInstruction<Instance, Export, LocalImport, Memory, MemoryView, Store>
 where
     Export: crate::interpreter::wasm::structures::Export,
     LocalImport: crate::interpreter::wasm::structures::LocalImport<Store>,
@@ -203,6 +203,7 @@ where
 
                 let LoweredArray { offset, size } =
                     it_lilo::lowerer::array_lower_memory(runtime.store, &mut lowerer, values)
+                        .await
                         .map_err(|e| InstructionError::from_lo(instruction.clone(), e))?;
 
                 log::trace!(
@@ -234,6 +235,7 @@ where
                 let offset = lowerer
                     .writer
                     .write_bytes(runtime.store, &bytearray)
+                    .await
                     .map_err(|e| InstructionError::from_lo(instruction.clone(), e))?;
                 let size = bytearray.len();
 

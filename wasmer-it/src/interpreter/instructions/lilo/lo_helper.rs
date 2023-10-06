@@ -47,6 +47,7 @@ where
     }
 }
 
+#[async_trait::async_trait]
 impl<'i, Instance, Export, LocalImport, Memory, MemoryView, Store> Allocatable<MemoryView, Store>
     for LoHelper<'i, Instance, Export, LocalImport, Memory, MemoryView, Store>
 where
@@ -57,7 +58,7 @@ where
     Instance: wasm::structures::Instance<Export, LocalImport, Memory, MemoryView, Store>,
     Store: wasm::structures::Store,
 {
-    fn allocate(
+    async fn allocate(
         &mut self,
         store: &mut <Store as wasm::structures::Store>::ActualStore<'_>,
         size: u32,
@@ -86,7 +87,7 @@ where
         .map_err(|_| AllocateFuncIncompatibleSignature)?;
 
         let outcome = local_or_import
-            .call(store, &inputs)
+            .call_async(store, &inputs).await
             .map_err(|_| AllocateCallFailed)?;
 
         if outcome.len() != 1 {

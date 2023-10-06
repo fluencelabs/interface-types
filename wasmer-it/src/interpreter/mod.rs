@@ -70,7 +70,7 @@ pub(crate) type AsyncExecutableInstruction<
     MemoryView,
     Store,
 > = Box<
-    dyn AsyncExecutableInstructionImpl<Instance, Export, LocalImport, Memory, MemoryView, Store>,
+    dyn AsyncExecutableInstructionImpl<Instance, Export, LocalImport, Memory, MemoryView, Store> + Send + Sync,
 >;
 
 #[async_trait]

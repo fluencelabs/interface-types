@@ -1,7 +1,6 @@
 use crate::IValue;
 
 use crate::interpreter::stack::Stackable;
-use crate::interpreter::AsyncExecutableInstructionImpl;
 use crate::interpreter::InstructionResult;
 use crate::interpreter::Runtime;
 

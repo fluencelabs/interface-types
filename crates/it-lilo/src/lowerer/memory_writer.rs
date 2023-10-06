@@ -46,25 +46,25 @@ impl<'i, A: Allocatable<MV, Store>, MV: MemoryView<Store>, Store: it_memory_trai
         Ok(writer)
     }
 
-    pub fn write_bytes(
+    pub async fn write_bytes(
         &mut self,
         store: &mut <Store as it_memory_traits::Store>::ActualStore<'_>,
         bytes: &[u8],
     ) -> LoResult<u32> {
         let byte_type_tag = type_tag_form_itype(&crate::IType::U8);
-        let seq_writer = self.sequential_writer(store, bytes.len() as u32, byte_type_tag)?;
+        let seq_writer = self.sequential_writer(store, bytes.len() as u32, byte_type_tag).await?;
         seq_writer.write_bytes(store, &self, bytes);
 
         Ok(seq_writer.start_offset())
     }
 
-    pub fn sequential_writer(
+    pub async fn sequential_writer(
         &mut self,
         store: &mut <Store as it_memory_traits::Store>::ActualStore<'_>,
         size: u32,
         type_tag: u32,
     ) -> LoResult<SequentialWriter> {
-        let (offset, view) = self.heap_manager.allocate(store, size, type_tag)?;
+        let (offset, view) = self.heap_manager.allocate(store, size, type_tag).await?;
         self.view.replace(view);
         let seq_writer = SequentialWriter::new(offset);
         Ok(seq_writer)

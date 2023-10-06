@@ -55,22 +55,22 @@ pub trait Export: Send {
     fn outputs_cardinality(&self) -> usize;
     fn arguments(&self) -> &[FunctionArg];
     fn outputs(&self) -> &[IType];
-    fn call(&self, arguments: &[IValue]) -> Result<Vec<IValue>, ()>;
+    //fn call(&self, arguments: &[IValue]) -> Result<Vec<IValue>, ()>;
     async fn call_async(&self, arguments: &[IValue]) -> Result<Vec<IValue>, ()>;
 }
 
 #[async_trait]
-pub trait LocalImport<Store: self::Store>: Send {
+pub trait LocalImport<Store: self::Store>: Send + Sync {
     fn name(&self) -> &str;
     fn inputs_cardinality(&self) -> usize;
     fn outputs_cardinality(&self) -> usize;
     fn arguments(&self) -> &[FunctionArg];
     fn outputs(&self) -> &[IType];
-    fn call(
+    /*fn call(
         &self,
         store: &mut <Store as self::Store>::ActualStore<'_>,
         arguments: &[IValue],
-    ) -> Result<Vec<IValue>, ()>;
+    ) -> Result<Vec<IValue>, ()>;*/
     async fn call_async(
         &self,
         store: &mut <Store as self::Store>::ActualStore<'_>,
@@ -83,7 +83,7 @@ pub trait LocalImportAsync<Store: self::Store>: Send + LocalImport<Store> {}
 
 pub use it_memory_traits::Store;
 
-pub trait Instance<E, LI, M, MV, S>: Send
+pub trait Instance<E, LI, M, MV, S>: Send + Sync
 where
     E: Export,
     LI: LocalImport<S>,
@@ -120,9 +120,9 @@ impl Export for () {
         &[]
     }
 
-    fn call(&self, _arguments: &[IValue]) -> Result<Vec<IValue>, ()> {
+    /*fn call(&self, _arguments: &[IValue]) -> Result<Vec<IValue>, ()> {
         Err(())
-    }
+    }*/
 
     async fn call_async(&self, _arguments: &[IValue]) -> Result<Vec<IValue>, ()> {
         Err(())
@@ -150,14 +150,14 @@ impl<Store: self::Store> LocalImport<Store> for () {
     fn outputs(&self) -> &[IType] {
         &[]
     }
-
+/*
     fn call(
         &self,
         _store: &mut <Store as self::Store>::ActualStore<'_>,
         _arguments: &[IValue],
     ) -> Result<Vec<IValue>, ()> {
         Err(())
-    }
+    }*/
 
     async fn call_async(
         &self,

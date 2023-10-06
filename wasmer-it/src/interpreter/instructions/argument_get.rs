@@ -1,7 +1,6 @@
 use crate::instr_error;
 use crate::interpreter::instructions::InstructionErrorKind;
 use crate::interpreter::stack::Stackable;
-use crate::interpreter::AsyncExecutableInstructionImpl;
 use crate::interpreter::Instruction;
 use crate::interpreter::InstructionResult;
 use crate::interpreter::Runtime;
