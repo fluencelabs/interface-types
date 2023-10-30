@@ -87,7 +87,7 @@ where
 
         let outcome = local_or_import
             .call(store, &inputs)
-            .map_err(|_| AllocateCallFailed)?;
+            .map_err(|e| AllocateCallFailed { reason: e })?;
 
         if outcome.len() != 1 {
             return Err(AllocateFuncIncompatibleOutput);

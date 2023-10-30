@@ -172,10 +172,14 @@ pub enum InstructionErrorKind {
     },
 
     /// Failed to call a local or import function.
-    #[error("failed while calling the local or import function `{function_name}`")]
+    #[error("failed while calling the local or import function `{function_name}`: {reason}")]
     LocalOrImportCall {
         /// The local or import function name that has been called.
         function_name: String,
+
+        /// Error returned by the local or import call
+        #[source]
+        reason: anyhow::Error,
     },
 
     /// The memory doesn't exist.
