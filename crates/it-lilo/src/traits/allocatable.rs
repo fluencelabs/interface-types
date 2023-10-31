@@ -45,7 +45,7 @@ pub enum AllocatableError {
     },
 
     /// Failed to call a allocate function.
-    #[error("call to allocated was failed: {reason}")]
+    #[error(r#"call to allocate function was failed: {reason}"#)]
     AllocateCallFailed {
         /// error returned by the allocate function
         #[source]
