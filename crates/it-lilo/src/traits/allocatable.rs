@@ -45,8 +45,12 @@ pub enum AllocatableError {
     },
 
     /// Failed to call a allocate function.
-    #[error("call to allocated was failed")]
-    AllocateCallFailed,
+    #[error(r#"call to allocate function was failed: {reason}"#)]
+    AllocateCallFailed {
+        /// error returned by the allocate function
+        #[source]
+        reason: anyhow::Error,
+    },
 
     /// Allocate input types doesn't match with needed.
     #[error(

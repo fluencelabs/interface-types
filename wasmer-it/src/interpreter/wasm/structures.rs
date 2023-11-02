@@ -51,7 +51,7 @@ pub trait Export {
     fn outputs_cardinality(&self) -> usize;
     fn arguments(&self) -> &[FunctionArg];
     fn outputs(&self) -> &[IType];
-    fn call(&self, arguments: &[IValue]) -> Result<Vec<IValue>, ()>;
+    fn call(&self, arguments: &[IValue]) -> Result<Vec<IValue>, anyhow::Error>;
 }
 
 pub trait LocalImport<Store: self::Store> {
@@ -64,7 +64,7 @@ pub trait LocalImport<Store: self::Store> {
         &self,
         store: &mut <Store as self::Store>::ActualStore<'_>,
         arguments: &[IValue],
-    ) -> Result<Vec<IValue>, ()>;
+    ) -> Result<Vec<IValue>, anyhow::Error>;
 }
 
 pub use it_memory_traits::Store;
@@ -105,8 +105,8 @@ impl Export for () {
         &[]
     }
 
-    fn call(&self, _arguments: &[IValue]) -> Result<Vec<IValue>, ()> {
-        Err(())
+    fn call(&self, _arguments: &[IValue]) -> Result<Vec<IValue>, anyhow::Error> {
+        Err(anyhow::anyhow!("some error"))
     }
 }
 
@@ -135,8 +135,8 @@ impl<Store: self::Store> LocalImport<Store> for () {
         &self,
         _store: &mut <Store as self::Store>::ActualStore<'_>,
         _arguments: &[IValue],
-    ) -> Result<Vec<IValue>, ()> {
-        Err(())
+    ) -> Result<Vec<IValue>, anyhow::Error> {
+        Err(anyhow::anyhow!("some error"))
     }
 }
 
