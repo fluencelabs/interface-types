@@ -1,6 +1,6 @@
 [package]
 name = "wasmer-interface-types-fl"
-version = "0.26.1"
+version = "0.27.0"
 description = "WebAssembly Interface Types library for Wasmer"
 license = "MIT"
 authors = ["The Wasmer Engineering Team <engineering@wasmer.io>"]
@@ -10,7 +10,7 @@ edition = "2018"
 [dependencies]
 fluence-it-types = { path = "../crates/it-types", version = "0.4.1", features = ["impls"] }
 it-to-bytes = { path = "../crates/to-bytes", version = "0.1.0" }
-it-lilo = { path = "../crates/it-lilo", version = "0.5.1" }
+it-lilo = { path = "../crates/it-lilo", version = "0.6.0" }
 it-memory-traits = { path = "../crates/it-memory-traits", version = "0.4.0" }
 
 anyhow = "1.0.75"
