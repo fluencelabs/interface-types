@@ -4,7 +4,6 @@ members = [
     "crates/to-bytes",
     "crates/it-types",
     "crates/it-memory-traits",
-    "test-crate",
     "wasmer-it",
 ]
 
