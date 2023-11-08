@@ -56,7 +56,7 @@ pub trait Export: Send {
     fn arguments(&self) -> &[FunctionArg];
     fn outputs(&self) -> &[IType];
     //fn call(&self, arguments: &[IValue]) -> Result<Vec<IValue>, ()>;
-    async fn call_async(&self, arguments: &[IValue]) -> Result<Vec<IValue>, ()>;
+    async fn call_async(&self, arguments: &[IValue]) -> Result<Vec<IValue>, anyhow::Error>;
 }
 
 #[async_trait]
@@ -75,7 +75,7 @@ pub trait LocalImport<Store: self::Store>: Send + Sync {
         &self,
         store: &mut <Store as self::Store>::ActualStore<'_>,
         arguments: &[IValue],
-    ) -> Result<Vec<IValue>, ()>;
+    ) -> Result<Vec<IValue>, anyhow::Error>;
 }
 
 #[async_trait]
@@ -124,8 +124,8 @@ impl Export for () {
         Err(())
     }*/
 
-    async fn call_async(&self, _arguments: &[IValue]) -> Result<Vec<IValue>, ()> {
-        Err(())
+    async fn call_async(&self, _arguments: &[IValue]) -> Result<Vec<IValue>, anyhow::Error> {
+        Err(anyhow::anyhow!("some error"))
     }
 }
 
@@ -163,8 +163,8 @@ impl<Store: self::Store> LocalImport<Store> for () {
         &self,
         _store: &mut <Store as it_memory_traits::Store>::ActualStore<'_>,
         _arguments: &[IValue],
-    ) -> Result<Vec<IValue>, ()> {
-        Err(())
+    ) -> Result<Vec<IValue>, anyhow::Error> {
+        Err(anyhow::anyhow!("some error"))
     }
 }
 
