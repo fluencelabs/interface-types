@@ -46,9 +46,9 @@ impl<'i, A: Allocatable<MV, Store>, MV: MemoryView<Store>, Store: it_memory_trai
         Ok(writer)
     }
 
-    pub async fn write_bytes(
+    pub async fn write_bytes<'ctx1, 'ctx2: 'ctx1>(
         &mut self,
-        store: &mut <Store as it_memory_traits::Store>::ActualStore<'_>,
+        store: &'ctx1 mut <Store as it_memory_traits::Store>::ActualStore<'ctx2>,
         bytes: &[u8],
     ) -> LoResult<u32> {
         let byte_type_tag = type_tag_form_itype(&crate::IType::U8);
@@ -58,9 +58,9 @@ impl<'i, A: Allocatable<MV, Store>, MV: MemoryView<Store>, Store: it_memory_trai
         Ok(seq_writer.start_offset())
     }
 
-    pub async fn sequential_writer(
+    pub async fn sequential_writer<'ctx1, 'ctx2: 'ctx1>(
         &mut self,
-        store: &mut <Store as it_memory_traits::Store>::ActualStore<'_>,
+        store: &'ctx1 mut <Store as it_memory_traits::Store>::ActualStore<'ctx2>,
         size: u32,
         type_tag: u32,
     ) -> LoResult<SequentialWriter> {

@@ -21,9 +21,9 @@ pub const DEFAULT_MEMORY_INDEX: usize = 0;
 
 #[async_trait::async_trait]
 pub trait Allocatable<MV: MemoryView<Store>, Store: it_memory_traits::Store>: Send {
-    async fn allocate(
+    async fn allocate<'ctx1, 'ctx2: 'ctx1>(
         &mut self,
-        store: &mut <Store as it_memory_traits::Store>::ActualStore<'_>,
+        store: &'ctx1 mut <Store as it_memory_traits::Store>::ActualStore<'ctx2>,
         size: u32,
         type_tag: u32,
     ) -> Result<(u32, MV), AllocatableError>;

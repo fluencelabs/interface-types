@@ -58,9 +58,9 @@ where
     Instance: wasm::structures::Instance<Export, LocalImport, Memory, MemoryView, Store>,
     Store: wasm::structures::Store,
 {
-    async fn allocate(
+    async fn allocate<'ctx1, 'ctx2: 'ctx1>(
         &mut self,
-        store: &mut <Store as wasm::structures::Store>::ActualStore<'_>,
+        store: &'ctx1 mut <Store as wasm::structures::Store>::ActualStore<'ctx2>,
         size: u32,
         type_tag: u32,
     ) -> Result<(u32, MemoryView), AllocatableError> {
