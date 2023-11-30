@@ -9,8 +9,9 @@ pub use instructions::Instruction;
 use crate::errors::{InstructionResult, InterpreterResult};
 use crate::IValue;
 use stack::Stack;
-//use std::pin::Pin;
-use async_trait::async_trait;
+
+use futures::future::BoxFuture;
+
 use std::{convert::TryFrom, marker::PhantomData};
 
 /// Represents the `Runtime`, which is used by an adapter to execute
@@ -70,10 +71,11 @@ pub(crate) type AsyncExecutableInstruction<
     MemoryView,
     Store,
 > = Box<
-    dyn AsyncExecutableInstructionImpl<Instance, Export, LocalImport, Memory, MemoryView, Store> + Send + Sync,
+    dyn AsyncExecutableInstructionImpl<Instance, Export, LocalImport, Memory, MemoryView, Store>
+        + Send
+        + Sync,
 >;
 
-#[async_trait]
 pub(crate) trait AsyncExecutableInstructionImpl<
     Instance,
     Export,
@@ -89,10 +91,10 @@ pub(crate) trait AsyncExecutableInstructionImpl<
     Instance: wasm::structures::Instance<Export, LocalImport, Memory, MemoryView, Store>,
     Store: wasm::structures::Store,
 {
-    async fn execute(
-        &self,
-        runtime: &mut Runtime<Instance, Export, LocalImport, Memory, MemoryView, Store>,
-    ) -> InstructionResult<()>;
+    fn execute<'args>(
+        &'args self,
+        runtime: &'args mut Runtime<Instance, Export, LocalImport, Memory, MemoryView, Store>,
+    ) -> BoxFuture<'args, InstructionResult<()>>;
 }
 
 /// An interpreter is the central piece of this crate. It is a set of

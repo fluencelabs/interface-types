@@ -55,7 +55,10 @@ pub async fn array_lower_memory<
     let elements_count = array_values.len() as u32;
     let size = ser_value_size(&array_values[0]) * elements_count;
     let type_tag = type_tag_form_ivalue(&array_values[0]);
-    let seq_writer = lowerer.writer.sequential_writer(store, size, type_tag).await?;
+    let seq_writer = lowerer
+        .writer
+        .sequential_writer(store, size, type_tag)
+        .await?;
 
     // here it's known that all interface values have the same type
     for value in array_values {
@@ -112,7 +115,8 @@ pub async fn array_lower_memory<
                 );
             }
             IValue::Array(values) => {
-                let LoweredArray { offset, size } = array_lower_memory(store, lowerer, values).await?;
+                let LoweredArray { offset, size } =
+                    array_lower_memory(store, lowerer, values).await?;
 
                 seq_writer.write_bytes(store, &lowerer.writer, &(offset as u32).to_le_bytes());
                 seq_writer.write_bytes(store, &lowerer.writer, &(size as u32).to_le_bytes());

@@ -5,6 +5,9 @@ use crate::{
     interpreter::Runtime,
 };
 
+use futures::future::BoxFuture;
+use futures::FutureExt;
+
 struct Swap2 {
     instruction: Instruction,
 }
@@ -14,20 +17,22 @@ impl_async_executable_instruction!(
         Box::new(Swap2{instruction})
     }
     Swap2 {
-        async fn execute(&self, runtime: &mut Runtime<Instance, Export, LocalImport, Memory, MemoryView, Store>) -> InstructionResult<()> {
-            let instruction = &self.instruction;
-            let mut values = runtime.stack.pop(2).ok_or_else(|| {
-                InstructionError::from_error_kind(
-                    instruction.clone(),
-                    InstructionErrorKind::StackIsTooSmall { needed: 1 },
-                )
-            })?;
+        fn execute<'args>(&'args self, runtime: &'args mut Runtime<Instance, Export, LocalImport, Memory, MemoryView, Store>) -> BoxFuture<InstructionResult<()>> {
+            async move {
+                let instruction = &self.instruction;
+                let mut values = runtime.stack.pop(2).ok_or_else(|| {
+                    InstructionError::from_error_kind(
+                        instruction.clone(),
+                        InstructionErrorKind::StackIsTooSmall { needed: 1 },
+                    )
+                })?;
 
-            log::trace!("swap2: swapping {:?}, {:?} values on the stack", values[0], values[1]);
-            runtime.stack.push(values.remove(1));
-            runtime.stack.push(values.remove(0));
+                log::trace!("swap2: swapping {:?}, {:?} values on the stack", values[0], values[1]);
+                runtime.stack.push(values.remove(1));
+                runtime.stack.push(values.remove(0));
 
-            Ok(())
+                Ok(())
+            }.boxed()
         }
     }
 );

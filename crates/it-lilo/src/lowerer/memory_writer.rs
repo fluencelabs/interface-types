@@ -52,7 +52,9 @@ impl<'i, A: Allocatable<MV, Store>, MV: MemoryView<Store>, Store: it_memory_trai
         bytes: &[u8],
     ) -> LoResult<u32> {
         let byte_type_tag = type_tag_form_itype(&crate::IType::U8);
-        let seq_writer = self.sequential_writer(store, bytes.len() as u32, byte_type_tag).await?;
+        let seq_writer = self
+            .sequential_writer(store, bytes.len() as u32, byte_type_tag)
+            .await?;
         seq_writer.write_bytes(store, &self, bytes);
 
         Ok(seq_writer.start_offset())

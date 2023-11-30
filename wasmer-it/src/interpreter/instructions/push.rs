@@ -4,6 +4,9 @@ use crate::interpreter::stack::Stackable;
 use crate::interpreter::InstructionResult;
 use crate::interpreter::Runtime;
 
+use futures::future::BoxFuture;
+use futures::FutureExt;
+
 struct PushI32Async {
     value: i32,
 }
@@ -14,11 +17,13 @@ impl_async_executable_instruction!(
     }
 
     PushI32Async {
-        async fn execute(&self, runtime: &mut Runtime<Instance, Export, LocalImport, Memory, MemoryView, Store>) -> InstructionResult<()> {
-            log::trace!("push_i32: push {} on the stack", self.value);
-            runtime.stack.push(IValue::I32(self.value));
+        fn execute<'args>(&'args self, runtime: &'args mut Runtime<Instance, Export, LocalImport, Memory, MemoryView, Store>) -> BoxFuture<InstructionResult<()>> {
+            async move {
+                log::trace!("push_i32: push {} on the stack", self.value);
+                runtime.stack.push(IValue::I32(self.value));
 
-            Ok(())
+                Ok(())
+            }.boxed()
         }
     }
 );
@@ -33,11 +38,14 @@ impl_async_executable_instruction!(
     }
 
     PushI64Async {
-        async fn execute(&self, runtime: &mut Runtime<Instance, Export, LocalImport, Memory, MemoryView, Store>) -> InstructionResult<()> {
-            log::trace!("push_i32: push {} on the stack", self.value);
-            runtime.stack.push(IValue::I64(self.value));
+        fn execute<'args>(&'args self, runtime: &'args mut Runtime<Instance, Export, LocalImport, Memory, MemoryView, Store>) -> BoxFuture<InstructionResult<()>> {
+            async move {
+                log::trace!("push_i32: push {} on the stack", self.value);
 
-            Ok(())
+                runtime.stack.push(IValue::I64(self.value));
+
+                Ok(())
+            }.boxed()
         }
     }
 );

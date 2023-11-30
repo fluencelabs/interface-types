@@ -6,6 +6,9 @@ use crate::{
     interpreter::Runtime,
 };
 
+use futures::future::BoxFuture;
+use futures::FutureExt;
+
 struct CallCoreAsync {
     function_index: u32,
     instruction: Instruction,
@@ -17,54 +20,60 @@ impl_async_executable_instruction!(
     }
 
     CallCoreAsync {
-        async fn execute(&self, runtime: &mut Runtime<Instance, Export, LocalImport, Memory, MemoryView, Store>) -> InstructionResult<()> {
-            let instruction = &self.instruction;
-            let function_index = self.function_index;
+        fn execute<'args>(&'args self, runtime: &'args mut Runtime<Instance, Export, LocalImport, Memory, MemoryView, Store>)
+        -> BoxFuture<InstructionResult<()>> {
+            async move {
+                let instruction = &self.instruction;
+                let function_index = self.function_index;
 
-            let instance = &runtime.wasm_instance;
-            let index = FunctionIndex::new(function_index as usize);
+                let instance = &runtime.wasm_instance;
+                let index = FunctionIndex::new(function_index as usize);
 
-            let local_or_import = instance.local_or_import(index).ok_or_else(|| {
-                InstructionError::from_error_kind(
-                    instruction.clone(),
-                    InstructionErrorKind::LocalOrImportIsMissing {
-                        function_index,
-                    },
-                )
-            })?;
-            let inputs_cardinality = local_or_import.inputs_cardinality();
+                let local_or_import = instance.local_or_import(index).ok_or_else(|| {
+                    InstructionError::from_error_kind(
+                        instruction.clone(),
+                        InstructionErrorKind::LocalOrImportIsMissing {
+                            function_index,
+                        },
+                    )
+                })?;
+                let inputs_cardinality = local_or_import.inputs_cardinality();
 
-            let inputs = runtime.stack.pop(inputs_cardinality).ok_or_else(|| {
-                InstructionError::from_error_kind(
-                    instruction.clone(),
-                    InstructionErrorKind::StackIsTooSmall {
-                        needed: inputs_cardinality,
-                    },
-                )
-            })?;
+                let inputs = runtime.stack.pop(inputs_cardinality).ok_or_else(|| {
+                    InstructionError::from_error_kind(
+                        instruction.clone(),
+                        InstructionErrorKind::StackIsTooSmall {
+                            needed: inputs_cardinality,
+                        },
+                    )
+                })?;
 
-            super::check_function_signature(&**instance, local_or_import, &inputs)
-                .map_err(|e| InstructionError::from_error_kind(instruction.clone(), e))?;
+                super::check_function_signature(&**instance, local_or_import, &inputs)
+                    .map_err(|e| InstructionError::from_error_kind(instruction.clone(), e))?;
 
-            log::debug!("call-core: calling {} with arguments: {:?}", local_or_import.name(), inputs);
+                log::debug!("call-core: calling {} with arguments: {:?}", local_or_import.name(), inputs);
 
-            let outputs = local_or_import.call_async(runtime.store, &inputs).await.map_err(|e| {
-                InstructionError::from_error_kind(
-                    instruction.clone(),
-                    InstructionErrorKind::LocalOrImportCall {
-                        function_name: local_or_import.name().to_string(),
-                        reason: e
-                    },
-                )
-            })?;
+                let outputs = local_or_import
+                    .call_async(runtime.store, &inputs)
+                    .await
+                    .map_err(|e| {
+                    InstructionError::from_error_kind(
+                        instruction.clone(),
+                        InstructionErrorKind::LocalOrImportCall {
+                            function_name: local_or_import.name().to_string(),
+                            reason: e
+                        },
+                    )
+                })?;
 
-            log::debug!("call-core: call to {} succeeded with result {:?}", local_or_import.name(), outputs);
+                log::debug!("call-core: call to {} succeeded with result {:?}", local_or_import.name(), outputs);
 
-            for output in outputs.into_iter() {
-                runtime.stack.push(output)
-            }
+                for output in outputs.into_iter() {
+                    runtime.stack.push(output)
+                }
 
-            Ok(())
+                Ok(())
+            }.boxed()
         }
     }
 );

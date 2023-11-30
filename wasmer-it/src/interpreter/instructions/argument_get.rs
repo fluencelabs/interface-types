@@ -5,6 +5,9 @@ use crate::interpreter::Instruction;
 use crate::interpreter::InstructionResult;
 use crate::interpreter::Runtime;
 
+use futures::future::BoxFuture;
+use futures::FutureExt;
+
 struct ArgumentGetAsync {
     index: u32,
     instruction: Instruction,
@@ -15,21 +18,24 @@ impl_async_executable_instruction!(
         Box::new(ArgumentGetAsync {index, instruction})
     }
     ArgumentGetAsync {
-        async fn execute(&self, runtime: &mut Runtime<Instance, Export, LocalImport, Memory, MemoryView, Store>) -> InstructionResult<()> {
-            let invocation_inputs = runtime.invocation_inputs;
+        fn execute<'args>(&'args self, runtime: &'args mut Runtime<Instance, Export, LocalImport, Memory, MemoryView, Store>) ->
+        BoxFuture<InstructionResult<()>> {
+            async move {
+                let invocation_inputs = runtime.invocation_inputs;
 
-            if (self.index as usize) >= invocation_inputs.len() {
-                return instr_error!(
-                    self.instruction.clone(),
-                    InstructionErrorKind::InvocationInputIsMissing { index: self.index }
-                );
-            }
+                if (self.index as usize) >= invocation_inputs.len() {
+                    return instr_error!(
+                        self.instruction.clone(),
+                        InstructionErrorKind::InvocationInputIsMissing { index: self.index }
+                    );
+                }
 
-            log::debug!("arg.get: pushing {:?} on the stack", invocation_inputs[self.index as usize]);
+                log::debug!("arg.get: pushing {:?} on the stack", invocation_inputs[self.index as usize]);
 
-            runtime.stack.push(invocation_inputs[self.index as usize].clone());
+                runtime.stack.push(invocation_inputs[self.index as usize].clone());
 
-            Ok(())
+                Ok(())
+            }.boxed()
         }
     }
 );

@@ -8,6 +8,9 @@ use crate::{
     interpreter::Runtime,
 };
 
+use futures::future::BoxFuture;
+use futures::FutureExt;
+
 use std::convert::TryInto;
 
 macro_rules! lowering_lifting {
@@ -22,49 +25,51 @@ macro_rules! lowering_lifting {
                 Box::new([< $instruction_function_name _Async>] {instruction})
             }
             [< $instruction_function_name _Async>] {
-                async fn execute(&self, runtime: &mut Runtime<Instance, Export, LocalImport, Memory, MemoryView, Store>) -> InstructionResult<()> {
-                    let instruction = &self.instruction;
-                    match runtime.stack.pop1() {
-                        Some(IValue::$from_variant(value)) => {
-                            runtime
-                                .stack
-                                .push({
-                                    let converted_value = IValue::$to_variant(value.try_into().map_err(
-                                        |_| {
-                                            InstructionError::from_error_kind(
-                                                instruction.clone(),
-                                                InstructionErrorKind::LoweringLifting {
-                                                    from: IType::$from_variant,
-                                                    to: IType::$to_variant
-                                                },
-                                            )
-                                       },
-                                    )?);
+                fn execute<'args>(&'args self, runtime: &'args mut Runtime<Instance, Export, LocalImport, Memory, MemoryView, Store>) -> BoxFuture<InstructionResult<()>> {
+                    async move {
+                        let instruction = &self.instruction;
+                        match runtime.stack.pop1() {
+                            Some(IValue::$from_variant(value)) => {
+                                runtime
+                                    .stack
+                                    .push({
+                                        let converted_value = IValue::$to_variant(value.try_into().map_err(
+                                            |_| {
+                                                InstructionError::from_error_kind(
+                                                    instruction.clone(),
+                                                    InstructionErrorKind::LoweringLifting {
+                                                        from: IType::$from_variant,
+                                                        to: IType::$to_variant
+                                                    },
+                                                )
+                                           },
+                                        )?);
 
-                                    log::trace!("{}: converting {:?} to {:?}", $instruction_name, value, converted_value);
+                                        log::trace!("{}: converting {:?} to {:?}", $instruction_name, value, converted_value);
 
-                                    converted_value
-                                })
+                                        converted_value
+                                    })
+                            }
+                            Some(wrong_value) => {
+                                return instr_error!(
+                                    instruction.clone(),
+                                    InstructionErrorKind::InvalidValueOnTheStack {
+                                        expected_type: IType::$from_variant,
+                                        received_value: wrong_value,
+                                    }
+                                )
+                            },
+
+                            None => {
+                                return instr_error!(
+                                    instruction.clone(),
+                                    InstructionErrorKind::StackIsTooSmall { needed: 1 }
+                                )
+                            }
                         }
-                        Some(wrong_value) => {
-                            return instr_error!(
-                                instruction.clone(),
-                                InstructionErrorKind::InvalidValueOnTheStack {
-                                    expected_type: IType::$from_variant,
-                                    received_value: wrong_value,
-                                }
-                            )
-                        },
 
-                        None => {
-                            return instr_error!(
-                                instruction.clone(),
-                                InstructionErrorKind::StackIsTooSmall { needed: 1 }
-                            )
-                        }
-                    }
-
-                    Ok(())
+                        Ok(())
+                    }.boxed()
                 }
             }
         );
@@ -114,39 +119,41 @@ impl_async_executable_instruction!(
         Box::new(BoolFromI32Async{instruction})
     }
     BoolFromI32Async {
-        async fn execute(&self, runtime: &mut Runtime<Instance, Export, LocalImport, Memory, MemoryView, Store>) -> InstructionResult<()> {
-            let instruction = &self.instruction;
-            match runtime.stack.pop1() {
-                Some(IValue::I32(value)) => {
-                    runtime
-                        .stack
-                        .push({
-                            let converted_value = IValue::Boolean(value != 0);
+        fn execute<'args>(&'args self, runtime: &'args mut Runtime<Instance, Export, LocalImport, Memory, MemoryView, Store>) -> BoxFuture<InstructionResult<()>> {
+            async move {
+                let instruction = &self.instruction;
+                match runtime.stack.pop1() {
+                    Some(IValue::I32(value)) => {
+                        runtime
+                            .stack
+                            .push({
+                                let converted_value = IValue::Boolean(value != 0);
 
-                            log::trace!("bool.from_i32: converting {:?} to {:?}" , value, converted_value);
+                                log::trace!("bool.from_i32: converting {:?} to {:?}" , value, converted_value);
 
-                            converted_value
-                        })
+                                converted_value
+                            })
+                    }
+                    Some(wrong_value) => {
+                        return instr_error!(
+                            instruction.clone(),
+                            InstructionErrorKind::InvalidValueOnTheStack {
+                                expected_type: IType::I32,
+                                received_value: wrong_value,
+                            }
+                        )
+                    },
+
+                    None => {
+                        return instr_error!(
+                            instruction.clone(),
+                            InstructionErrorKind::StackIsTooSmall { needed: 1 }
+                        )
+                    }
                 }
-                Some(wrong_value) => {
-                    return instr_error!(
-                        instruction.clone(),
-                        InstructionErrorKind::InvalidValueOnTheStack {
-                            expected_type: IType::I32,
-                            received_value: wrong_value,
-                        }
-                    )
-                },
 
-                None => {
-                    return instr_error!(
-                        instruction.clone(),
-                        InstructionErrorKind::StackIsTooSmall { needed: 1 }
-                    )
-                }
-            }
-
-            Ok(())
+                Ok(())
+            }.boxed()
         }
     }
 );

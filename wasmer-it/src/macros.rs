@@ -90,7 +90,6 @@ macro_rules! executable_instruction{
 macro_rules! impl_async_executable_instruction{
     //($name:ident ( $($argument_name:ident: $argument_type:ty),* ) -> Box<dyn Fn(&mut Runtime) -> Box<dyn InstructionFuture> $implementation:block ) =>
     ($getter_name:ident($($argument_name:ident: $argument_type:ty),*) -> _ $getter_implementation:block $name:ident $($implementation:tt)*) => {
-        #[async_trait::async_trait]
         impl<Instance, Export, LocalImport, Memory, MemoryView, Store> crate::interpreter::AsyncExecutableInstructionImpl<Instance, Export, LocalImport, Memory, MemoryView, Store> for $name
         where
             Export: crate::interpreter::wasm::structures::Export,

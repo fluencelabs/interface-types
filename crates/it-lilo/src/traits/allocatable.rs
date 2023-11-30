@@ -16,17 +16,17 @@
 
 use it_memory_traits::MemoryView;
 use thiserror::Error as ThisError;
+use futures::future::BoxFuture;
 
 pub const DEFAULT_MEMORY_INDEX: usize = 0;
 
-#[async_trait::async_trait]
 pub trait Allocatable<MV: MemoryView<Store>, Store: it_memory_traits::Store>: Send {
-    async fn allocate<'ctx1, 'ctx2: 'ctx1>(
-        &mut self,
+    fn allocate<'s, 'ctx1: 's, 'ctx2: 'ctx1>(
+        &'s mut self,
         store: &'ctx1 mut <Store as it_memory_traits::Store>::ActualStore<'ctx2>,
         size: u32,
         type_tag: u32,
-    ) -> Result<(u32, MV), AllocatableError>;
+    ) -> BoxFuture<'s, Result<(u32, MV), AllocatableError>>;
 }
 
 #[derive(Debug, ThisError)]

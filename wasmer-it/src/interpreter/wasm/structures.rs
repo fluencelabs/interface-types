@@ -5,7 +5,8 @@ use crate::IRecordType;
 use crate::IType;
 use crate::IValue;
 
-use async_trait::async_trait;
+use futures::future::BoxFuture;
+use futures::FutureExt;
 
 use std::sync::Arc;
 
@@ -48,7 +49,6 @@ impl LocalImportIndex for FunctionIndex {
     type Import = ImportFunctionIndex;
 }
 
-#[async_trait]
 pub trait Export: Send {
     fn name(&self) -> &str;
     fn inputs_cardinality(&self) -> usize;
@@ -56,10 +56,12 @@ pub trait Export: Send {
     fn arguments(&self) -> &[FunctionArg];
     fn outputs(&self) -> &[IType];
     //fn call(&self, arguments: &[IValue]) -> Result<Vec<IValue>, ()>;
-    async fn call_async(&self, arguments: &[IValue]) -> Result<Vec<IValue>, anyhow::Error>;
+    fn call_async<'args>(
+        &'args self,
+        arguments: &'args [IValue],
+    ) -> BoxFuture<'args, Result<Vec<IValue>, anyhow::Error>>;
 }
 
-#[async_trait]
 pub trait LocalImport<Store: self::Store>: Send + Sync {
     fn name(&self) -> &str;
     fn inputs_cardinality(&self) -> usize;
@@ -71,14 +73,13 @@ pub trait LocalImport<Store: self::Store>: Send + Sync {
         store: &mut <Store as self::Store>::ActualStore<'_>,
         arguments: &[IValue],
     ) -> Result<Vec<IValue>, ()>;*/
-    async fn call_async(
-        &self,
-        store: &mut <Store as self::Store>::ActualStore<'_>,
-        arguments: &[IValue],
-    ) -> Result<Vec<IValue>, anyhow::Error>;
+    fn call_async<'args>(
+        &'args self,
+        store: &'args mut <Store as self::Store>::ActualStore<'_>,
+        arguments: &'args [IValue],
+    ) -> BoxFuture<Result<Vec<IValue>, anyhow::Error>>;
 }
 
-#[async_trait]
 pub trait LocalImportAsync<Store: self::Store>: Send + LocalImport<Store> {}
 
 pub use it_memory_traits::Store;
@@ -98,7 +99,44 @@ where
     fn wit_record_by_id(&self, index: u64) -> Option<&Arc<IRecordType>>;
 }
 
-#[async_trait]
+impl<Store: self::Store> LocalImport<Store> for () {
+    fn name(&self) -> &str {
+        ""
+    }
+
+    fn inputs_cardinality(&self) -> usize {
+        0
+    }
+
+    fn outputs_cardinality(&self) -> usize {
+        0
+    }
+
+    fn arguments(&self) -> &[FunctionArg] {
+        &[]
+    }
+
+    fn outputs(&self) -> &[IType] {
+        &[]
+    }
+    /*
+    fn call(
+        &self,
+        _store: &mut <Store as self::Store>::ActualStore<'_>,
+        _arguments: &[IValue],
+    ) -> Result<Vec<IValue>, ()> {
+        Err(())
+    }*/
+
+    fn call_async(
+        &self,
+        _store: &mut <Store as it_memory_traits::Store>::ActualStore<'_>,
+        _arguments: &[IValue],
+    ) -> BoxFuture<Result<Vec<IValue>, anyhow::Error>> {
+        async { Err(anyhow::anyhow!("some error")) }.boxed()
+    }
+}
+
 impl Export for () {
     fn name(&self) -> &str {
         ""
@@ -120,51 +158,8 @@ impl Export for () {
         &[]
     }
 
-    /*fn call(&self, _arguments: &[IValue]) -> Result<Vec<IValue>, ()> {
-        Err(())
-    }*/
-
-    async fn call_async(&self, _arguments: &[IValue]) -> Result<Vec<IValue>, anyhow::Error> {
-        Err(anyhow::anyhow!("some error"))
-    }
-}
-
-#[async_trait]
-impl<Store: self::Store> LocalImport<Store> for () {
-    fn name(&self) -> &str {
-        ""
-    }
-
-    fn inputs_cardinality(&self) -> usize {
-        0
-    }
-
-    fn outputs_cardinality(&self) -> usize {
-        0
-    }
-
-    fn arguments(&self) -> &[FunctionArg] {
-        &[]
-    }
-
-    fn outputs(&self) -> &[IType] {
-        &[]
-    }
-/*
-    fn call(
-        &self,
-        _store: &mut <Store as self::Store>::ActualStore<'_>,
-        _arguments: &[IValue],
-    ) -> Result<Vec<IValue>, ()> {
-        Err(())
-    }*/
-
-    async fn call_async(
-        &self,
-        _store: &mut <Store as it_memory_traits::Store>::ActualStore<'_>,
-        _arguments: &[IValue],
-    ) -> Result<Vec<IValue>, anyhow::Error> {
-        Err(anyhow::anyhow!("some error"))
+    fn call_async(&self, _arguments: &[IValue]) -> BoxFuture<Result<Vec<IValue>, anyhow::Error>> {
+        async { Err(anyhow::anyhow!("some error")) }.boxed()
     }
 }
 

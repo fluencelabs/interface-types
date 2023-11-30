@@ -11,6 +11,9 @@ use crate::{
 
 use it_lilo::traits::DEFAULT_MEMORY_INDEX;
 
+use futures::future::BoxFuture;
+use futures::FutureExt;
+
 struct ByteArrayLiftMemoryAsync {
     instruction: Instruction,
 }
@@ -20,46 +23,49 @@ impl_async_executable_instruction!(
         Box::new(ByteArrayLiftMemoryAsync{instruction})
     }
     ByteArrayLiftMemoryAsync {
-        async fn execute(&self, runtime: &mut Runtime<Instance, Export, LocalImport, Memory, MemoryView, Store>) -> InstructionResult<()> {
-            let mut inputs = runtime.stack.pop(2).ok_or_else(|| {
-                InstructionError::from_error_kind(
-                    self.instruction.clone(),
-                    InstructionErrorKind::StackIsTooSmall { needed: 2 },
-                )
-            })?;
-
-            let memory_index = DEFAULT_MEMORY_INDEX;
-            let memory = runtime
-                .wasm_instance
-                .memory(memory_index)
-                .ok_or_else(|| {
+        fn execute<'args>(&'args self, runtime: &'args mut Runtime<Instance, Export, LocalImport, Memory, MemoryView, Store>)
+        -> BoxFuture<InstructionResult<()>> {
+            async move {
+                let mut inputs = runtime.stack.pop(2).ok_or_else(|| {
                     InstructionError::from_error_kind(
                         self.instruction.clone(),
-                        InstructionErrorKind::MemoryIsMissing { memory_index },
+                        InstructionErrorKind::StackIsTooSmall { needed: 2 },
                     )
                 })?;
 
-            let pointer = to_native::<i32>(inputs.remove(0), self.instruction.clone())? as u32;
-            let length = to_native::<i32>(inputs.remove(0), self.instruction.clone())? as u32;
+                let memory_index = DEFAULT_MEMORY_INDEX;
+                let memory = runtime
+                    .wasm_instance
+                    .memory(memory_index)
+                    .ok_or_else(|| {
+                        InstructionError::from_error_kind(
+                            self.instruction.clone(),
+                            InstructionErrorKind::MemoryIsMissing { memory_index },
+                        )
+                    })?;
 
-            let memory_view = memory.view();
+                let pointer = to_native::<i32>(inputs.remove(0), self.instruction.clone())? as u32;
+                let length = to_native::<i32>(inputs.remove(0), self.instruction.clone())? as u32;
 
-            if length == 0 {
-                runtime.stack.push(IValue::ByteArray(vec![]));
+                let memory_view = memory.view();
 
-                return Ok(())
-            }
+                if length == 0 {
+                    runtime.stack.push(IValue::ByteArray(vec![]));
 
-            memory_view
-                .check_bounds(runtime.store, pointer, length)
-                .map_err(|e| InstructionError::from_memory_access(self.instruction.clone(), e))?;
+                    return Ok(())
+                }
 
-            let data = memory_view.read_vec(runtime.store, pointer, length);
+                memory_view
+                    .check_bounds(runtime.store, pointer, length)
+                    .map_err(|e| InstructionError::from_memory_access(self.instruction.clone(), e))?;
 
-            log::debug!("byte_array.lift_memory: pushing {:?} on the stack", data);
-            runtime.stack.push(IValue::ByteArray(data));
+                let data = memory_view.read_vec(runtime.store, pointer, length);
 
-            Ok(())
+                log::debug!("byte_array.lift_memory: pushing {:?} on the stack", data);
+                runtime.stack.push(IValue::ByteArray(data));
+
+                Ok(())
+            }.boxed()
         }
     }
 );
@@ -74,42 +80,44 @@ impl_async_executable_instruction!(
     }
 
     ByteArrayLowerMemoryAsync {
-         async fn execute(&self, runtime: &mut Runtime<Instance, Export, LocalImport, Memory, MemoryView, Store>) -> InstructionResult<()> {
-            let instruction = &self.instruction;
-            let mut inputs = runtime.stack.pop(2).ok_or_else(|| {
-                InstructionError::from_error_kind(
-                    instruction.clone(),
-                    InstructionErrorKind::StackIsTooSmall { needed: 2 },
-                )
-            })?;
-
-            let array_pointer = to_native::<i32>(inputs.remove(0), instruction.clone())? as u32;
-            let array: Vec<u8> = to_native(inputs.remove(0), instruction.clone())?;
-            let length = array.len() as u32;
-
-            let instance = &mut runtime.wasm_instance;
-            let memory_index = DEFAULT_MEMORY_INDEX;
-            let memory_view = instance
-                .memory(memory_index)
-                .ok_or_else(|| {
+         fn execute<'args>(&'args self, runtime: &'args mut Runtime<Instance, Export, LocalImport, Memory, MemoryView, Store>) -> BoxFuture<InstructionResult<()>> {
+            async move {
+                let instruction = &self.instruction;
+                let mut inputs = runtime.stack.pop(2).ok_or_else(|| {
                     InstructionError::from_error_kind(
                         instruction.clone(),
-                        InstructionErrorKind::MemoryIsMissing { memory_index },
+                        InstructionErrorKind::StackIsTooSmall { needed: 2 },
                     )
-                })?
-                .view();
+                })?;
 
-            memory_view
-                .check_bounds(runtime.store, array_pointer, array.len() as u32)
-                .map_err(|e| InstructionError::from_memory_access(instruction.clone(), e))?;
+                let array_pointer = to_native::<i32>(inputs.remove(0), instruction.clone())? as u32;
+                let array: Vec<u8> = to_native(inputs.remove(0), instruction.clone())?;
+                let length = array.len() as u32;
 
-            memory_view.write_bytes(runtime.store, array_pointer, &array);
+                let instance = &mut runtime.wasm_instance;
+                let memory_index = DEFAULT_MEMORY_INDEX;
+                let memory_view = instance
+                    .memory(memory_index)
+                    .ok_or_else(|| {
+                        InstructionError::from_error_kind(
+                            instruction.clone(),
+                            InstructionErrorKind::MemoryIsMissing { memory_index },
+                        )
+                    })?
+                    .view();
 
-            log::debug!("string.lower_memory: pushing {}, {} on the stack", array_pointer, length);
-            runtime.stack.push(IValue::I32(array_pointer as i32));
-            runtime.stack.push(IValue::I32(length as i32));
+                memory_view
+                    .check_bounds(runtime.store, array_pointer, array.len() as u32)
+                    .map_err(|e| InstructionError::from_memory_access(instruction.clone(), e))?;
 
-            Ok(())
+                memory_view.write_bytes(runtime.store, array_pointer, &array);
+
+                log::debug!("string.lower_memory: pushing {}, {} on the stack", array_pointer, length);
+                runtime.stack.push(IValue::I32(array_pointer as i32));
+                runtime.stack.push(IValue::I32(length as i32));
+
+                Ok(())
+            }.boxed()
         }
     }
 );
@@ -124,42 +132,44 @@ impl_async_executable_instruction!(
     }
 
     ByteArraySizeAsync {
-        async fn execute(&self, runtime: &mut Runtime<Instance, Export, LocalImport, Memory, MemoryView, Store>) -> InstructionResult<()> {
-            let instruction = &self.instruction;
-            match runtime.stack.pop1() {
-                Some(IValue::ByteArray(array)) => {
-                    let length = array.len() as i32;
+        fn execute<'args>(&'args self, runtime: &'args mut Runtime<Instance, Export, LocalImport, Memory, MemoryView, Store>) -> BoxFuture<InstructionResult<()>> {
+            async move {
+                let instruction = &self.instruction;
+                match runtime.stack.pop1() {
+                    Some(IValue::ByteArray(array)) => {
+                        let length = array.len() as i32;
 
-                    log::debug!("byte_array.size: pushing {} on the stack", length);
-                    runtime.stack.push(IValue::I32(length));
+                        log::debug!("byte_array.size: pushing {} on the stack", length);
+                        runtime.stack.push(IValue::I32(length));
 
-                    Ok(())
-                },
+                        Ok(())
+                    },
 
-                Some(IValue::Array(array)) => {
-                    let array = check_array_type(array, &instruction)?;
+                    Some(IValue::Array(array)) => {
+                        let array = check_array_type(array, &instruction)?;
 
-                    let length = array.len() as i32;
+                        let length = array.len() as i32;
 
-                    log::debug!("byte_array.size: pushing {} on the stack", length);
-                    runtime.stack.push(IValue::I32(length));
+                        log::debug!("byte_array.size: pushing {} on the stack", length);
+                        runtime.stack.push(IValue::I32(length));
 
-                    Ok(())
-                },
+                        Ok(())
+                    },
 
-                Some(value) => instr_error!(
-                    instruction.clone(),
-                    InstructionErrorKind::InvalidValueOnTheStack {
-                        expected_type: IType::ByteArray,
-                        received_value: (&value).clone(),
-                    }
-                ),
+                    Some(value) => instr_error!(
+                        instruction.clone(),
+                        InstructionErrorKind::InvalidValueOnTheStack {
+                            expected_type: IType::ByteArray,
+                            received_value: (&value).clone(),
+                        }
+                    ),
 
-                None => instr_error!(
-                    instruction.clone(),
-                    InstructionErrorKind::StackIsTooSmall { needed: 1 }
-                ),
-            }
+                    None => instr_error!(
+                        instruction.clone(),
+                        InstructionErrorKind::StackIsTooSmall { needed: 1 }
+                    ),
+                }
+            }.boxed()
         }
     }
 );
