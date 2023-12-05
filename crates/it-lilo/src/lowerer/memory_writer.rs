@@ -60,9 +60,9 @@ impl<'i, A: Allocatable<MV, Store>, MV: MemoryView<Store>, Store: it_memory_trai
         Ok(seq_writer.start_offset())
     }
 
-    pub async fn sequential_writer<'ctx1, 'ctx2: 'ctx1>(
+    pub async fn sequential_writer(
         &mut self,
-        store: &'ctx1 mut <Store as it_memory_traits::Store>::ActualStore<'ctx2>,
+        store: &mut <Store as it_memory_traits::Store>::ActualStore<'_>,
         size: u32,
         type_tag: u32,
     ) -> LoResult<SequentialWriter> {

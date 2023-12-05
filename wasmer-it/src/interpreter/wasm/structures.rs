@@ -55,7 +55,6 @@ pub trait Export: Send {
     fn outputs_cardinality(&self) -> usize;
     fn arguments(&self) -> &[FunctionArg];
     fn outputs(&self) -> &[IType];
-    //fn call(&self, arguments: &[IValue]) -> Result<Vec<IValue>, ()>;
     fn call_async<'args>(
         &'args self,
         arguments: &'args [IValue],
@@ -68,19 +67,12 @@ pub trait LocalImport<Store: self::Store>: Send + Sync {
     fn outputs_cardinality(&self) -> usize;
     fn arguments(&self) -> &[FunctionArg];
     fn outputs(&self) -> &[IType];
-    /*fn call(
-        &self,
-        store: &mut <Store as self::Store>::ActualStore<'_>,
-        arguments: &[IValue],
-    ) -> Result<Vec<IValue>, ()>;*/
     fn call_async<'args>(
         &'args self,
         store: &'args mut <Store as self::Store>::ActualStore<'_>,
         arguments: &'args [IValue],
     ) -> BoxFuture<Result<Vec<IValue>, anyhow::Error>>;
 }
-
-pub trait LocalImportAsync<Store: self::Store>: Send + LocalImport<Store> {}
 
 pub use it_memory_traits::Store;
 
@@ -119,14 +111,6 @@ impl<Store: self::Store> LocalImport<Store> for () {
     fn outputs(&self) -> &[IType] {
         &[]
     }
-    /*
-    fn call(
-        &self,
-        _store: &mut <Store as self::Store>::ActualStore<'_>,
-        _arguments: &[IValue],
-    ) -> Result<Vec<IValue>, ()> {
-        Err(())
-    }*/
 
     fn call_async(
         &self,
@@ -219,7 +203,7 @@ impl<S: Store> Memory<EmptyMemoryView, S> for () {
 impl<E, LI, M, MV, S> Instance<E, LI, M, MV, S> for ()
 where
     E: Export,
-    LI: LocalImportAsync<S>,
+    LI: LocalImport<S>,
     M: Memory<MV, S>,
     MV: MemoryView<S>,
     S: Store,

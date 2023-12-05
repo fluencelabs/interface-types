@@ -14,19 +14,19 @@
  * limitations under the License.
  */
 
+use futures::future::BoxFuture;
 use it_memory_traits::MemoryView;
 use thiserror::Error as ThisError;
-use futures::future::BoxFuture;
 
 pub const DEFAULT_MEMORY_INDEX: usize = 0;
 
 pub trait Allocatable<MV: MemoryView<Store>, Store: it_memory_traits::Store>: Send {
-    fn allocate<'s, 'ctx1: 's, 'ctx2: 'ctx1>(
-        &'s mut self,
+    fn allocate<'this, 'ctx1: 'this, 'ctx2: 'this>(
+        &'this mut self,
         store: &'ctx1 mut <Store as it_memory_traits::Store>::ActualStore<'ctx2>,
         size: u32,
         type_tag: u32,
-    ) -> BoxFuture<'s, Result<(u32, MV), AllocatableError>>;
+    ) -> BoxFuture<'this, Result<(u32, MV), AllocatableError>>;
 }
 
 #[derive(Debug, ThisError)]

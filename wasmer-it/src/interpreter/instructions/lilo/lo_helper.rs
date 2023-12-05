@@ -31,7 +31,7 @@ where
 impl<'i, Instance, Export, LocalImport, Memory, MemoryView, Store>
     LoHelper<'i, Instance, Export, LocalImport, Memory, MemoryView, Store>
 where
-    Export: wasm::structures::Export + 'i,
+    Export: wasm::structures::Export,
     LocalImport: wasm::structures::LocalImport<Store>,
     Memory: wasm::structures::Memory<MemoryView, Store>,
     MemoryView: wasm::structures::MemoryView<Store>,
@@ -60,12 +60,12 @@ where
     Instance: wasm::structures::Instance<Export, LocalImport, Memory, MemoryView, Store>,
     Store: wasm::structures::Store,
 {
-    fn allocate<'s, 'ctx1: 's, 'ctx2: 'ctx1>(
-        &'s mut self,
+    fn allocate<'this, 'ctx1: 'this, 'ctx2: 'this>(
+        &'this mut self,
         store: &'ctx1 mut <Store as wasm::structures::Store>::ActualStore<'ctx2>,
         size: u32,
         type_tag: u32,
-    ) -> BoxFuture<'s, Result<(u32, MemoryView), AllocatableError>> {
+    ) -> BoxFuture<'this, Result<(u32, MemoryView), AllocatableError>> {
         async move {
             use crate::interpreter::instructions::ALLOCATE_FUNC_INDEX;
             use crate::interpreter::wasm::structures::TypedIndex;

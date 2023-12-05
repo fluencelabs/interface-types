@@ -53,16 +53,7 @@ pub(crate) struct Runtime<
 }
 
 /// Type alias for an executable instruction. It's an implementation
-/// details, but an instruction is a boxed closure instance.
-pub(crate) type ExecutableInstruction<Instance, Export, LocalImport, Memory, MemoryView, Store> =
-    Box<
-        dyn Fn(
-                &mut Runtime<Instance, Export, LocalImport, Memory, MemoryView, Store>,
-            ) -> InstructionResult<()>
-            + Send
-            + Sync,
-    >;
-
+/// details, but an instruction is a boxed dyn AsyncExecutableInstructionImpl instance.
 pub(crate) type AsyncExecutableInstruction<
     Instance,
     Export,
@@ -175,20 +166,6 @@ pub(crate) trait AsyncExecutableInstructionImpl<
 /// // 5. Read the stack to get the result.
 /// assert_eq!(stack.as_slice(), &[IValue::I32(7)]);
 /// ```
-pub struct Interpreter<Instance, Export, LocalImport, Memory, MemoryView, Store>
-where
-    Export: wasm::structures::Export,
-    LocalImport: wasm::structures::LocalImport<Store>,
-    Memory: wasm::structures::Memory<MemoryView, Store>,
-    MemoryView: wasm::structures::MemoryView<Store>,
-    Instance: wasm::structures::Instance<Export, LocalImport, Memory, MemoryView, Store>,
-    Store: wasm::structures::Store,
-{
-    executable_instructions:
-        Vec<ExecutableInstruction<Instance, Export, LocalImport, Memory, MemoryView, Store>>,
-}
-
-/// Async version of `Interpreter`
 pub struct AsyncInterpreter<Instance, Export, LocalImport, Memory, MemoryView, Store>
 where
     Export: wasm::structures::Export,
@@ -200,51 +177,6 @@ where
 {
     executable_instructions:
         Vec<AsyncExecutableInstruction<Instance, Export, LocalImport, Memory, MemoryView, Store>>,
-}
-
-impl<Instance, Export, LocalImport, Memory, MemoryView, Store>
-    Interpreter<Instance, Export, LocalImport, Memory, MemoryView, Store>
-where
-    Export: wasm::structures::Export,
-    LocalImport: wasm::structures::LocalImport<Store>,
-    Memory: wasm::structures::Memory<MemoryView, Store>,
-    MemoryView: wasm::structures::MemoryView<Store>,
-    Instance: wasm::structures::Instance<Export, LocalImport, Memory, MemoryView, Store>,
-    Store: wasm::structures::Store,
-{
-    fn iter(
-        &self,
-    ) -> impl Iterator<
-        Item = &ExecutableInstruction<Instance, Export, LocalImport, Memory, MemoryView, Store>,
-    > + '_ {
-        self.executable_instructions.iter()
-    }
-
-    /// Runs the interpreter, such as:
-    ///   1. Create a fresh stack,
-    ///   2. Create a fresh stack,
-    ///   3. Execute the instructions one after the other, and
-    ///      returns the stack.
-    pub fn run(
-        &self,
-        invocation_inputs: &[IValue],
-        wasm_instance: &mut Instance,
-        wasm_store: &mut <Store as wasm::structures::Store>::ActualStore<'_>,
-    ) -> InterpreterResult<Stack<IValue>> {
-        let mut runtime = Runtime {
-            invocation_inputs,
-            stack: Stack::new(),
-            wasm_instance,
-            store: wasm_store,
-            _phantom: PhantomData,
-        };
-
-        for executable_instruction in self.iter() {
-            executable_instruction(&mut runtime)?;
-        }
-
-        Ok(runtime.stack)
-    }
 }
 
 impl<Instance, Export, LocalImport, Memory, MemoryView, Store>
