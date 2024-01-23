@@ -2,7 +2,6 @@ use crate::instr_error;
 use crate::interpreter::instructions::InstructionErrorKind;
 use crate::interpreter::Instruction;
 
-
 impl_sync_executable_instruction!(
     argument_get(index: u32, instruction: Instruction) -> _ {
         move |runtime| -> _ {

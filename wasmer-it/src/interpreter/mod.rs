@@ -67,23 +67,25 @@ pub(crate) type AsyncExecutableInstruction<
         + Sync,
 >;
 
-pub(crate) type SyncExecutableInstruction<Instance, Export, LocalImport, Memory, MemoryView, Store> =
-Box<
-    dyn Fn(&mut Runtime<Instance, Export, LocalImport, Memory, MemoryView, Store>, ) -> InstructionResult<()>
-    + Send
-    + Sync,
->;
-
-/// Type alias for an executable instruction. It's an implementation
-/// details, but an instruction is a boxed closure instance.
-pub(crate) enum ExecutableInstruction<
+pub(crate) type SyncExecutableInstruction<
     Instance,
     Export,
     LocalImport,
     Memory,
     MemoryView,
     Store,
-> where
+> = Box<
+    dyn Fn(
+            &mut Runtime<Instance, Export, LocalImport, Memory, MemoryView, Store>,
+        ) -> InstructionResult<()>
+        + Send
+        + Sync,
+>;
+
+/// Type alias for an executable instruction. It's an implementation
+/// details, but an instruction is a boxed closure instance.
+pub(crate) enum ExecutableInstruction<Instance, Export, LocalImport, Memory, MemoryView, Store>
+where
     Export: wasm::structures::Export,
     LocalImport: wasm::structures::LocalImport<Store>,
     Memory: wasm::structures::Memory<MemoryView, Store>,
@@ -92,7 +94,7 @@ pub(crate) enum ExecutableInstruction<
     Store: wasm::structures::Store,
 {
     Sync(SyncExecutableInstruction<Instance, Export, LocalImport, Memory, MemoryView, Store>),
-    Async(AsyncExecutableInstruction<Instance, Export, LocalImport, Memory, MemoryView, Store>)
+    Async(AsyncExecutableInstruction<Instance, Export, LocalImport, Memory, MemoryView, Store>),
 }
 
 pub(crate) trait AsyncExecutableInstructionImpl<
@@ -220,14 +222,7 @@ where
     fn iter(
         &self,
     ) -> impl Iterator<
-        Item = &ExecutableInstruction<
-            Instance,
-            Export,
-            LocalImport,
-            Memory,
-            MemoryView,
-            Store,
-        >,
+        Item = &ExecutableInstruction<Instance, Export, LocalImport, Memory, MemoryView, Store>,
     > + '_ {
         self.executable_instructions.iter()
     }
@@ -254,7 +249,9 @@ where
         for executable_instruction in self.iter() {
             match &executable_instruction {
                 ExecutableInstruction::Sync(instruction) => instruction(&mut runtime)?,
-                ExecutableInstruction::Async(instruction) => instruction.execute(&mut runtime).await?,
+                ExecutableInstruction::Async(instruction) => {
+                    instruction.execute(&mut runtime).await?
+                }
             }
         }
 
