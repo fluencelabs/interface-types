@@ -76,7 +76,7 @@ macro_rules! impl_async_executable_instruction {
             Instance: crate::interpreter::wasm::structures::Instance<Export, LocalImport, Memory, MemoryView, Store>,
             Store: crate::interpreter::wasm::structures::Store, $($implementation)*
 
-        pub(crate) fn $getter_name<Instance, Export, LocalImport, Memory, MemoryView, Store>($($argument_name: $argument_type),*) -> crate::interpreter::AsyncExecutableInstruction<Instance, Export, LocalImport, Memory, MemoryView, Store>
+        pub(crate) fn $getter_name<Instance, Export, LocalImport, Memory, MemoryView, Store>($($argument_name: $argument_type),*) -> crate::interpreter::ExecutableInstruction<Instance, Export, LocalImport, Memory, MemoryView, Store>
         where
         Export: crate::interpreter::wasm::structures::Export,
         LocalImport: crate::interpreter::wasm::structures::LocalImport<Store>,
@@ -84,9 +84,30 @@ macro_rules! impl_async_executable_instruction {
         MemoryView: crate::interpreter::wasm::structures::MemoryView<Store>,
         Instance: crate::interpreter::wasm::structures::Instance<Export, LocalImport, Memory, MemoryView, Store>,
         Store: crate::interpreter::wasm::structures::Store, {
-            $getter_implementation
+            crate::interpreter::ExecutableInstruction::Async($getter_implementation)
         }
     }
+}
+
+macro_rules! impl_sync_executable_instruction {
+    ($name:ident ( $($argument_name:ident: $argument_type:ty),* ) -> _ $implementation:block ) => {
+        pub(crate) fn $name<Instance, Export, LocalImport, Memory, MemoryView, Store>(
+            $($argument_name: $argument_type),*
+        ) -> crate::interpreter::ExecutableInstruction<Instance, Export, LocalImport, Memory, MemoryView, Store>
+        where
+            Export: crate::interpreter::wasm::structures::Export,
+            LocalImport: crate::interpreter::wasm::structures::LocalImport<Store>,
+            Memory: crate::interpreter::wasm::structures::Memory<MemoryView, Store>,
+            MemoryView: crate::interpreter::wasm::structures::MemoryView<Store>,
+            Instance: crate::interpreter::wasm::structures::Instance<Export, LocalImport, Memory, MemoryView, Store>,
+            Store: crate::interpreter::wasm::structures::Store,
+        {
+            #[allow(unused_imports)]
+            use crate::interpreter::{stack::Stackable};
+
+            crate::interpreter::ExecutableInstruction::Sync(Box::new($implementation))
+        }
+    };
 }
 
 #[cfg(test)]

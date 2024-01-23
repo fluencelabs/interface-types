@@ -4,7 +4,7 @@ use crate::errors::InstructionResult;
 use crate::instr_error;
 use crate::interpreter::instructions::to_native;
 use crate::interpreter::stack::Stackable;
-use crate::interpreter::{AsyncExecutableInstruction, AsyncExecutableInstructionImpl, Runtime};
+use crate::interpreter::{AsyncExecutableInstructionImpl, ExecutableInstruction, Runtime};
 use crate::{
     errors::{InstructionError, InstructionErrorKind},
     interpreter::Instruction,
@@ -25,7 +25,7 @@ struct ArrayLiftMemoryAsync {
 pub(crate) fn array_lift_memory<Instance, Export, LocalImport, Memory, MemoryView, Store>(
     instruction: Instruction,
     value_type: IType,
-) -> AsyncExecutableInstruction<Instance, Export, LocalImport, Memory, MemoryView, Store>
+) -> ExecutableInstruction<Instance, Export, LocalImport, Memory, MemoryView, Store>
 where
     Export: crate::interpreter::wasm::structures::Export,
     LocalImport: crate::interpreter::wasm::structures::LocalImport<Store>,
@@ -40,10 +40,10 @@ where
     >,
     Store: crate::interpreter::wasm::structures::Store,
 {
-    Box::new(ArrayLiftMemoryAsync {
+    ExecutableInstruction::Async(Box::new(ArrayLiftMemoryAsync {
         instruction,
         value_type,
-    })
+    }))
 }
 
 impl<Instance, Export, LocalImport, Memory, MemoryView, Store>
@@ -130,7 +130,7 @@ struct ArrayLowerMemoryAsync {
 pub(crate) fn array_lower_memory<Instance, Export, LocalImport, Memory, MemoryView, Store>(
     instruction: Instruction,
     value_type: IType,
-) -> AsyncExecutableInstruction<Instance, Export, LocalImport, Memory, MemoryView, Store>
+) -> ExecutableInstruction<Instance, Export, LocalImport, Memory, MemoryView, Store>
 where
     Export: crate::interpreter::wasm::structures::Export,
     LocalImport: crate::interpreter::wasm::structures::LocalImport<Store>,
@@ -145,10 +145,10 @@ where
     >,
     Store: crate::interpreter::wasm::structures::Store,
 {
-    Box::new(ArrayLowerMemoryAsync {
+    ExecutableInstruction::Async(Box::new(ArrayLowerMemoryAsync {
         instruction,
         value_type,
-    })
+    }))
 }
 
 impl<Instance, Export, LocalImport, Memory, MemoryView, Store>

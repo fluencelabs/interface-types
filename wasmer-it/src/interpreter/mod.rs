@@ -67,6 +67,34 @@ pub(crate) type AsyncExecutableInstruction<
         + Sync,
 >;
 
+pub(crate) type SyncExecutableInstruction<Instance, Export, LocalImport, Memory, MemoryView, Store> =
+Box<
+    dyn Fn(&mut Runtime<Instance, Export, LocalImport, Memory, MemoryView, Store>, ) -> InstructionResult<()>
+    + Send
+    + Sync,
+>;
+
+/// Type alias for an executable instruction. It's an implementation
+/// details, but an instruction is a boxed closure instance.
+pub(crate) enum ExecutableInstruction<
+    Instance,
+    Export,
+    LocalImport,
+    Memory,
+    MemoryView,
+    Store,
+> where
+    Export: wasm::structures::Export,
+    LocalImport: wasm::structures::LocalImport<Store>,
+    Memory: wasm::structures::Memory<MemoryView, Store>,
+    MemoryView: wasm::structures::MemoryView<Store>,
+    Instance: wasm::structures::Instance<Export, LocalImport, Memory, MemoryView, Store>,
+    Store: wasm::structures::Store,
+{
+    Sync(SyncExecutableInstruction<Instance, Export, LocalImport, Memory, MemoryView, Store>),
+    Async(AsyncExecutableInstruction<Instance, Export, LocalImport, Memory, MemoryView, Store>)
+}
+
 pub(crate) trait AsyncExecutableInstructionImpl<
     Instance,
     Export,
@@ -166,7 +194,7 @@ pub(crate) trait AsyncExecutableInstructionImpl<
 /// // 5. Read the stack to get the result.
 /// assert_eq!(stack.as_slice(), &[IValue::I32(7)]);
 /// ```
-pub struct AsyncInterpreter<Instance, Export, LocalImport, Memory, MemoryView, Store>
+pub struct Interpreter<Instance, Export, LocalImport, Memory, MemoryView, Store>
 where
     Export: wasm::structures::Export,
     LocalImport: wasm::structures::LocalImport<Store>,
@@ -176,11 +204,11 @@ where
     Store: wasm::structures::Store,
 {
     executable_instructions:
-        Vec<AsyncExecutableInstruction<Instance, Export, LocalImport, Memory, MemoryView, Store>>,
+        Vec<ExecutableInstruction<Instance, Export, LocalImport, Memory, MemoryView, Store>>,
 }
 
 impl<Instance, Export, LocalImport, Memory, MemoryView, Store>
-    AsyncInterpreter<Instance, Export, LocalImport, Memory, MemoryView, Store>
+    Interpreter<Instance, Export, LocalImport, Memory, MemoryView, Store>
 where
     Export: wasm::structures::Export,
     LocalImport: wasm::structures::LocalImport<Store>,
@@ -192,7 +220,7 @@ where
     fn iter(
         &self,
     ) -> impl Iterator<
-        Item = &AsyncExecutableInstruction<
+        Item = &ExecutableInstruction<
             Instance,
             Export,
             LocalImport,
@@ -224,7 +252,10 @@ where
         };
 
         for executable_instruction in self.iter() {
-            executable_instruction.execute(&mut runtime).await?;
+            match &executable_instruction {
+                ExecutableInstruction::Sync(instruction) => instruction(&mut runtime)?,
+                ExecutableInstruction::Async(instruction) => instruction.execute(&mut runtime).await?,
+            }
         }
 
         Ok(runtime.stack)
@@ -332,7 +363,7 @@ where
 */
 /// Transforms a `Vec<Instruction>` into an `Interpreter`.
 impl<Instance, Export, LocalImport, Memory, MemoryView, Store> TryFrom<Vec<Instruction>>
-    for AsyncInterpreter<Instance, Export, LocalImport, Memory, MemoryView, Store>
+    for Interpreter<Instance, Export, LocalImport, Memory, MemoryView, Store>
 where
     Export: wasm::structures::Export,
     LocalImport: wasm::structures::LocalImport<Store>,
@@ -423,7 +454,7 @@ where
             })
             .collect();
 
-        Ok(AsyncInterpreter {
+        Ok(Interpreter {
             executable_instructions,
         })
     }

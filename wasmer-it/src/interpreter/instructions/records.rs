@@ -7,7 +7,7 @@ use crate::{errors::InstructionError, errors::InstructionErrorKind, interpreter:
 
 use crate::errors::InstructionResult;
 use crate::interpreter::stack::Stackable;
-use crate::interpreter::{AsyncExecutableInstruction, AsyncExecutableInstructionImpl, Runtime};
+use crate::interpreter::{AsyncExecutableInstructionImpl, ExecutableInstruction, Runtime};
 use it_lilo::lifter::ILifter;
 use it_lilo::lowerer::ILowerer;
 use it_lilo::traits::DEFAULT_MEMORY_INDEX;
@@ -23,7 +23,7 @@ struct RecordLiftMemoryAsync {
 pub(crate) fn record_lift_memory<Instance, Export, LocalImport, Memory, MemoryView, Store>(
     record_type_id: u64,
     instruction: Instruction,
-) -> AsyncExecutableInstruction<Instance, Export, LocalImport, Memory, MemoryView, Store>
+) -> ExecutableInstruction<Instance, Export, LocalImport, Memory, MemoryView, Store>
 where
     Export: crate::interpreter::wasm::structures::Export,
     LocalImport: crate::interpreter::wasm::structures::LocalImport<Store>,
@@ -38,10 +38,10 @@ where
     >,
     Store: crate::interpreter::wasm::structures::Store,
 {
-    Box::new(RecordLiftMemoryAsync {
+    ExecutableInstruction::Async(Box::new(RecordLiftMemoryAsync {
         record_type_id,
         instruction,
-    })
+    }))
 }
 
 impl<Instance, Export, LocalImport, Memory, MemoryView, Store>
@@ -127,7 +127,7 @@ struct RecordLowerMemoryAsync {
 pub(crate) fn record_lower_memory<Instance, Export, LocalImport, Memory, MemoryView, Store>(
     record_type_id: u64,
     instruction: Instruction,
-) -> AsyncExecutableInstruction<Instance, Export, LocalImport, Memory, MemoryView, Store>
+) -> ExecutableInstruction<Instance, Export, LocalImport, Memory, MemoryView, Store>
 where
     Export: crate::interpreter::wasm::structures::Export,
     LocalImport: crate::interpreter::wasm::structures::LocalImport<Store>,
@@ -142,10 +142,10 @@ where
     >,
     Store: crate::interpreter::wasm::structures::Store,
 {
-    Box::new(RecordLowerMemoryAsync {
+    ExecutableInstruction::Async(Box::new(RecordLowerMemoryAsync {
         record_type_id,
         instruction,
-    })
+    }))
 }
 
 impl<Instance, Export, LocalImport, Memory, MemoryView, Store>
