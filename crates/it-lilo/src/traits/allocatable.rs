@@ -21,9 +21,9 @@ use thiserror::Error as ThisError;
 pub const DEFAULT_MEMORY_INDEX: usize = 0;
 
 pub trait Allocatable<MV: MemoryView<Store>, Store: it_memory_traits::Store>: Send {
-    fn allocate<'this, 'ctx1: 'this, 'ctx2: 'this>(
+    fn allocate<'this, 'store: 'this, 'store_inner: 'this>(
         &'this mut self,
-        store: &'ctx1 mut <Store as it_memory_traits::Store>::ActualStore<'ctx2>,
+        store: &'store mut <Store as it_memory_traits::Store>::ActualStore<'store_inner>,
         size: u32,
         type_tag: u32,
     ) -> BoxFuture<'this, Result<(u32, MV), AllocatableError>>;

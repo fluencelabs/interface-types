@@ -60,9 +60,9 @@ where
     Instance: wasm::structures::Instance<Export, LocalImport, Memory, MemoryView, Store>,
     Store: wasm::structures::Store,
 {
-    fn allocate<'this, 'ctx1: 'this, 'ctx2: 'this>(
+    fn allocate<'this, 'store: 'this, 'store_inner: 'this>(
         &'this mut self,
-        store: &'ctx1 mut <Store as wasm::structures::Store>::ActualStore<'ctx2>,
+        store: &'store mut <Store as wasm::structures::Store>::ActualStore<'store_inner>,
         size: u32,
         type_tag: u32,
     ) -> BoxFuture<'this, Result<(u32, MemoryView), AllocatableError>> {

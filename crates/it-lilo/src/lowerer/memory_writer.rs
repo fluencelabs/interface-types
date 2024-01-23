@@ -46,9 +46,9 @@ impl<'i, A: Allocatable<MV, Store>, MV: MemoryView<Store>, Store: it_memory_trai
         Ok(writer)
     }
 
-    pub async fn write_bytes<'ctx1, 'ctx2: 'ctx1>(
+    pub async fn write_bytes<'store, 'store_inner: 'store>(
         &mut self,
-        store: &'ctx1 mut <Store as it_memory_traits::Store>::ActualStore<'ctx2>,
+        store: &'store mut <Store as it_memory_traits::Store>::ActualStore<'store_inner>,
         bytes: &[u8],
     ) -> LoResult<u32> {
         let byte_type_tag = type_tag_form_itype(&crate::IType::U8);
