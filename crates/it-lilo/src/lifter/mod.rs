@@ -41,9 +41,6 @@ impl<'r, R: RecordResolvable, MV: MemoryView<Store>, Store: it_memory_traits::St
 {
     pub fn new(view: MV, resolver: &'r R) -> Self {
         let reader = MemoryReader::new(view);
-        Self {
-            reader,
-            resolver,
-        }
+        Self { reader, resolver }
     }
 }

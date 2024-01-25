@@ -3,7 +3,7 @@ use crate::{
     interpreter::Instruction,
 };
 
-executable_instruction!(
+impl_sync_executable_instruction!(
     swap2(instruction: Instruction) -> _ {
         move |runtime| -> _ {
             let mut values = runtime.stack.pop(2).ok_or_else(|| {

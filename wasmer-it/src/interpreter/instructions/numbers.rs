@@ -10,7 +10,7 @@ use std::convert::TryInto;
 
 macro_rules! lowering_lifting {
     ($instruction_function_name:ident, $instruction_name:expr, $to_variant:ident, $from_variant:ident) => {
-        executable_instruction!(
+        impl_sync_executable_instruction!(
             $instruction_function_name(instruction: Instruction) -> _ {
                 move |runtime| -> _ {
                     match runtime.stack.pop1() {
@@ -94,7 +94,7 @@ lowering_lifting!(i64_from_u16, "i64.from_u16", I64, U16);
 lowering_lifting!(i64_from_u32, "i64.from_u32", I64, U32);
 lowering_lifting!(i64_from_u64, "i64.from_u64", I64, U64);
 
-executable_instruction!(
+impl_sync_executable_instruction!(
     bool_from_i32(instruction: Instruction) -> _ {
         move |runtime| -> _ {
             match runtime.stack.pop1() {

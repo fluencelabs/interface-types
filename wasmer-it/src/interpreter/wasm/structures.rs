@@ -4,6 +4,10 @@ use crate::ast::FunctionArg;
 use crate::IRecordType;
 use crate::IType;
 use crate::IValue;
+
+use futures::future::BoxFuture;
+use futures::FutureExt;
+
 use std::sync::Arc;
 
 pub use it_memory_traits::{Memory, MemoryAccessError, MemoryView};
@@ -45,31 +49,34 @@ impl LocalImportIndex for FunctionIndex {
     type Import = ImportFunctionIndex;
 }
 
-pub trait Export {
+pub trait Export: Send {
     fn name(&self) -> &str;
     fn inputs_cardinality(&self) -> usize;
     fn outputs_cardinality(&self) -> usize;
     fn arguments(&self) -> &[FunctionArg];
     fn outputs(&self) -> &[IType];
-    fn call(&self, arguments: &[IValue]) -> Result<Vec<IValue>, anyhow::Error>;
+    fn call_async<'args>(
+        &'args self,
+        arguments: &'args [IValue],
+    ) -> BoxFuture<'args, Result<Vec<IValue>, anyhow::Error>>;
 }
 
-pub trait LocalImport<Store: self::Store> {
+pub trait LocalImport<Store: self::Store>: Send + Sync {
     fn name(&self) -> &str;
     fn inputs_cardinality(&self) -> usize;
     fn outputs_cardinality(&self) -> usize;
     fn arguments(&self) -> &[FunctionArg];
     fn outputs(&self) -> &[IType];
-    fn call(
-        &self,
-        store: &mut <Store as self::Store>::ActualStore<'_>,
-        arguments: &[IValue],
-    ) -> Result<Vec<IValue>, anyhow::Error>;
+    fn call_async<'args>(
+        &'args self,
+        store: &'args mut <Store as self::Store>::ActualStore<'_>,
+        arguments: &'args [IValue],
+    ) -> BoxFuture<Result<Vec<IValue>, anyhow::Error>>;
 }
 
 pub use it_memory_traits::Store;
 
-pub trait Instance<E, LI, M, MV, S>
+pub trait Instance<E, LI, M, MV, S>: Send + Sync
 where
     E: Export,
     LI: LocalImport<S>,
@@ -82,32 +89,6 @@ where
     fn memory(&self, index: usize) -> Option<&M>;
     fn memory_view(&self, index: usize) -> Option<MV>;
     fn wit_record_by_id(&self, index: u64) -> Option<&Arc<IRecordType>>;
-}
-
-impl Export for () {
-    fn name(&self) -> &str {
-        ""
-    }
-
-    fn inputs_cardinality(&self) -> usize {
-        0
-    }
-
-    fn outputs_cardinality(&self) -> usize {
-        0
-    }
-
-    fn arguments(&self) -> &[FunctionArg] {
-        &[]
-    }
-
-    fn outputs(&self) -> &[IType] {
-        &[]
-    }
-
-    fn call(&self, _arguments: &[IValue]) -> Result<Vec<IValue>, anyhow::Error> {
-        Err(anyhow::anyhow!("some error"))
-    }
 }
 
 impl<Store: self::Store> LocalImport<Store> for () {
@@ -131,12 +112,38 @@ impl<Store: self::Store> LocalImport<Store> for () {
         &[]
     }
 
-    fn call(
+    fn call_async(
         &self,
-        _store: &mut <Store as self::Store>::ActualStore<'_>,
+        _store: &mut <Store as it_memory_traits::Store>::ActualStore<'_>,
         _arguments: &[IValue],
-    ) -> Result<Vec<IValue>, anyhow::Error> {
-        Err(anyhow::anyhow!("some error"))
+    ) -> BoxFuture<Result<Vec<IValue>, anyhow::Error>> {
+        async { Err(anyhow::anyhow!("some error")) }.boxed()
+    }
+}
+
+impl Export for () {
+    fn name(&self) -> &str {
+        ""
+    }
+
+    fn inputs_cardinality(&self) -> usize {
+        0
+    }
+
+    fn outputs_cardinality(&self) -> usize {
+        0
+    }
+
+    fn arguments(&self) -> &[FunctionArg] {
+        &[]
+    }
+
+    fn outputs(&self) -> &[IType] {
+        &[]
+    }
+
+    fn call_async(&self, _arguments: &[IValue]) -> BoxFuture<Result<Vec<IValue>, anyhow::Error>> {
+        async { Err(anyhow::anyhow!("some error")) }.boxed()
     }
 }
 

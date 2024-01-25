@@ -3,7 +3,7 @@ use crate::{
     interpreter::Instruction,
 };
 
-executable_instruction!(
+impl_sync_executable_instruction!(
     dup(instruction: Instruction) -> _ {
         move |runtime| -> _ {
             let value = runtime.stack.peek1().ok_or_else(|| {

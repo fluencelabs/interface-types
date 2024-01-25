@@ -11,10 +11,12 @@ name = "it_lilo"
 path = "src/lib.rs"
 
 [dependencies]
-fluence-it-types = { path = "../it-types/", version = "0.4.1" }
+fluence-it-types = { path = "../it-types", version = "0.4.1" }
 it-memory-traits = { path = "../it-memory-traits", version = "0.4.0" }
 
 anyhow = "1.0.75"
 paste = "1.0.11"
 thiserror = "1.0.38"
 log = "0.4.17"
+async-recursion = "1.0.5"
+futures = "0.3.29"

@@ -23,7 +23,8 @@ use crate::NEVec;
 
 use it_memory_traits::MemoryView;
 
-pub fn record_lower_memory<
+#[async_recursion::async_recursion]
+pub async fn record_lower_memory<
     A: Allocatable<MV, Store>,
     MV: MemoryView<Store>,
     Store: it_memory_traits::Store,
@@ -52,13 +53,13 @@ pub fn record_lower_memory<
             IValue::F32(value) => result.extend_from_slice(&value.to_le_bytes()),
             IValue::F64(value) => result.extend_from_slice(&value.to_le_bytes()),
             IValue::String(value) => {
-                let offset = lowerer.writer.write_bytes(store, value.as_bytes())?;
+                let offset = lowerer.writer.write_bytes(store, value.as_bytes()).await?;
 
                 result.extend_from_slice(&offset.to_le_bytes());
                 result.extend_from_slice(&(value.len() as u32).to_le_bytes());
             }
             IValue::ByteArray(value) => {
-                let offset = lowerer.writer.write_bytes(store, &value)?;
+                let offset = lowerer.writer.write_bytes(store, &value).await?;
 
                 result.extend_from_slice(&offset.to_le_bytes());
                 result.extend_from_slice(&(value.len() as u32).to_le_bytes());
@@ -66,21 +67,21 @@ pub fn record_lower_memory<
 
             IValue::Array(values) => {
                 let LoweredArray { offset, size } =
-                    super::array_lower_memory(store, lowerer, values)?;
+                    super::array_lower_memory(store, lowerer, values).await?;
 
                 result.extend_from_slice(&(offset).to_le_bytes());
                 result.extend_from_slice(&(size).to_le_bytes());
             }
 
             IValue::Record(values) => {
-                let offset = record_lower_memory(store, lowerer, values)?;
+                let offset = record_lower_memory(store, lowerer, values).await?;
 
                 result.extend_from_slice(&offset.to_le_bytes());
             }
         }
     }
 
-    let result_pointer = lowerer.writer.write_bytes(store, &result)?;
+    let result_pointer = lowerer.writer.write_bytes(store, &result).await?;
 
     Ok(result_pointer)
 }

@@ -38,7 +38,8 @@ impl LoweredArray {
     }
 }
 
-pub fn array_lower_memory<
+#[async_recursion::async_recursion]
+pub async fn array_lower_memory<
     A: Allocatable<MV, Store>,
     MV: MemoryView<Store>,
     Store: it_memory_traits::Store,
@@ -54,32 +55,57 @@ pub fn array_lower_memory<
     let elements_count = array_values.len() as u32;
     let size = ser_value_size(&array_values[0]) * elements_count;
     let type_tag = type_tag_form_ivalue(&array_values[0]);
-    let seq_writer = lowerer.writer.sequential_writer(store, size, type_tag)?;
+    let seq_writer = lowerer
+        .writer
+        .sequential_writer(store, size, type_tag)
+        .await?;
 
     // here it's known that all interface values have the same type
     for value in array_values {
         match value {
             IValue::Boolean(value) => seq_writer.write_u8(store, &lowerer.writer, value as _),
             IValue::S8(value) => seq_writer.write_u8(store, &lowerer.writer, value as _),
-            IValue::S16(value) => seq_writer.write_bytes(store, &lowerer.writer, &value.to_le_bytes()),
-            IValue::S32(value) => seq_writer.write_bytes(store, &lowerer.writer, &value.to_le_bytes()),
-            IValue::S64(value) => seq_writer.write_bytes(store, &lowerer.writer, &value.to_le_bytes()),
-            IValue::U8(value) => seq_writer.write_bytes(store, &lowerer.writer, &value.to_le_bytes()),
-            IValue::U16(value) => seq_writer.write_bytes(store, &lowerer.writer, &value.to_le_bytes()),
-            IValue::U32(value) => seq_writer.write_bytes(store, &lowerer.writer, &value.to_le_bytes()),
-            IValue::U64(value) => seq_writer.write_bytes(store, &lowerer.writer, &value.to_le_bytes()),
-            IValue::I32(value) => seq_writer.write_bytes(store, &lowerer.writer, &value.to_le_bytes()),
-            IValue::I64(value) => seq_writer.write_bytes(store, &lowerer.writer, &value.to_le_bytes()),
-            IValue::F32(value) => seq_writer.write_bytes(store, &lowerer.writer, &value.to_le_bytes()),
-            IValue::F64(value) => seq_writer.write_bytes(store, &lowerer.writer, &value.to_le_bytes()),
+            IValue::S16(value) => {
+                seq_writer.write_bytes(store, &lowerer.writer, &value.to_le_bytes())
+            }
+            IValue::S32(value) => {
+                seq_writer.write_bytes(store, &lowerer.writer, &value.to_le_bytes())
+            }
+            IValue::S64(value) => {
+                seq_writer.write_bytes(store, &lowerer.writer, &value.to_le_bytes())
+            }
+            IValue::U8(value) => {
+                seq_writer.write_bytes(store, &lowerer.writer, &value.to_le_bytes())
+            }
+            IValue::U16(value) => {
+                seq_writer.write_bytes(store, &lowerer.writer, &value.to_le_bytes())
+            }
+            IValue::U32(value) => {
+                seq_writer.write_bytes(store, &lowerer.writer, &value.to_le_bytes())
+            }
+            IValue::U64(value) => {
+                seq_writer.write_bytes(store, &lowerer.writer, &value.to_le_bytes())
+            }
+            IValue::I32(value) => {
+                seq_writer.write_bytes(store, &lowerer.writer, &value.to_le_bytes())
+            }
+            IValue::I64(value) => {
+                seq_writer.write_bytes(store, &lowerer.writer, &value.to_le_bytes())
+            }
+            IValue::F32(value) => {
+                seq_writer.write_bytes(store, &lowerer.writer, &value.to_le_bytes())
+            }
+            IValue::F64(value) => {
+                seq_writer.write_bytes(store, &lowerer.writer, &value.to_le_bytes())
+            }
             IValue::String(value) => {
-                let offset = lowerer.writer.write_bytes(store, &value.as_bytes())? as u32;
+                let offset = lowerer.writer.write_bytes(store, &value.as_bytes()).await? as u32;
 
                 seq_writer.write_bytes(store, &lowerer.writer, &offset.to_le_bytes());
                 seq_writer.write_bytes(store, &lowerer.writer, &(value.len() as u32).to_le_bytes());
             }
             IValue::ByteArray(values) => {
-                let offset = lowerer.writer.write_bytes(store, &values)? as u32;
+                let offset = lowerer.writer.write_bytes(store, &values).await? as u32;
 
                 seq_writer.write_bytes(store, &lowerer.writer, &offset.to_le_bytes());
                 seq_writer.write_bytes(
@@ -89,13 +115,14 @@ pub fn array_lower_memory<
                 );
             }
             IValue::Array(values) => {
-                let LoweredArray { offset, size } = array_lower_memory(store, lowerer, values)?;
+                let LoweredArray { offset, size } =
+                    array_lower_memory(store, lowerer, values).await?;
 
                 seq_writer.write_bytes(store, &lowerer.writer, &(offset as u32).to_le_bytes());
                 seq_writer.write_bytes(store, &lowerer.writer, &(size as u32).to_le_bytes());
             }
             IValue::Record(values) => {
-                let offset = super::record_lower_memory(store, lowerer, values)? as u32;
+                let offset = super::record_lower_memory(store, lowerer, values).await? as u32;
                 seq_writer.write_bytes(store, &lowerer.writer, &offset.to_le_bytes());
             }
         }

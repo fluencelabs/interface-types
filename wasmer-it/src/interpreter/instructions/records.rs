@@ -5,21 +5,25 @@ use crate::IType;
 use crate::IValue;
 use crate::{errors::InstructionError, errors::InstructionErrorKind, interpreter::Instruction};
 
+use crate::errors::InstructionResult;
+use crate::interpreter::stack::Stackable;
+use crate::interpreter::{AsyncExecutableInstructionImpl, ExecutableInstruction, Runtime};
 use it_lilo::lifter::ILifter;
 use it_lilo::lowerer::ILowerer;
 use it_lilo::traits::DEFAULT_MEMORY_INDEX;
 
+use futures::future::BoxFuture;
+use futures::FutureExt;
+
+struct RecordLiftMemoryAsync {
+    record_type_id: u64,
+    instruction: Instruction,
+}
+
 pub(crate) fn record_lift_memory<Instance, Export, LocalImport, Memory, MemoryView, Store>(
     record_type_id: u64,
     instruction: Instruction,
-) -> crate::interpreter::ExecutableInstruction<
-    Instance,
-    Export,
-    LocalImport,
-    Memory,
-    MemoryView,
-    Store,
->
+) -> ExecutableInstruction<Instance, Export, LocalImport, Memory, MemoryView, Store>
 where
     Export: crate::interpreter::wasm::structures::Export,
     LocalImport: crate::interpreter::wasm::structures::LocalImport<Store>,
@@ -34,10 +38,37 @@ where
     >,
     Store: crate::interpreter::wasm::structures::Store,
 {
-    #[allow(unused_imports)]
-    use crate::interpreter::stack::Stackable;
-    Box::new({
-        move |runtime| -> _ {
+    ExecutableInstruction::Async(Box::new(RecordLiftMemoryAsync {
+        record_type_id,
+        instruction,
+    }))
+}
+
+impl<Instance, Export, LocalImport, Memory, MemoryView, Store>
+    AsyncExecutableInstructionImpl<Instance, Export, LocalImport, Memory, MemoryView, Store>
+    for RecordLiftMemoryAsync
+where
+    Export: crate::interpreter::wasm::structures::Export,
+    LocalImport: crate::interpreter::wasm::structures::LocalImport<Store>,
+    Memory: crate::interpreter::wasm::structures::Memory<MemoryView, Store>,
+    MemoryView: crate::interpreter::wasm::structures::MemoryView<Store>,
+    Instance: crate::interpreter::wasm::structures::Instance<
+        Export,
+        LocalImport,
+        Memory,
+        MemoryView,
+        Store,
+    >,
+    Store: crate::interpreter::wasm::structures::Store,
+{
+    fn execute<'args>(
+        &'args self,
+        runtime: &'args mut Runtime<Instance, Export, LocalImport, Memory, MemoryView, Store>,
+    ) -> BoxFuture<InstructionResult<()>> {
+        async move {
+            let record_type_id = self.record_type_id;
+            let instruction = &self.instruction;
+
             let mut inputs = runtime.stack.pop(1).ok_or_else(|| {
                 InstructionError::from_error_kind(
                     instruction.clone(),
@@ -75,28 +106,28 @@ where
 
             let li_helper = lilo::LiHelper::new(&**instance);
             let lifter = ILifter::new(memory_view, &li_helper);
-            let record = it_lilo::lifter::record_lift_memory(runtime.store, &lifter, record_type, offset)
-                .map_err(|e| InstructionError::from_li(instruction.clone(), e))?;
+            let record =
+                it_lilo::lifter::record_lift_memory(runtime.store, &lifter, record_type, offset)
+                    .map_err(|e| InstructionError::from_li(instruction.clone(), e))?;
 
             log::debug!("record.lift_memory: pushing {:?} on the stack", record);
             runtime.stack.push(record);
 
             Ok(())
         }
-    })
+        .boxed()
+    }
+}
+
+struct RecordLowerMemoryAsync {
+    record_type_id: u64,
+    instruction: Instruction,
 }
 
 pub(crate) fn record_lower_memory<Instance, Export, LocalImport, Memory, MemoryView, Store>(
     record_type_id: u64,
     instruction: Instruction,
-) -> crate::interpreter::ExecutableInstruction<
-    Instance,
-    Export,
-    LocalImport,
-    Memory,
-    MemoryView,
-    Store,
->
+) -> ExecutableInstruction<Instance, Export, LocalImport, Memory, MemoryView, Store>
 where
     Export: crate::interpreter::wasm::structures::Export,
     LocalImport: crate::interpreter::wasm::structures::LocalImport<Store>,
@@ -111,10 +142,36 @@ where
     >,
     Store: crate::interpreter::wasm::structures::Store,
 {
-    #[allow(unused_imports)]
-    use crate::interpreter::stack::Stackable;
-    Box::new({
-        move |runtime| -> _ {
+    ExecutableInstruction::Async(Box::new(RecordLowerMemoryAsync {
+        record_type_id,
+        instruction,
+    }))
+}
+
+impl<Instance, Export, LocalImport, Memory, MemoryView, Store>
+    AsyncExecutableInstructionImpl<Instance, Export, LocalImport, Memory, MemoryView, Store>
+    for RecordLowerMemoryAsync
+where
+    Export: crate::interpreter::wasm::structures::Export,
+    LocalImport: crate::interpreter::wasm::structures::LocalImport<Store>,
+    Memory: crate::interpreter::wasm::structures::Memory<MemoryView, Store>,
+    MemoryView: crate::interpreter::wasm::structures::MemoryView<Store>,
+    Instance: crate::interpreter::wasm::structures::Instance<
+        Export,
+        LocalImport,
+        Memory,
+        MemoryView,
+        Store,
+    >,
+    Store: crate::interpreter::wasm::structures::Store,
+{
+    fn execute<'args>(
+        &'args self,
+        runtime: &'args mut Runtime<Instance, Export, LocalImport, Memory, MemoryView, Store>,
+    ) -> BoxFuture<InstructionResult<()>> {
+        async move {
+            let record_type_id = self.record_type_id;
+            let instruction = &self.instruction;
             let instance = &mut runtime.wasm_instance;
 
             match runtime.stack.pop1() {
@@ -126,7 +183,11 @@ where
                     )
                     .map_err(|e| InstructionError::from_error_kind(instruction.clone(), e))?;
 
-                    log::debug!("record.lower_memory: obtained {:?} values on the stack for record type = {}", record_fields, record_type_id);
+                    log::debug!(
+                    "record.lower_memory: obtained {:?} values on the stack for record type = {}",
+                    record_fields,
+                    record_type_id
+                );
 
                     let memory_index = DEFAULT_MEMORY_INDEX;
                     let memory_view = instance
@@ -142,11 +203,13 @@ where
                     let mut lo_helper = lilo::LoHelper::new(&**instance);
                     let mut memory_writer = ILowerer::new(memory_view, &mut lo_helper)
                         .map_err(|e| InstructionError::from_lo(instruction.clone(), e))?;
+
                     let offset = it_lilo::lowerer::record_lower_memory(
                         runtime.store,
                         &mut memory_writer,
                         record_fields,
                     )
+                    .await
                     .map_err(|e| InstructionError::from_lo(instruction.clone(), e))?;
 
                     log::debug!("record.lower_memory: pushing {} on the stack", offset);
@@ -167,5 +230,6 @@ where
                 ),
             }
         }
-    })
+        .boxed()
+    }
 }

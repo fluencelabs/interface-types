@@ -1,6 +1,6 @@
 use crate::IValue;
 
-executable_instruction!(
+impl_sync_executable_instruction!(
     push_i32(value: i32) -> _ {
         move |runtime| -> _ {
 
@@ -12,7 +12,7 @@ executable_instruction!(
     }
 );
 
-executable_instruction!(
+impl_sync_executable_instruction!(
     push_i64(value: i64) -> _ {
         move |runtime| -> _ {
 

@@ -1,7 +1,8 @@
 use crate::instr_error;
-use crate::{errors::InstructionErrorKind, interpreter::Instruction};
+use crate::interpreter::instructions::InstructionErrorKind;
+use crate::interpreter::Instruction;
 
-executable_instruction!(
+impl_sync_executable_instruction!(
     argument_get(index: u32, instruction: Instruction) -> _ {
         move |runtime| -> _ {
             let invocation_inputs = runtime.invocation_inputs;
