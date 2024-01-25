@@ -1,6 +1,6 @@
 [package]
 name = "it-lilo"
-version = "0.6.0"
+version = "0.7.0"
 authors = ["Fluence Labs"]
 description = "Defines some helper utils for lifting/lowering IT"
 edition = "2018"
